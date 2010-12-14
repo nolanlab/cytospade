@@ -1164,7 +1164,7 @@ public class CytoSpade extends CytoscapePlugin {
             if(!plotsOnly) {
                 out.write("OUTPUT_DIR=\"output/\""+"\n");
             } else {
-                out.write("OUTPUT_DIR=./"+"\n");
+                out.write("OUTPUT_DIR=\"./\""+"\n");
             }
 
             out.write("TMPDIR=\"/tmp/\""+"\n");

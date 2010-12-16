@@ -469,7 +469,7 @@ public class CytoSpade extends CytoscapePlugin {
 
             BufferedWriter out = new BufferedWriter(temp);
 
-            out.write("cd "+ new File(FCSFilePath).getAbsolutePath() +"\n");
+            out.write("cd \""+ new File(FCSFilePath).getAbsolutePath() + "\""+"\n");
 
             if( getOS().matches("windows")) {
                 out.write("cmd /c \"");
@@ -955,21 +955,21 @@ public class CytoSpade extends CytoscapePlugin {
      */
     private Calculator createColorCalculator() {
         CyAttributes cyNodeAttrs = Cytoscape.getNodeAttributes();
-        double min = 0;
+        double min = 1000;
         double max = 0;
 
         Iterator<CyNode> it = Cytoscape.getCurrentNetwork().nodesIterator();
-
         //TODO: make these lines find the global 2-98% range
         while (it.hasNext()) {
             giny.model.Node node = (giny.model.Node) it.next();
             Double value = cyNodeAttrs.getDoubleAttribute(node.getIdentifier(), colorscaleComboBox.getSelectedItem().toString());
             if (value.doubleValue() < min) {
-                    min = value.doubleValue();
+                min = value.doubleValue();
             } else if (value.doubleValue() > max) {
-                    max = value.doubleValue();
+                max = value.doubleValue();
             }
         }
+
         //pick 7 points within (min~max)
         double p1 = min + (max-min)/6.0;
         double p2 = p1 + (max-min)/6.0;
@@ -986,6 +986,7 @@ public class CytoSpade extends CytoscapePlugin {
         cm.setControllingAttributeName(colorscaleComboBox.getSelectedItem().toString(), Cytoscape.getCurrentNetwork(), false);
         Interpolator numToColor = new LinearNumberToColorInterpolator();
         cm.setInterpolator(numToColor);
+
 
         //Color underColor = new Color(0,0,0);
         Color color1 = new Color(0,0,153);

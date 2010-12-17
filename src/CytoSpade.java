@@ -531,7 +531,7 @@ public class CytoSpade extends CytoscapePlugin {
             //Make batch/shell file delete itself
             if( getOS().matches("windows")) {
                 out.write("\r\n");
-                //out.write("rm \"" + new File(FCSFilePath, "runspade.bat").getAbsolutePath()+"\n");
+                out.write("rm \"" + new File(FCSFilePath, "runspade.bat").getAbsolutePath()+"\n");
             } else {
                 //Posix breed
                 out.write("\n");
@@ -548,7 +548,7 @@ public class CytoSpade extends CytoscapePlugin {
                 //Make executable first
                 String[] chmod = {"chmod","+x", new File(FCSFilePath, "runspade.sh").getAbsolutePath()};
                 Process ppp = Runtime.getRuntime().exec(chmod);
-                Process pp = Runtime.getRuntime().exec(new File(FCSFilePath, "runspade.sh").getAbsolutePath());
+                Process pp = Runtime.getRuntime().exec(new String[] {new File(FCSFilePath, "runspade.sh").getAbsolutePath(), ""});
             }
 
         } catch (IOException e) {
@@ -1375,6 +1375,7 @@ public class CytoSpade extends CytoscapePlugin {
 
             drawPlotsButton.addActionListener(new java.awt.event.ActionListener() {
                 public void actionPerformed(java.awt.event.ActionEvent evt) {
+                    saveLandscaping(false);
                     authorRS(evt, true, true);
                     runSPADE(evt, true);
                 }

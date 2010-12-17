@@ -1529,6 +1529,7 @@ public class CytoSpade extends CytoscapePlugin {
 
             drawPlotsButton.addActionListener(new java.awt.event.ActionListener() {
                 public void actionPerformed(java.awt.event.ActionEvent evt) {
+                    saveLandscaping(false);
                     authorRS(evt, true, true);
                     runSPADE(evt, true);
                 }

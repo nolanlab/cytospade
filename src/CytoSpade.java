@@ -7,6 +7,9 @@ import cytoscape.data.CyAttributes;
 import cytoscape.data.SelectEventListener;
 import cytoscape.logger.CyLogger;
 import cytoscape.view.CyNetworkView;
+import cytoscape.visual.NodeAppearanceCalculator;
+import cytoscape.visual.VisualMappingManager;
+import cytoscape.visual.VisualPropertyDependency;
 import cytoscape.visual.VisualPropertyType;
 import cytoscape.visual.VisualStyle;
 import cytoscape.visual.calculators.BasicCalculator;
@@ -608,96 +611,60 @@ public class CytoSpade extends CytoscapePlugin {
 
     }
 
-    /**
-     * Fills the colorscaleComboBox with attributes from the given GML file
-     * @param fi - the GML file to read attributes from
-     */
-    private void fillColorscaleComboWithAttributes(File fi) {
-        //Tell the colorscaleComboBox event handler to not listen
-        registeringAttributes = true;
-
-        try {
-            BufferedReader reader = new BufferedReader(new FileReader(fi));
-
-            //Read into the file, stopping when we get to a ']', picking out
-            //things that start with "percent", "median" or "fold".
-            String line = null;
-            try {
-                while ((line = reader.readLine()) != null) {
-                    if(line.startsWith("]")) {
-                        break;
-                    } else if (line.startsWith("percent") || line.startsWith("median") || line.startsWith("fold")) {
-                        colorscaleComboBox.addItem(line.split(" ")[0]);
-                    }
-                }
-
-            } catch (IOException ex) {
-                Logger.getLogger(CytoSpade.class.getName()).log(Level.SEVERE, null, ex);
-            }
-
-        } catch (FileNotFoundException ex) {
-            Logger.getLogger(CytoSpade.class.getName()).log(Level.SEVERE, null, ex);
-        }
-
-        //All ears, colorscaleCombobox:
-        registeringAttributes = false;
-    }
 
     /**
      * Applies sizes and colors to the network view
      */
     private void mapSizeAndColors() {
-            if(filenameComboBox.getSelectedIndex() == 0) {
-                return;
-            }
+        // Skip mapping if no file is specified
+        if(filenameComboBox.getSelectedIndex() < 0) {
+            return;
+        }
 
-           
-            CyAttributes cyNodeAttrs = Cytoscape.getNodeAttributes();
+        // If first mapping, populate colorscaleCombo from network attributes
+        if (colorscaleComboBox.getItemCount() == 0) {
+            registeringAttributes = true;
+            VisualMapping.populateNumericAttributeComboBox(colorscaleComboBox);
+            colorscaleComboBox.setSelectedIndex(0);
+            registeringAttributes = false;
+        }
+
+        System.err.println(colorscaleComboBox.getSelectedItem().toString());
+        VisualMapping csVM;
+        try {
+            csVM = new VisualMapping("percenttotal",colorscaleComboBox.getSelectedItem().toString());
+        } catch(IllegalArgumentException e) {
+            JOptionPane.showMessageDialog(null, "Invalid choice of mapping parameters: "+e);
+            return;
+        }
+
+        VisualMappingManager cyVMM = Cytoscape.getVisualMappingManager();
+
+        try {
             
-            // We can only map numeric attributes
-            byte attrType = cyNodeAttrs.getType(colorscaleComboBox.getSelectedItem().toString());
-            switch(attrType) {
-                default:
-                    JOptionPane.showMessageDialog(null, "Attribute is non-numeric, cannot use for color mapping");
-                    return;
-                case CyAttributes.TYPE_INTEGER:
-                case CyAttributes.TYPE_FLOATING:
-                    break;
+            VisualStyle spadeVS = cyVMM.getCalculatorCatalog().getVisualStyle("SPADEVisualStyle");
+            if (spadeVS == null) {  // Create "SPADEVisualStyle" if does not exist
+                spadeVS = new VisualStyle("SPADEVisualStyle");
             }
+                
+            // Update with new calculators
+            NodeAppearanceCalculator nodeAppCalc = new NodeAppearanceCalculator();
+            nodeAppCalc.setCalculator(csVM.createColorCalculator());
+            nodeAppCalc.setCalculator(csVM.createSizeCalculator());
+            spadeVS.setNodeAppearanceCalculator(nodeAppCalc);
 
-            if (cyNodeAttrs.getType("percenttotal") != CyAttributes.TYPE_FLOATING) {
-                JOptionPane.showMessageDialog(null, "Cannot map GML files, percenttotal attribute missing or of wrong type");
-                return;
-            }
+            // Set a few defaults now that we have overwritten the calculators
+            VisualPropertyType.NODE_SHAPE.setDefault(spadeVS, cytoscape.visual.NodeShape.ELLIPSE);
+            VisualPropertyType.NODE_FILL_COLOR.setDefault(spadeVS, Color.LIGHT_GRAY);
+            // "Lock" size so we can create size mapper
+            spadeVS.getDependency().set(VisualPropertyDependency.Definition.NODE_SIZE_LOCKED,true);
 
-            //Create a calculator and style and apply
-            if (Cytoscape.getVisualMappingManager().getCalculatorCatalog().getVisualStyle("SPADEVisualStyle") != null) {
-                Cytoscape.getVisualMappingManager().getCalculatorCatalog().removeVisualStyle("SPADEVisualStyle");
-            }
-            vs = new VisualStyle("SPADEVisualStyle");
-
-            try {
-                vs.getNodeAppearanceCalculator().setCalculator(createColorCalculator());
-            } catch (RuntimeException e) {
-                JOptionPane.showMessageDialog(null, "error: " + e);
-            }
-
-            try {
-                vs.getNodeAppearanceCalculator().setCalculator(createSizeCalculator());
-            } catch (RuntimeException e) {
-                JOptionPane.showMessageDialog(null, "error: " + e);
-            }
-
-            vs.getGlobalAppearanceCalculator().setDefaultBackgroundColor(Color.LIGHT_GRAY);
-
-            vs.getNodeAppearanceCalculator().getDefaultAppearance().set(VisualPropertyType.NODE_SHAPE, cytoscape.visual.NodeShape.ELLIPSE);
-
-            Cytoscape.getVisualMappingManager().getCalculatorCatalog().addVisualStyle(vs);
-            Cytoscape.getVisualMappingManager().setVisualStyle(vs);
-            Cytoscape.getCurrentNetworkView().setVisualStyle(vs.getName());
-            VisualPropertyType.NODE_SHAPE.setDefault(Cytoscape.getVisualMappingManager().getVisualStyle(), cytoscape.visual.NodeShape.ELLIPSE);
-
-    }
+            cyVMM.setVisualStyle(spadeVS);
+            Cytoscape.getCurrentNetworkView().setVisualStyle(spadeVS.getName());
+        } catch (RuntimeException e) {
+            JOptionPane.showMessageDialog(null, "Visual Mapping Error: " + e);
+        }   
+     }
 
 //    /**
 //     * Applies colors to the network view
@@ -914,138 +881,7 @@ public class CytoSpade extends CytoscapePlugin {
 
     }
 
-    /**
-     * The size mapping calculator. Three-point, local scaling, 10; 30 to 150 px.
-     * @return
-     */
-    private Calculator createSizeCalculator() {
-        CyAttributes cyNodeAttrs = Cytoscape.getNodeAttributes();
-
-        // Initialize min and max prior to scanning the nodes
-        double min = Double.MAX_VALUE;
-        double max = Double.MIN_VALUE;
-
-        Iterator<CyNode> it = Cytoscape.getCurrentNetwork().nodesIterator();
-        while (it.hasNext()) {
-            giny.model.Node node = (giny.model.Node) it.next();
-            // Ignore nodes without percenttotal
-            if (cyNodeAttrs.hasAttribute(node.getIdentifier(), "percenttotal")) {
-                Double value = cyNodeAttrs.getDoubleAttribute(node.getIdentifier(), "percenttotal");
-                min = Math.min(value, min);
-                max = Math.max(value, max);
-            }
-        }
-        if (max < min) {
-            min = 0.0;
-            max = 100.0;
-        }
-
-        VisualPropertyType type = VisualPropertyType.NODE_SIZE;
-        final Object defaultObj = type.getDefault(Cytoscape.getVisualMappingManager().getVisualStyle());
-
-        ContinuousMapping cm = new ContinuousMapping(defaultObj, ObjectMapping.NODE_MAPPING);
-        cm.setControllingAttributeName("percenttotal", Cytoscape.getCurrentNetwork(), false);
-        Interpolator numToSize = new LinearNumberToNumberInterpolator();
-        cm.setInterpolator(numToSize);
-
-        BoundaryRangeValues bv0 = new BoundaryRangeValues(10, 10, 10);
-        BoundaryRangeValues bv1 = new BoundaryRangeValues(10, 30, 30);
-        BoundaryRangeValues bv2 = new BoundaryRangeValues(150, 150, 150);
-
-        cm.addPoint(0, bv0);
-        cm.addPoint(min, bv1);
-        cm.addPoint(max, bv2);
-
-        return new BasicCalculator("SPADE Size Calc", cm, VisualPropertyType.NODE_SIZE);
-    }
-
-    /**
-     * The color mapping calculator. Seven-point, local scaling, red-to-blue.
-     */
-    private Calculator createColorCalculator() {
-        String selectedAttribute = colorscaleComboBox.getSelectedItem().toString();
-
-        CyAttributes cyNodeAttrs = Cytoscape.getNodeAttributes();
-        byte attrType = cyNodeAttrs.getType(selectedAttribute);
-
-        // Initialize min and max prior to scanning the nodes
-        double min = Double.MAX_VALUE;
-        double max = Double.MIN_VALUE;
-        
-        //TODO: make these lines find the global 2-98% range
-        Iterator<CyNode> it = Cytoscape.getCurrentNetwork().nodesIterator();
-        while (it.hasNext()) {
-            giny.model.Node node = (giny.model.Node) it.next();
-            
-            // Ignore nodes without or with nonattribute, or not integers/floats
-            if (cyNodeAttrs.hasAttribute(node.getIdentifier(), selectedAttribute)) {
-                
-                Double value;
-                if (attrType == CyAttributes.TYPE_INTEGER) {
-                    value = cyNodeAttrs.getIntegerAttribute(node.getIdentifier(), selectedAttribute).doubleValue();
-                } else if (attrType == CyAttributes.TYPE_FLOATING) {
-                    value = cyNodeAttrs.getDoubleAttribute(node.getIdentifier(), selectedAttribute);
-                } else {
-                    continue;
-                }
-                min = Math.min(value, min);
-                max = Math.max(value, max);
-            }
-        }
-        if (max < min) {
-            min = 0.0;
-            max = 100.0;
-        }
-
-
-        //pick 7 points within (min~max)
-        double p1 = min + (max-min)/6.0;
-        double p2 = p1 + (max-min)/6.0;
-        double p3 = p2 + (max-min)/6.0;
-        double p4 = p3 + (max-min)/6.0;
-        double p5 = p4 + (max-min)/6.0;
-        double p6 = p5 + (max-min)/6.0;
-        double p7 = p6 + (max-min)/6.0;
-
-        VisualPropertyType type = VisualPropertyType.NODE_FILL_COLOR;
-        final Object defaultObj = type.getDefault(Cytoscape.getVisualMappingManager().getVisualStyle());
-
-        ContinuousMapping cm = new ContinuousMapping(defaultObj, ObjectMapping.NODE_MAPPING);
-        cm.setControllingAttributeName(colorscaleComboBox.getSelectedItem().toString(), Cytoscape.getCurrentNetwork(), false);
-        Interpolator numToColor = new LinearNumberToColorInterpolator();
-        cm.setInterpolator(numToColor);
-
-
-        //Color underColor = new Color(0,0,0);
-        Color color1 = new Color(0,0,153);
-        Color color2 = new Color(0,0,255);
-        Color color3 = new Color(0,255,255);
-        Color color4 = new Color(51,255,0);
-        Color color5 = new Color(255,255,0);
-        Color color6 = new Color(255,0,51);
-        Color color7 = new Color(153,0,0);
-        //Color overColor = new Color(255,255,255);
-
-        BoundaryRangeValues bv0 = new BoundaryRangeValues(color1, color1, color1);
-        BoundaryRangeValues bv1 = new BoundaryRangeValues(color2, color2, color2);
-        BoundaryRangeValues bv2 = new BoundaryRangeValues(color3, color3, color3);
-        BoundaryRangeValues bv3 = new BoundaryRangeValues(color4, color4, color4);
-        BoundaryRangeValues bv4 = new BoundaryRangeValues(color5, color5, color5);
-        BoundaryRangeValues bv5 = new BoundaryRangeValues(color6, color6, color6);
-        BoundaryRangeValues bv6 = new BoundaryRangeValues(color7, color7, color7);
-
-        cm.addPoint(p1, bv0);
-        cm.addPoint(p2, bv1);
-        cm.addPoint(p3, bv2);
-        cm.addPoint(p4, bv3);
-        cm.addPoint(p5, bv4);
-        cm.addPoint(p6, bv5);
-        cm.addPoint(p7, bv6);
-
-        return new BasicCalculator("SPADE calculator", cm, VisualPropertyType.NODE_FILL_COLOR);
-
-    }
-
+   
     /**
      * Writes out the runSPADE.R file
      * @param evt - not used
@@ -1840,9 +1676,6 @@ public class CytoSpade extends CytoscapePlugin {
                 CytoPanelImp ctrlPanel = (CytoPanelImp) Cytoscape.getDesktop().getCytoPanel(SwingConstants.WEST);
                 SpadePanel spadePanel = new SpadePanel();
                 ctrlPanel.add("SPADE", spadePanel);
-
-                //Populate the colorscaleComboBox
-                fillColorscaleComboWithAttributes(flGML[0]);
 
                 //Set the focus on the panel
                 Cytoscape.getDesktop().getCytoPanel(SwingConstants.WEST).setSelectedIndex(

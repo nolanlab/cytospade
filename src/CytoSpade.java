@@ -5,6 +5,7 @@ import cytoscape.*;
 import cytoscape.actions.LoadNetworkTask;
 import cytoscape.data.CyAttributes;
 import cytoscape.data.SelectEventListener;
+import cytoscape.logger.CyLogger;
 import cytoscape.view.CyNetworkView;
 import cytoscape.visual.VisualPropertyType;
 import cytoscape.visual.VisualStyle;
@@ -324,6 +325,12 @@ public class CytoSpade extends CytoscapePlugin {
 
     private void colorscaleComboBoxActionPerformed(java.awt.event.ActionEvent evt) {
         if(!registeringAttributes) {
+            // Coloring Nodes is only relevant for attributes of integer
+            // and double types
+
+
+
+
             mapSizeAndColors();
             Cytoscape.getCurrentNetworkView().redrawGraph(true, true);
             //These aren't documented (thank you Cytoscape...), but one is
@@ -644,40 +651,29 @@ public class CytoSpade extends CytoscapePlugin {
                 return;
             }
 
-            //Check if selected color attribute exists (probably unnecessary)
-            boolean attributeExists = false;
+           
             CyAttributes cyNodeAttrs = Cytoscape.getNodeAttributes();
-            String[] names = cyNodeAttrs.getAttributeNames();
-            for (String name: names){
-                    if (name.equalsIgnoreCase(colorscaleComboBox.getSelectedItem().toString())) {
-                            attributeExists = true;
-                            break;
-                    }
-            }
-            if (!attributeExists) {
-                JOptionPane.showMessageDialog(null, "Couldn't find color parameter to map");
-                return;
-            }
-
-            //Check if size attribute exists (probably unnecessary)
-            attributeExists = false;
-            for (String name: names){
-                    if (name.equalsIgnoreCase("percenttotal")) {
-                            attributeExists = true;
-                            break;
-                    }
-            }
-            if (!attributeExists) {
-                JOptionPane.showMessageDialog(null, "Couldn't find \"percenttotal\" to map");
-                return;
+            
+            // We can only map numeric attributes
+            byte attrType = cyNodeAttrs.getType(colorscaleComboBox.getSelectedItem().toString());
+            switch(attrType) {
+                default:
+                    JOptionPane.showMessageDialog(null, "Attribute is non-numeric, cannot use for color mapping");
+                    return;
+                case CyAttributes.TYPE_INTEGER:
+                case CyAttributes.TYPE_FLOATING:
+                    break;
             }
 
+            if (cyNodeAttrs.getType("percenttotal") != CyAttributes.TYPE_FLOATING) {
+                JOptionPane.showMessageDialog(null, "Cannot map GML files, percenttotal attribute missing or of wrong type");
+                return;
+            }
 
             //Create a calculator and style and apply
             if (Cytoscape.getVisualMappingManager().getCalculatorCatalog().getVisualStyle("SPADEVisualStyle") != null) {
                 Cytoscape.getVisualMappingManager().getCalculatorCatalog().removeVisualStyle("SPADEVisualStyle");
             }
-
             vs = new VisualStyle("SPADEVisualStyle");
 
             try {
@@ -925,24 +921,23 @@ public class CytoSpade extends CytoscapePlugin {
     private Calculator createSizeCalculator() {
         CyAttributes cyNodeAttrs = Cytoscape.getNodeAttributes();
 
-        double p1 = 0.0d; //No events
-        double p2 = 100.0d; //Min# > 0 events
-        double p3 = 0.0d; //Max# events
+        // Initialize min and max prior to scanning the nodes
+        double min = Double.MAX_VALUE;
+        double max = Double.MIN_VALUE;
 
         Iterator<CyNode> it = Cytoscape.getCurrentNetwork().nodesIterator();
-
         while (it.hasNext()) {
             giny.model.Node node = (giny.model.Node) it.next();
-            Double value = cyNodeAttrs.getDoubleAttribute(node.getIdentifier(), "percenttotal");
-            //Ignore NaNs
-            if (value != null && value.doubleValue() > 0) {
-                if (value.doubleValue() > p3) {
-                    p3 = value.doubleValue(); //Max# events
-                }
-                if (value.doubleValue() < p2) {
-                    p2 = value.doubleValue(); //Min# events
-                }
+            // Ignore nodes without percenttotal
+            if (cyNodeAttrs.hasAttribute(node.getIdentifier(), "percenttotal")) {
+                Double value = cyNodeAttrs.getDoubleAttribute(node.getIdentifier(), "percenttotal");
+                min = Math.min(value, min);
+                max = Math.max(value, max);
             }
+        }
+        if (max < min) {
+            min = 0.0;
+            max = 100.0;
         }
 
         VisualPropertyType type = VisualPropertyType.NODE_SIZE;
@@ -957,9 +952,9 @@ public class CytoSpade extends CytoscapePlugin {
         BoundaryRangeValues bv1 = new BoundaryRangeValues(10, 30, 30);
         BoundaryRangeValues bv2 = new BoundaryRangeValues(150, 150, 150);
 
-        cm.addPoint(p1, bv0);
-        cm.addPoint(p2, bv1);
-        cm.addPoint(p3, bv2);
+        cm.addPoint(0, bv0);
+        cm.addPoint(min, bv1);
+        cm.addPoint(max, bv2);
 
         return new BasicCalculator("SPADE Size Calc", cm, VisualPropertyType.NODE_SIZE);
     }
@@ -968,25 +963,40 @@ public class CytoSpade extends CytoscapePlugin {
      * The color mapping calculator. Seven-point, local scaling, red-to-blue.
      */
     private Calculator createColorCalculator() {
-        CyAttributes cyNodeAttrs = Cytoscape.getNodeAttributes();
-        double min = 1000;
-        double max = 0;
+        String selectedAttribute = colorscaleComboBox.getSelectedItem().toString();
 
-        Iterator<CyNode> it = Cytoscape.getCurrentNetwork().nodesIterator();
+        CyAttributes cyNodeAttrs = Cytoscape.getNodeAttributes();
+        byte attrType = cyNodeAttrs.getType(selectedAttribute);
+
+        // Initialize min and max prior to scanning the nodes
+        double min = Double.MAX_VALUE;
+        double max = Double.MIN_VALUE;
+        
         //TODO: make these lines find the global 2-98% range
+        Iterator<CyNode> it = Cytoscape.getCurrentNetwork().nodesIterator();
         while (it.hasNext()) {
             giny.model.Node node = (giny.model.Node) it.next();
-            try {
-                Double value = cyNodeAttrs.getDoubleAttribute(node.getIdentifier(), colorscaleComboBox.getSelectedItem().toString());
-                if (value.doubleValue() < min) {
-                    min = value.doubleValue();
-                } else if (value.doubleValue() > max) {
-                    max = value.doubleValue();
+            
+            // Ignore nodes without or with nonattribute, or not integers/floats
+            if (cyNodeAttrs.hasAttribute(node.getIdentifier(), selectedAttribute)) {
+                
+                Double value;
+                if (attrType == CyAttributes.TYPE_INTEGER) {
+                    value = cyNodeAttrs.getIntegerAttribute(node.getIdentifier(), selectedAttribute).doubleValue();
+                } else if (attrType == CyAttributes.TYPE_FLOATING) {
+                    value = cyNodeAttrs.getDoubleAttribute(node.getIdentifier(), selectedAttribute);
+                } else {
+                    continue;
                 }
-            } catch (RuntimeException e) {
-                //Ignore a type-mismatch or missing value or NaN
+                min = Math.min(value, min);
+                max = Math.max(value, max);
             }
         }
+        if (max < min) {
+            min = 0.0;
+            max = 100.0;
+        }
+
 
         //pick 7 points within (min~max)
         double p1 = min + (max-min)/6.0;

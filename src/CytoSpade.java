@@ -370,9 +370,9 @@ public class CytoSpade extends CytoscapePlugin {
         String RPath = null;
         if( getOS().matches("windows")) {
             //We can query the registry
-            //Try R64 first
-            RPath = queryRegistry("HKLM\\SOFTWARE\\R-core\\R64","InstallPath");
-            //JOptionPane.showMessageDialog(null, "queryingreg result:" + RPath);
+            //Don't try R64, because SPADE isn't yet compatible with it.
+            ////Try R64 first
+            //RPath = queryRegistry("HKLM\\SOFTWARE\\R-core\\R64","InstallPath");
             if (RPath == null) {
                 //Try R[32] second
                 RPath = queryRegistry("HKLM\\SOFTWARE\\R-core\\R","InstallPath");
@@ -396,21 +396,17 @@ public class CytoSpade extends CytoscapePlugin {
                     }
                 } else {
                     //We found R[32]
-                    return RPath + "bin\\Rscript.exe";
+                    return RPath + "\\bin\\Rscript.exe";
                 }
             } else {
+                //Won't evaluate without trying R64 first
                 //We found R64
-                return RPath + "bin\\x64\\Rscript.exe";
+                return RPath + "\\bin\\x64\\Rscript.exe";
             }
 
         } else {
-            //Try R64 first
-            //FIXME
+
             RPath = posixWhich("Rscript");
-//            if (RPath == null) {
-//                //Try R[32] second
-//                RPath = posixWhich("R");
-//            }
             
             //Give up
             if (RPath == null) {
@@ -469,7 +465,10 @@ public class CytoSpade extends CytoscapePlugin {
 
             BufferedWriter out = new BufferedWriter(temp);
 
-            out.write("cd \""+ new File(FCSFilePath).getAbsolutePath() + "\""+"\n");
+            if( !getOS().matches("windows")) {
+                //Posix breed
+                out.write("cd \""+ new File(FCSFilePath).getAbsolutePath() + "\"" + "\n");
+            }
 
             if( getOS().matches("windows")) {
                 out.write("cmd /c \"");
@@ -478,13 +477,28 @@ public class CytoSpade extends CytoscapePlugin {
                 out.write("/bin/sh -c \"");
             }
 
-            out.write(RPath);
-            out.write(" --vanilla ");
-            //out.write("C:\\Users\\Bjorn\\Desktop\\test.R"); //Debug use
-            if(!plotsOnly) {
-                out.write(new File(FCSFilePath, "runSPADE.R").getAbsolutePath());
+            //Note: Windows will almost always have spaces in the path to R, e.g.
+            //C:\Program Files\R, so it for sure needs the quotes around the path.
+            //Not sure if posix needs quotes, since the path/to/R probably won't
+            //have spaces in it.
+            if( getOS().matches("windows")) {
+                out.write("\"");
+                out.write(RPath);
+                out.write("\"");
             } else {
-                out.write(new File(FCSFilePath, "printPDFs.R").getAbsolutePath());
+                out.write(RPath);
+            }
+            
+            out.write(" --vanilla ");
+
+            if(!plotsOnly) {
+                if (getOS().matches("windows")) {
+                    out.write("\"" + new File(FCSFilePath, "runSPADE.R").getAbsolutePath()+ "\"");
+                } else {
+                    out.write("runSPADE.R");
+                }
+            } else {
+                out.write("printPDFs.R");
             }
             out.write(" -num_threads=");
             out.write(String.valueOf(Runtime.getRuntime().availableProcessors()));
@@ -507,7 +521,7 @@ public class CytoSpade extends CytoscapePlugin {
             //Make batch/shell file delete itself
             if( getOS().matches("windows")) {
                 out.write("\r\n");
-                out.write("rm \"" + new File(FCSFilePath, "runspade.bat").getAbsolutePath()+"\n");
+                //out.write("rm \"" + new File(FCSFilePath, "runspade.bat").getAbsolutePath()+"\n");
             } else {
                 //Posix breed
                 out.write("\n");
@@ -962,11 +976,15 @@ public class CytoSpade extends CytoscapePlugin {
         //TODO: make these lines find the global 2-98% range
         while (it.hasNext()) {
             giny.model.Node node = (giny.model.Node) it.next();
-            Double value = cyNodeAttrs.getDoubleAttribute(node.getIdentifier(), colorscaleComboBox.getSelectedItem().toString());
-            if (value.doubleValue() < min) {
-                min = value.doubleValue();
-            } else if (value.doubleValue() > max) {
-                max = value.doubleValue();
+            try {
+                Double value = cyNodeAttrs.getDoubleAttribute(node.getIdentifier(), colorscaleComboBox.getSelectedItem().toString());
+                if (value.doubleValue() < min) {
+                    min = value.doubleValue();
+                } else if (value.doubleValue() > max) {
+                    max = value.doubleValue();
+                }
+            } catch (RuntimeException e) {
+                //Ignore a type-mismatch or missing value or NaN
             }
         }
 

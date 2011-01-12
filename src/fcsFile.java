@@ -1193,6 +1193,34 @@ public final class fcsFile {
   }
 
   /**
+   * getChannelShortName
+   * ---
+   * <p>Returns the name of the channel with number channelNumber.</p>
+   *
+   * <p>I do this way too often in the code. I don't know why I didn't realize
+   * that a method is needed sooner.</p>
+   *
+   * @param channelNumber int number of the channel whose name to return.
+   * @return <code>String</code> name of the channel with number channelNumber.
+   */
+  public String getChannelShortName(int channelNumber) {
+    if((channelShortname == null) || (channelNumber < 0) || (channelNumber >= getNumChannels())) {
+    // If the channel name array or the channel shortname array is null or the channel number is invalid, then quit, since they have not been initialized suggesting something went wrong in the TEXT parsing.
+      return "Error reading this channel!";
+    }
+
+    
+    if(channelShortname[channelNumber] == null) {
+      // If the channel short name for the channel is also null, then return "Channel #" as the channel name.
+      return ("Channel " + channelNumber);
+    }
+    else {
+      // Otherwise, return the channel short name as the channel name.
+      return channelShortname[channelNumber];
+    }
+  }
+
+  /**
    * getChannelName
    * ---
    * <p>Returns the name of the channel with number channelNumber.</p>

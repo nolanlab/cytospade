@@ -67,7 +67,9 @@ import javax.swing.SwingConstants;
  */
 public class CytoSpade extends CytoscapePlugin {
 
-    private String[] channels;
+    private String[] channels;    // Name:Description
+    private String[] channelsPN;  // Name
+
     private String[] filenames;
     private File[][] files;
     private String FCSFilePath;
@@ -953,9 +955,9 @@ public class CytoSpade extends CytoscapePlugin {
                 out.write("FILE_TO_PROCESS=\".\""+"\n");
 
                 out.write("SURFACE_MARKERS=c(");
-                for (int i = 0; i < clusterPList.getSelectedValues().length; i++) {
-                    out.write("\""+ clusterPList.getSelectedValues()[i] +"\"");
-                    if (i + 1 < clusterPList.getSelectedValues().length) {
+                for (int i = 0; i < clusterPList.getSelectedIndices().length; i++) {
+                    out.write("\""+ channelsPN[clusterPList.getSelectedIndices()[i]] +"\"");
+                    if (i + 1 < clusterPList.getSelectedIndices().length) {
                         out.write(",");
                     }
                 }
@@ -963,9 +965,9 @@ public class CytoSpade extends CytoscapePlugin {
 
                 if (foldPList.getSelectedValues().length > 0) {
                     out.write("FUNCTIONAL_MARKERS=c(");
-                    for (int i = 0; i < foldPList.getSelectedValues().length; i++) {
-                        out.write("\""+ foldPList.getSelectedValues()[i] +"\"");
-                        if (i + 1 < foldPList.getSelectedValues().length) {
+                    for (int i = 0; i < foldPList.getSelectedIndices().length; i++) {
+                        out.write("\""+ channelsPN[foldPList.getSelectedIndices()[i]] +"\"");
+                        if (i + 1 < foldPList.getSelectedIndices().length) {
                             out.write(",");
                         }
                     }
@@ -1611,9 +1613,11 @@ public class CytoSpade extends CytoscapePlugin {
 
                 //Get the full list of channels
                 int numChannels = FCSInputFile.getChannelCount();
-                channels = new String[numChannels];
+                channels   = new String[numChannels];
+                channelsPN = new String[numChannels];
                 for(int i=0; i < numChannels; i++) {
-                    channels[i] = FCSInputFile.getChannelName(i);
+                    channels[i] = FCSInputFile.getChannelShortName(i)+":"+FCSInputFile.getChannelName(i);
+                    channelsPN[i] = FCSInputFile.getChannelShortName(i);
                 }
 
                 //Prepare the list of filenames for the list box
@@ -1633,7 +1637,7 @@ public class CytoSpade extends CytoscapePlugin {
                     }
 
                     for(int j=0; j < numChannels; j++) {
-                        if (!FCSInputFile.getChannelName(j).contentEquals(channels[j])) {
+                        if (!channels[j].contentEquals(FCSInputFile.getChannelShortName(j)+":"+FCSInputFile.getChannelName(j))) {
                             JOptionPane.showMessageDialog(null, "Error in input files: inconsistent parameter in " +
                                     flAllFCS[i].getName());
                             return;
@@ -1663,8 +1667,10 @@ public class CytoSpade extends CytoscapePlugin {
                 //Get the full list of channels
                 int numChannels = FCSInputFile.getChannelCount();
                 channels = new String[numChannels - 2];
+                channelsPN = new String[numChannels - 2];
                 for(int i=0; i < numChannels - 2; i++) {
-                    channels[i] = FCSInputFile.getChannelName(i);
+                    channels[i] = FCSInputFile.getChannelShortName(i)+":"+FCSInputFile.getChannelName(i);
+                    channelsPN[i] = FCSInputFile.getChannelShortName(i);
                 }
 
                 //Initialize these so that a plot shows up the first time a file is selected

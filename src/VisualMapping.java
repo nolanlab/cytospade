@@ -134,7 +134,8 @@ public class VisualMapping {
         CyAttributes cyNodeAttrs = Cytoscape.getNodeAttributes();
         for (String name : cyNodeAttrs.getAttributeNames()) {
             if (isNumericAttribute(name)) {
-            csBox.addItem(name);
+                System.err.println(name);
+                csBox.addItem(name);
             }
         }
     }

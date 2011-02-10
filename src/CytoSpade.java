@@ -1059,11 +1059,12 @@ public class CytoSpade extends CytoscapePlugin {
                 out.write("SPADE.driver(FILE_TO_PROCESS, file_pattern=\"*.fcs\", out_dir=OUTPUT_DIR, cluster_cols=SURFACE_MARKERS, arcsinh_cofactor=ARCSINH_COFACTOR, layout=LAYOUT_FUNCTION, median_cols=ALL_MARKERS, reference_files=REFERENCE_FILE, fold_cols=FUNCTIONAL_MARKERS, downsampling_samples=DOWNSAMPLED_EVENTS, downsampling_exclude_pctile=DOWNSAMPLING_EXCLUDE_PCTILE, k=TARGET_CLUSTERS, clustering_samples=CLUSTERING_SAMPLES)"+"\n");
             }
             out.write("LAYOUT_TABLE <- read.table(paste(OUTPUT_DIR,\"layout.table\",sep=\"\"))"+"\n");
+            out.write("MST_GRAPH <- read.graph(paste(OUTPUT_DIR,\"mst.gml\",sep=\"\"),format=\"gml\")"+"\n");
             out.write("if (NORMALIZE_GML_FILES) {"+"\n");
             out.write("	SPADE.normalize.trees(OUTPUT_DIR,file_pattern=\"*fcs*gml\",layout=as.matrix(LAYOUT_TABLE),out_dir=paste(OUTPUT_DIR,\"norm\",sep=\"\"),normalize=NORMALIZE)"+"\n");
-            out.write("	SPADE.plot.trees(paste(OUTPUT_DIR,\"norm\",sep=\"\"),file_pattern=\"*fcs*gml\",layout=as.matrix(LAYOUT_TABLE),out_dir=paste(OUTPUT_DIR,\"norm/pdf\",sep=\"\"),scale=c(-1,1))"+"\n");
+            out.write("	SPADE.plot.trees(MST_GRAPH,paste(OUTPUT_DIR,\"norm\",sep=\"\"),file_pattern=\"*fcs*gml\",layout=as.matrix(LAYOUT_TABLE),out_dir=paste(OUTPUT_DIR,\"norm/pdf\",sep=\"\"),scale=c(-1,1))"+"\n");
             out.write("}"+"\n");
-            out.write("SPADE.plot.trees(OUTPUT_DIR,file_pattern=\"*fcs*gml\",layout=as.matrix(LAYOUT_TABLE),out_dir=paste(OUTPUT_DIR,\"pdf\",sep=\"\"))"+"\n");
+            out.write("SPADE.plot.trees(MST_GRAPH,OUTPUT_DIR,file_pattern=\"*fcs*Rsave\",layout=as.matrix(LAYOUT_TABLE),out_dir=paste(OUTPUT_DIR,\"pdf\",sep=\"\"))"+"\n");
             out.write("Sys.unsetenv(\"OMP_NUM_THREADS\")"+"\n");
             
             out.close();

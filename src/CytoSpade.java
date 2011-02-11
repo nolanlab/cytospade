@@ -631,7 +631,6 @@ public class CytoSpade extends CytoscapePlugin {
             registeringAttributes = false;
         }
 
-        System.err.println(colorscaleComboBox.getSelectedItem().toString());
         VisualMapping csVM;
         try {
             csVM = new VisualMapping("percenttotal",colorscaleComboBox.getSelectedItem().toString());
@@ -645,9 +644,10 @@ public class CytoSpade extends CytoscapePlugin {
         try {
             
             VisualStyle spadeVS = cyVMM.getCalculatorCatalog().getVisualStyle("SPADEVisualStyle");
-            if (spadeVS == null) {  // Create "SPADEVisualStyle" if does not exist
-                spadeVS = new VisualStyle("SPADEVisualStyle");
+            if (spadeVS != null) {  // Create "SPADEVisualStyle" if does not exist
+                cyVMM.getCalculatorCatalog().removeVisualStyle("SPADEVisualStyle");
             }
+            spadeVS = new VisualStyle("SPADEVisualStyle");
                 
             // Update with new calculators
             NodeAppearanceCalculator nodeAppCalc = new NodeAppearanceCalculator();
@@ -661,6 +661,7 @@ public class CytoSpade extends CytoscapePlugin {
             // "Lock" size so we can create size mapper
             spadeVS.getDependency().set(VisualPropertyDependency.Definition.NODE_SIZE_LOCKED,true);
 
+            cyVMM.getCalculatorCatalog().addVisualStyle(spadeVS);
             cyVMM.setVisualStyle(spadeVS);
             Cytoscape.getCurrentNetworkView().setVisualStyle(spadeVS.getName());
         } catch (RuntimeException e) {

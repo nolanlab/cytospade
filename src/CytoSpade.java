@@ -91,6 +91,7 @@ public class CytoSpade extends CytoscapePlugin {
     private javax.swing.JComboBox plotStyleComboBox;
     private javax.swing.JComboBox colorscaleComboBox;
     private javax.swing.JComboBox filenameComboBox;
+    private javax.swing.JComboBox colorrangeComboBox;
     private javax.swing.JLabel jLabelPlot; // contains the rendered plot
     private javax.swing.JLabel countLabel;
     private javax.swing.JLabel xAxisClickable; // Captures the axis click events
@@ -109,7 +110,7 @@ public class CytoSpade extends CytoscapePlugin {
     private javax.swing.JSpinner clusterTargetSpinner;
     private javax.swing.JSpinner downsampleTargetSpinner;
 
-    private VisualStyle vs;
+    private VisualMapping visualMapping;
 
     /**
      * Creates an action and adds it to the Plugins menu.
@@ -269,27 +270,6 @@ public class CytoSpade extends CytoscapePlugin {
             plottype = facs.Illustration.DENSITY_PLOT;
         }
 
-        //KEY (may not be current for drawPlot):
-//        drawPlot(
-//                CanvasSettings cs,
-//                double[] xChanEvents, double[] yChanEvents,
-//                String xChanLabel, String yChanLabel,
-//                double xChanMaximum, double yChanMaximum,
-//                int xDisplay, int yDisplay
-//                )
-
-//        getCanvasSettings(
-//        int hSpacing, int vSpacing,
-//        int channelCount,
-//        int xChannel, int yChannel,
-//        int plotType, int colorSet,
-//        boolean blackBackgroundP, boolean annotationP,
-//        boolean scaleLabelP, boolean scaleTickP,
-//        boolean axisLabelP, boolean longLabelP, int axisBins,
-//        double smoothing, double aspectRatio,
-//        double contourPercent, double contourStartPercent,
-//        int populationType, int eventCount)
-
       // Note that the size is set by axisBins
 
         int dotSize;
@@ -328,14 +308,15 @@ public class CytoSpade extends CytoscapePlugin {
         (new drawScatterThread()).execute();
     }
 
+    private void colorrangeComboBoxActionPerformed(java.awt.event.ActionEvent evt) {
+        if (!registeringAttributes) {
+            mapSizeAndColors();
+            Cytoscape.getCurrentNetworkView().redrawGraph(true, true);
+        }
+    }
+
     private void colorscaleComboBoxActionPerformed(java.awt.event.ActionEvent evt) {
         if(!registeringAttributes) {
-            // Coloring Nodes is only relevant for attributes of integer
-            // and double types
-
-
-
-
             mapSizeAndColors();
             Cytoscape.getCurrentNetworkView().redrawGraph(true, true);
             //These aren't documented (thank you Cytoscape...), but one is
@@ -631,9 +612,12 @@ public class CytoSpade extends CytoscapePlugin {
             registeringAttributes = false;
         }
 
-        VisualMapping csVM;
         try {
-            csVM = new VisualMapping("percenttotal",colorscaleComboBox.getSelectedItem().toString());
+            visualMapping.setCurrentMarkersAndRangeKind(
+                    "percenttotal",
+                    colorscaleComboBox.getSelectedItem().toString(),
+                    (VisualMapping.RangeKind)colorrangeComboBox.getSelectedItem()
+            );
         } catch(IllegalArgumentException e) {
             JOptionPane.showMessageDialog(null, "Invalid choice of mapping parameters: "+e);
             return;
@@ -652,8 +636,8 @@ public class CytoSpade extends CytoscapePlugin {
                 
             // Update with new calculators
             NodeAppearanceCalculator nodeAppCalc = new NodeAppearanceCalculator();
-            nodeAppCalc.setCalculator(csVM.createColorCalculator());
-            nodeAppCalc.setCalculator(csVM.createSizeCalculator());
+            nodeAppCalc.setCalculator(visualMapping.createColorCalculator());
+            nodeAppCalc.setCalculator(visualMapping.createSizeCalculator());
             spadeVS.setNodeAppearanceCalculator(nodeAppCalc);
 
             // Set a few defaults now that we have overwritten the calculators
@@ -670,50 +654,7 @@ public class CytoSpade extends CytoscapePlugin {
         }   
      }
 
-//    /**
-//     * Applies colors to the network view
-//     * Deprecated -- now done in one shot, as mapSizeAndColors
-//     */
-//    private void mapSizes() {
-//            //Create a calculator and style and apply
-//
-//            //Check if selected attribute exists (probably unnecessary)
-//            boolean attributeExists = false;
-//            CyAttributes cyNodeAttrs = Cytoscape.getNodeAttributes();
-//            String[] names = cyNodeAttrs.getAttributeNames();
-//            for (String name: names){
-//                    if (name.equalsIgnoreCase("percenttotal")) {
-//                            attributeExists = true;
-//                            break;
-//                    }
-//            }
-//            if (!attributeExists) {
-//                JOptionPane.showMessageDialog(null, "Couldn't find \"percenttotal\" to map");
-//                return;
-//            }
-//
-//            if (Cytoscape.getVisualMappingManager().getCalculatorCatalog().getVisualStyle("SPADEVisualStyleForSize") != null) {
-//                Cytoscape.getVisualMappingManager().getCalculatorCatalog().removeVisualStyle("SPADEVisualStyleForSize");
-//            }
-//
-//            vs = new VisualStyle("SPADEVisualStyleForSize");
-//
-//            try {
-//                vs.getNodeAppearanceCalculator().setCalculator(createSizeCalculator());
-//            } catch (RuntimeException e) {
-//                JOptionPane.showMessageDialog(null, "error: " + e);
-//            }
-//
-//            vs.getGlobalAppearanceCalculator().setDefaultBackgroundColor(Color.LIGHT_GRAY);
-//
-//            vs.getNodeAppearanceCalculator().getDefaultAppearance().set(VisualPropertyType.NODE_SHAPE, cytoscape.visual.NodeShape.ELLIPSE);
-//
-//            Cytoscape.getVisualMappingManager().getCalculatorCatalog().addVisualStyle(vs);
-//            Cytoscape.getVisualMappingManager().setVisualStyle(vs);
-//            Cytoscape.getCurrentNetworkView().setVisualStyle(vs.getName());
-//            VisualPropertyType.NODE_SHAPE.setDefault(Cytoscape.getVisualMappingManager().getVisualStyle(), cytoscape.visual.NodeShape.ELLIPSE);
-//
-//    }
+
 
     /**
      * Event to save the user-defined network landscaping when Cytoscape exits.
@@ -848,12 +789,11 @@ public class CytoSpade extends CytoscapePlugin {
         }
 
         //Find the layout.table file if it exists
-        FilenameFilter filterLayout = new FilenameFilter() {
+        File[] layoutFiles = new File(FCSFilePath).listFiles(new FilenameFilter() {
             public boolean accept(File f, String name) {
                 return (name.matches("layout.table"));
             }
-        };
-        File[] layoutFiles = new File(FCSFilePath).listFiles(filterLayout);
+        });
         if (layoutFiles.length > 1) {
             JOptionPane.showMessageDialog(null, "Error: Found more than one layout.table file, what ever shall I do!?");
             return;
@@ -1040,8 +980,6 @@ public class CytoSpade extends CytoscapePlugin {
 
             out.write("#END AUTOGENERATED DATA"+"\n");
 
-            out.write("NORMALIZE_GML_FILES=FALSE"+"\n");
-
             out.write("LIBRARY_PATH=NULL"+"\n");
 
             out.write("NUM_THREADS <- 1"+"\n");
@@ -1062,10 +1000,6 @@ public class CytoSpade extends CytoscapePlugin {
             }
             out.write("LAYOUT_TABLE <- read.table(paste(OUTPUT_DIR,\"layout.table\",sep=\"\"))"+"\n");
             out.write("MST_GRAPH <- read.graph(paste(OUTPUT_DIR,\"mst.gml\",sep=\"\"),format=\"gml\")"+"\n");
-            out.write("if (NORMALIZE_GML_FILES) {"+"\n");
-            out.write("	SPADE.normalize.trees(OUTPUT_DIR,file_pattern=\"*fcs*gml\",layout=as.matrix(LAYOUT_TABLE),out_dir=paste(OUTPUT_DIR,\"norm\",sep=\"\"),normalize=NORMALIZE)"+"\n");
-            out.write("	SPADE.plot.trees(MST_GRAPH,paste(OUTPUT_DIR,\"norm\",sep=\"\"),file_pattern=\"*fcs*gml\",layout=as.matrix(LAYOUT_TABLE),out_dir=paste(OUTPUT_DIR,\"norm/pdf\",sep=\"\"),scale=c(-1,1))"+"\n");
-            out.write("}"+"\n");
             out.write("SPADE.plot.trees(MST_GRAPH,OUTPUT_DIR,file_pattern=\"*fcs*Rsave\",layout=as.matrix(LAYOUT_TABLE),out_dir=paste(OUTPUT_DIR,\"pdf\",sep=\"\"))"+"\n");
             out.write("Sys.unsetenv(\"OMP_NUM_THREADS\")"+"\n");
             
@@ -1321,50 +1255,65 @@ public class CytoSpade extends CytoscapePlugin {
 
         public SpadePanel(){
 
-            javax.swing.JLabel FilenameLbl;
-            javax.swing.JLabel StyleLbl;
-            javax.swing.JLabel colorscaleLabel;
-            javax.swing.JButton closeButtonWest, drawPlotsButton;
-
-            javax.swing.JLabel howtoadjust = new javax.swing.JLabel("Click axis label to change parameter and scale");
-            xAxisClickable = new javax.swing.JLabel();
-            yAxisClickable = new javax.swing.JLabel();
-            plotArea = new javax.swing.JLayeredPane();
-            FilenameLbl = new javax.swing.JLabel("File");
-            StyleLbl = new javax.swing.JLabel("Style");
-            closeButtonWest = new javax.swing.JButton();
-            drawPlotsButton = new javax.swing.JButton();
-            colorscaleLabel = new javax.swing.JLabel("Coloring attribute");
+           
+            javax.swing.JButton closeButtonWest = new javax.swing.JButton();
+            javax.swing.JButton drawPlotsButton = new javax.swing.JButton();
 
             closeButtonWest.setText("Close");
             drawPlotsButton.setText("Produce PDFs");
 
-            colorscaleComboBox = new javax.swing.JComboBox();
+           
+            javax.swing.JLabel FilenameLbl = new javax.swing.JLabel("File");
             filenameComboBox = new javax.swing.JComboBox(filenames);
-            plotStyleComboBox = new javax.swing.JComboBox();
-            
-            jLabelPlot = new javax.swing.JLabel();
-            countLabel = new javax.swing.JLabel();
-
-            yAxisClickable.setBounds(0,0,46,308);
-            xAxisClickable.setBounds(48,311,308,46);
-            jLabelPlot.setBounds(0,0,358,358);
-
             filenameComboBox.setMaximumRowCount(20);
 
+            javax.swing.JLabel colorscaleLabel = new javax.swing.JLabel("Coloring attribute");
+            colorscaleComboBox = new javax.swing.JComboBox();
+
+            javax.swing.JLabel colorrangeLabel = new javax.swing.JLabel("Coloring range");
+            colorrangeComboBox = new javax.swing.JComboBox();
+            colorrangeComboBox.setModel(new javax.swing.DefaultComboBoxModel(
+                    visualMapping.globalRangeAvailable() ?
+                        new VisualMapping.RangeKind[] { VisualMapping.RangeKind.GLOBAL, VisualMapping.RangeKind.LOCAL } :
+                        new VisualMapping.RangeKind[] { VisualMapping.RangeKind.LOCAL }
+            ));
+         
+            javax.swing.JLabel howtoadjust = new javax.swing.JLabel("Click axis label to change parameter and scale");
+
+            javax.swing.JLabel StyleLbl = new javax.swing.JLabel("Style");
+            plotStyleComboBox = new javax.swing.JComboBox();
             plotStyleComboBox.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Shaded Contour", "Dot", "Density Dot", "Shadow", "Contour", "Density" }));
 
-            colorscaleComboBox.addActionListener(new java.awt.event.ActionListener() {
-                public void actionPerformed(java.awt.event.ActionEvent evt) {
-                    colorscaleComboBoxActionPerformed(evt);
-                }
-            });
+
+            jLabelPlot = new javax.swing.JLabel();
+            jLabelPlot.setBounds(0,0,358,358);
+
+            countLabel = new javax.swing.JLabel();
+            xAxisClickable = new javax.swing.JLabel();
+            xAxisClickable.setBounds(48,311,308,46);
+
+            yAxisClickable = new javax.swing.JLabel();
+            yAxisClickable.setBounds(0,0,46,308);
+
+            plotArea = new javax.swing.JLayeredPane();
+            
 
             filenameComboBox.addActionListener(new java.awt.event.ActionListener() {
                 public void actionPerformed(java.awt.event.ActionEvent evt) {
                     filenameComboBoxActionPerformed(evt);
                 }
             });
+            colorscaleComboBox.addActionListener(new java.awt.event.ActionListener() {
+                public void actionPerformed(java.awt.event.ActionEvent evt) {
+                    colorscaleComboBoxActionPerformed(evt);
+                }
+            });
+            colorrangeComboBox.addActionListener(new java.awt.event.ActionListener() {
+                public void actionPerformed(java.awt.event.ActionEvent evt) {
+                    colorrangeComboBoxActionPerformed(evt);
+                }
+            });
+            
 
             plotStyleComboBox.addActionListener(new java.awt.event.ActionListener() {
                 public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -1457,6 +1406,10 @@ public class CytoSpade extends CytoscapePlugin {
                             .addComponent(colorscaleLabel)
                             .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                             .addComponent(colorscaleComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, 165, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addGroup(layout.createSequentialGroup()
+                            .addComponent(colorrangeLabel)
+                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                            .addComponent(colorrangeComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, 165, javax.swing.GroupLayout.PREFERRED_SIZE))
                         .addComponent(countLabel)
                         .addComponent(drawPlotsButton)
                         .addComponent(closeButtonWest))
@@ -1469,16 +1422,21 @@ public class CytoSpade extends CytoscapePlugin {
                     .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                         .addComponent(FilenameLbl)
                         .addComponent(filenameComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                        .addComponent(StyleLbl)
-                        .addComponent(plotStyleComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    
                     .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                     .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                         .addComponent(colorscaleLabel)
                         .addComponent(colorscaleComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addComponent(colorrangeLabel)
+                        .addComponent(colorrangeComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                     .addComponent(howtoadjust)
+                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addComponent(StyleLbl)
+                        .addComponent(plotStyleComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                     .addComponent(plotArea, 358, 358, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
@@ -1511,36 +1469,19 @@ public class CytoSpade extends CytoscapePlugin {
         public void actionPerformed(ActionEvent ae) {
             JOptionPane.showMessageDialog(null, "To author runSPADE file, please select directory containing input FCS files.\nTo analyze SPADE data, please select SPADE output directory.");
 
-            if (getOS().startsWith("Mac")) {
-                //This is a Macintosh, use the AWT style file dialog
-                FileDialog chooser = new FileDialog(Cytoscape.getDesktop(),"Select directory");
-                //Need to export a system property to make it DIRECTORIES_ONLY-like
-                System.setProperty("apple.awt.fileDialogForDirectories", "true");
-                chooser.setVisible(true);
-                System.setProperty("apple.awt.fileDialogForDirectories", "false");
-
-                FCSFilePath = chooser.getFile();
-                if (FCSFilePath == null) {
-                    JOptionPane.showMessageDialog(null, "File selection error");
-                    return;
-                }
-
+            //Select the directory of FCS and GML files
+            JFileChooser FCSfileChooser = new JFileChooser();
+            FCSfileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+            int returnValue = FCSfileChooser.showOpenDialog(FCSfileChooser);
+            if(returnValue == JFileChooser.APPROVE_OPTION) {
+                FCSFilePath = FCSfileChooser.getSelectedFile().getPath();
+            } else if (returnValue == JFileChooser.CANCEL_OPTION) {
+                return;
             } else {
-                //Not a mac, use the Swing style file dialog
-
-                //Select the directory of FCS and GML files
-                JFileChooser FCSfileChooser = new JFileChooser();
-                FCSfileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-                int returnValue = FCSfileChooser.showOpenDialog(FCSfileChooser);
-                if(returnValue == JFileChooser.APPROVE_OPTION) {
-                    FCSFilePath = FCSfileChooser.getSelectedFile().getPath();
-                } else if (returnValue == JFileChooser.CANCEL_OPTION) {
-                    return;
-                } else {
-                    JOptionPane.showMessageDialog(null, "File selection error");
-                    return;
-                }
+                JOptionPane.showMessageDialog(null, "File selection error");
+                return;
             }
+            
 
             File dir = new File(FCSFilePath);
             FilenameFilter filterAnyFCS = new FilenameFilter() {
@@ -1598,7 +1539,6 @@ public class CytoSpade extends CytoscapePlugin {
                 for(int i=0; i < files.length-1; i++) {
                     filenames[i+1] = files[i][0].getName().split(".density.fcs.cluster.fcs")[0];
                 }
-
             }
 
             fcsFile FCSInputFile = null;
@@ -1682,6 +1622,21 @@ public class CytoSpade extends CytoscapePlugin {
                 xChanScale = "Log";
                 yChanScale = "Log";
 
+                // Find the global_boundaries.table file it exists, and create appropiate visual mapping
+                File[] boundaryFiles = new File(FCSFilePath).listFiles(new FilenameFilter() {
+                    public boolean accept(File f, String name) {
+                        return (name.matches("global_boundaries.table"));
+                    }
+                });
+                if (boundaryFiles.length == 1)
+                    visualMapping = new VisualMapping(boundaryFiles[0]);
+                else if (boundaryFiles.length == 0)
+                    visualMapping = new VisualMapping();
+                else {
+                    JOptionPane.showMessageDialog(null, "Error: Found more than one global_boundaries.table file, what ever shall I do!?");
+                    return;
+                }
+               
                 //Create a tab panel for SPADE controls
                 CytoPanelImp ctrlPanel = (CytoPanelImp) Cytoscape.getDesktop().getCytoPanel(SwingConstants.WEST);
                 SpadePanel spadePanel = new SpadePanel();

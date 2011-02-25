@@ -2,6 +2,7 @@
 import cytoscape.CyNode;
 import cytoscape.Cytoscape;
 import cytoscape.data.CyAttributes;
+import cytoscape.logger.CyLogger;
 import cytoscape.visual.VisualPropertyType;
 import cytoscape.visual.calculators.BasicCalculator;
 import cytoscape.visual.calculators.Calculator;
@@ -12,7 +13,16 @@ import cytoscape.visual.mappings.LinearNumberToColorInterpolator;
 import cytoscape.visual.mappings.LinearNumberToNumberInterpolator;
 import cytoscape.visual.mappings.ObjectMapping;
 import java.awt.Color;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /*
  * To change this template, choose Tools | Templates
@@ -25,13 +35,29 @@ import java.util.Iterator;
  */
 public class VisualMapping {
 
+    public enum RangeKind { LOCAL, GLOBAL }
+
+    public VisualMapping() {
+        globalRanges = null;
+    }
+    public VisualMapping(File globalBoundaryFile) {
+        globalRanges = new HashMap();
+        readBoundaries(globalBoundaryFile);
+    }
+
+    
+    public boolean globalRangeAvailable() { 
+        return (globalRanges != null) && (globalRanges.size() > 0);
+    }
+
+
     /**
-     * Construct a new VisualMapping regime
+     * Set markers used in VisualMapping
      * @param sizeMarker Marker to use for size calculator
      * @param colorMarker Marker to use for color calculator
      * @throws IllegalArgumentException If markers are non-numeric
      */
-    public VisualMapping(String sizeMarker, String colorMarker) throws IllegalArgumentException {
+    public void setCurrentMarkersAndRangeKind(String sizeMarker, String colorMarker, RangeKind rangeKind) throws IllegalArgumentException {
         if (!isNumericAttribute(sizeMarker)) {
           throw new IllegalArgumentException("sizeMarker is non-numeric");
         }
@@ -41,7 +67,13 @@ public class VisualMapping {
             throw new IllegalArgumentException("colorMarker is non-numeric");
         }
         this.colorMarker = colorMarker;
+
+        this.rangeKind = rangeKind;
     }
+    
+    public String getCurrentSizeMarker() { return sizeMarker; }
+    public String getCurrentColorMarker() { return colorMarker; }
+
 
     /**
      * Create a size calculator based on current sizeMarker
@@ -140,6 +172,9 @@ public class VisualMapping {
         }
     }
 
+    private RangeKind rangeKind;
+    private HashMap globalRanges;
+
     /**
      * Markers used for size and color "mapping"
      */
@@ -155,7 +190,13 @@ public class VisualMapping {
         }
     }
 
-    private static Range getAttributeRange(String attrID) {
+    private Range getAttributeRange(String attrID) {
+        Range range;
+        if ((rangeKind == RangeKind.GLOBAL) && ((range = (Range)globalRanges.get(attrID)) != null)) {
+            return range;
+        }
+        // Either local, or could not find attribute in global list
+
         // Initialize min and max prior to scanning the nodes
         double min = Double.MAX_VALUE;
         double max = Double.MIN_VALUE;
@@ -181,10 +222,29 @@ public class VisualMapping {
                 max = Math.max(value, max);
             }
         }
-        
         return new Range(min,max);
     }
 
-    
+     private void readBoundaries(File boundaryFile) {
+        try {
+
+            BufferedReader br = new BufferedReader(new FileReader(boundaryFile.getAbsolutePath()));
+            String   read;
+
+            while ((read = br.readLine()) != null) {
+                // Line: attribute 0% min% max% 100%
+                String[] vals = read.split(" ");
+                globalRanges.put(vals[0].replaceAll("\"",""), new Range(Double.parseDouble(vals[2]),Double.parseDouble(vals[3])));
+            }
+
+        } catch (FileNotFoundException ex) {
+            CyLogger.getLogger(CytoSpade.class.getName()).error(null, ex);
+            globalRanges = null;
+        } catch (IOException ex) {
+            CyLogger.getLogger(CytoSpade.class.getName()).error(null, ex);
+            globalRanges = null;
+        }
+        CyLogger.getLogger(CytoSpade.class.getName()).info("Loaded ranges from global_boundaries.table");
+    }
 
 }

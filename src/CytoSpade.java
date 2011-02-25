@@ -659,8 +659,6 @@ public class CytoSpade extends CytoscapePlugin {
             // Set a few defaults now that we have overwritten the calculators
             VisualPropertyType.NODE_SHAPE.setDefault(spadeVS, cytoscape.visual.NodeShape.ELLIPSE);
             VisualPropertyType.NODE_FILL_COLOR.setDefault(spadeVS, Color.LIGHT_GRAY);
-            VisualPropertyType.NODE_LINE_WIDTH.setDefault(spadeVS, 0.05);
-            VisualPropertyType.EDGE_LINE_WIDTH.setDefault(spadeVS, 0.1);
             spadeVS.getDependency().set(VisualPropertyDependency.Definition.NODE_SIZE_LOCKED,true);
 
             cyVMM.getCalculatorCatalog().addVisualStyle(spadeVS);

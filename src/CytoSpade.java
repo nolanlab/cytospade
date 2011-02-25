@@ -644,7 +644,8 @@ public class CytoSpade extends CytoscapePlugin {
         try {
             
             VisualStyle spadeVS = cyVMM.getCalculatorCatalog().getVisualStyle("SPADEVisualStyle");
-            if (spadeVS != null) {  // Create "SPADEVisualStyle" if does not exist
+            if (spadeVS != null) {  
+                // Overwrite visual style, only way to get Cytoscape to reliably update
                 cyVMM.getCalculatorCatalog().removeVisualStyle("SPADEVisualStyle");
             }
             spadeVS = new VisualStyle("SPADEVisualStyle");
@@ -658,12 +659,14 @@ public class CytoSpade extends CytoscapePlugin {
             // Set a few defaults now that we have overwritten the calculators
             VisualPropertyType.NODE_SHAPE.setDefault(spadeVS, cytoscape.visual.NodeShape.ELLIPSE);
             VisualPropertyType.NODE_FILL_COLOR.setDefault(spadeVS, Color.LIGHT_GRAY);
-            // "Lock" size so we can create size mapper
+            VisualPropertyType.NODE_LINE_WIDTH.setDefault(spadeVS, 0.05);
+            VisualPropertyType.EDGE_LINE_WIDTH.setDefault(spadeVS, 0.1);
             spadeVS.getDependency().set(VisualPropertyDependency.Definition.NODE_SIZE_LOCKED,true);
 
             cyVMM.getCalculatorCatalog().addVisualStyle(spadeVS);
             cyVMM.setVisualStyle(spadeVS);
             Cytoscape.getCurrentNetworkView().setVisualStyle(spadeVS.getName());
+
         } catch (RuntimeException e) {
             JOptionPane.showMessageDialog(null, "Visual Mapping Error: " + e);
         }   
@@ -1055,7 +1058,7 @@ public class CytoSpade extends CytoscapePlugin {
             out.write("}"+"\n");
             out.write("Sys.setenv(\"OMP_NUM_THREADS\"=NUM_THREADS)"+"\n");
             out.write("library(\"spade\",lib.loc=LIBRARY_PATH)"+"\n");
-            out.write("LAYOUT_FUNCTION=SPADE.layout.arch"+"\n");
+            out.write("LAYOUT_FUNCTION=layout.kamada.kawai"+"\n");
             if(!plotsOnly) {
                 out.write("SPADE.driver(FILE_TO_PROCESS, file_pattern=\"*.fcs\", out_dir=OUTPUT_DIR, cluster_cols=SURFACE_MARKERS, arcsinh_cofactor=ARCSINH_COFACTOR, layout=LAYOUT_FUNCTION, median_cols=ALL_MARKERS, reference_files=REFERENCE_FILE, fold_cols=FUNCTIONAL_MARKERS, downsampling_samples=DOWNSAMPLED_EVENTS, downsampling_exclude_pctile=DOWNSAMPLING_EXCLUDE_PCTILE, k=TARGET_CLUSTERS, clustering_samples=CLUSTERING_SAMPLES)"+"\n");
             }

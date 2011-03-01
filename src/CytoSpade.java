@@ -918,7 +918,7 @@ public class CytoSpade extends CytoscapePlugin {
                     out.write("FUNCTIONAL_MARKERS=NULL"+"\n");
                 }
 
-                out.write("ALL_MARKERS=c(SURFACE_MARKERS, FUNCTIONAL_MARKERS)"+"\n");
+                out.write("ALL_MARKERS=NULL"+"\n");
 
                 if (referenceFList.getSelectedValues().length > 0) {
                     out.write("REFERENCE_FILE=c(");

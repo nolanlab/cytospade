@@ -905,33 +905,55 @@ public class CytoSpade extends CytoscapePlugin {
                 }
                 out.write(")"+"\n");
 
-                if (foldPList.getSelectedValues().length > 0) {
-                    out.write("FUNCTIONAL_MARKERS=c(");
-                    for (int i = 0; i < foldPList.getSelectedIndices().length; i++) {
-                        out.write("\""+ channelsPN[foldPList.getSelectedIndices()[i]] +"\"");
-                        if (i + 1 < foldPList.getSelectedIndices().length) {
-                            out.write(",");
-                        }
-                    }
-                    out.write(")"+"\n");
-                } else {
-                    out.write("FUNCTIONAL_MARKERS=NULL"+"\n");
-                }
 
-                out.write("ALL_MARKERS=NULL"+"\n");
+                out.write("PANELS=list(\n");
+                out.write("list(\n");
+
+                out.write("panel_files=c(");
+                for (int i = 0; i < filenames.length; i++) {
+                    if (i > 0) {
+                        out.write(",");
+                    }
+                    out.write("\"" + filenames[i] + "\"");
+                }
+                out.write("),\n");
+
+                out.write("median_cols=NULL,\n");
 
                 if (referenceFList.getSelectedValues().length > 0) {
-                    out.write("REFERENCE_FILE=c(");
+                    out.write("reference_files=c(");
                     for (int i = 0; i < referenceFList.getSelectedValues().length; i++) {
                         out.write("\""+ referenceFList.getSelectedValues()[i] +"\"");
                         if (i + 1 < referenceFList.getSelectedValues().length) {
                             out.write(",");
                         }
                     }
-                    out.write(")"+"\n");
+                    out.write("),\n");
                 } else {
-                    out.write("REFERENCE_FILE=NULL"+"\n");
+                    out.write("reference_files=NULL,\n");
                 }
+
+                if (foldPList.getSelectedValues().length > 0) {
+                    out.write("fold_cols=c(");
+                    for (int i = 0; i < foldPList.getSelectedIndices().length; i++) {
+                        out.write("\""+ channelsPN[foldPList.getSelectedIndices()[i]] +"\"");
+                        if (i + 1 < foldPList.getSelectedIndices().length) {
+                            out.write(",");
+                        }
+                    }
+                    out.write(")\n");
+                } else {
+                    out.write("fold_cols=NULL\n");
+                }
+
+                out.write(")\n");
+                out.write(");\n");
+
+
+
+                out.write("ALL_MARKERS=NULL"+"\n");
+
+                
 
                 out.write("ARCSINH_COFACTOR=");
                 out.write(arcsinhSpinner.getValue().toString());
@@ -996,7 +1018,7 @@ public class CytoSpade extends CytoscapePlugin {
             out.write("library(\"spade\",lib.loc=LIBRARY_PATH)"+"\n");
             out.write("LAYOUT_FUNCTION=layout.kamada.kawai"+"\n");
             if(!plotsOnly) {
-                out.write("SPADE.driver(FILE_TO_PROCESS, file_pattern=\"*.fcs\", out_dir=OUTPUT_DIR, cluster_cols=SURFACE_MARKERS, arcsinh_cofactor=ARCSINH_COFACTOR, layout=LAYOUT_FUNCTION, median_cols=ALL_MARKERS, reference_files=REFERENCE_FILE, fold_cols=FUNCTIONAL_MARKERS, downsampling_samples=DOWNSAMPLED_EVENTS, downsampling_exclude_pctile=DOWNSAMPLING_EXCLUDE_PCTILE, k=TARGET_CLUSTERS, clustering_samples=CLUSTERING_SAMPLES)"+"\n");
+                out.write("SPADE.driver(FILE_TO_PROCESS, file_pattern=\"*.fcs\", out_dir=OUTPUT_DIR, cluster_cols=SURFACE_MARKERS, panels=PANELS, arcsinh_cofactor=ARCSINH_COFACTOR, layout=LAYOUT_FUNCTION, downsampling_samples=DOWNSAMPLED_EVENTS, downsampling_exclude_pctile=DOWNSAMPLING_EXCLUDE_PCTILE, k=TARGET_CLUSTERS, clustering_samples=CLUSTERING_SAMPLES)"+"\n");
             }
             out.write("LAYOUT_TABLE <- read.table(paste(OUTPUT_DIR,\"layout.table\",sep=\"\"))"+"\n");
             out.write("MST_GRAPH <- read.graph(paste(OUTPUT_DIR,\"mst.gml\",sep=\"\"),format=\"gml\")"+"\n");

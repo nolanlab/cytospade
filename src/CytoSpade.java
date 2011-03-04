@@ -1488,6 +1488,14 @@ public class CytoSpade extends CytoscapePlugin {
          * This method is called when the user selects the menu item.
          */
         public void actionPerformed(ActionEvent ae) {
+            WorkflowWizard wf = new WorkflowWizard(Cytoscape.getDesktop());
+
+            WorkflowWizard.PanelDescriptor intro = new WorkflowWizardPanels.Intro();
+            wf.registerWizardPanel(WorkflowWizardPanels.Intro.IDENTIFIER, intro);
+
+            wf.setCurrentPanel(WorkflowWizardPanels.Intro.IDENTIFIER);
+            wf.showModalDialog();
+
             JOptionPane.showMessageDialog(null, "To author runSPADE file, please select directory containing input FCS files.\nTo analyze SPADE data, please select SPADE output directory.");
 
             //Select the directory of FCS and GML files

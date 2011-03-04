@@ -159,7 +159,7 @@ public class CytoSpade extends CytoscapePlugin {
         }
 
         //Pull the events list
-        int[][] events = FCSInputFile.getEventList();
+        double[][] events = FCSInputFile.getEventList();
 
         //Find the columns with the appropriate parameters
         int xChan = 0;
@@ -175,41 +175,40 @@ public class CytoSpade extends CytoscapePlugin {
             }
         }
 
-        //The cluster channel is always the last
-        int clustChan = events[0].length;
+        int num_events = FCSInputFile.getEventCount();
 
-        datax = new double[events.length];
-        datay = new double[events.length];
-        dataAx = new double[events.length];
-        dataAy = new double[events.length];
+        //The cluster channel is always the last
+        int clustChan = FCSInputFile.getChannelCount() - 1;
 
         DecimalFormat df = new DecimalFormat();
 
         if (selectedClust == null) {
-            for (int i = 0; i < events.length; i++) {
-                datax[i] = events[i][xChan];
-                datay[i] = events[i][yChan];
-            }
-            countLabel.setText("Displaying " + df.format((int)events.length) + " of " + df.format((int)events.length) + " events");
-            COUNT = events.length;
+            datax = events[xChan];
+            datay = events[yChan];
+
+            countLabel.setText("Displaying " + df.format(num_events) + " of " + df.format(num_events) + " events");
+            COUNT = num_events;
         } else {
-            int eventcount = 0;
+            
             //The background events (all events)
-            for (int i = 0; i < events.length; i++) {
-                dataAx[i] = events[i][xChan];
-                dataAy[i] = events[i][yChan];
-            }
+            dataAx = events[xChan];
+            dataAy = events[yChan];
+
             //The primary events (selected only)
+            int eventcount = 0;
+            datax  = new double[num_events];
+            datay  = new double[num_events];
+            
             for( int clust = 0; clust < selectedClust.length; clust ++) {
-                for (int i = 0; i < events.length; i++) {
-                    if (events[i][clustChan-1] == selectedClust[clust]) {
-                        datax[i] = events[i][xChan];
-                        datay[i] = events[i][yChan];
+                for (int i = 0; i < num_events; i++) {
+                    if (events[clustChan][i] == selectedClust[clust]) {
+                        datax[i] = events[xChan][i];
+                        datay[i] = events[yChan][i];
                         eventcount++;
                     }
                 }
             }
-            countLabel.setText("Displaying " + df.format((int)eventcount) + " of " + df.format((int)events.length) + " events");
+            countLabel.setText("Displaying " + df.format((int)eventcount) + " of " + df.format(num_events) + " events");
             COUNT = eventcount;
         }
 

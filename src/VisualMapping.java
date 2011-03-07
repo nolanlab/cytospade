@@ -6,12 +6,7 @@ import cytoscape.logger.CyLogger;
 import cytoscape.visual.VisualPropertyType;
 import cytoscape.visual.calculators.BasicCalculator;
 import cytoscape.visual.calculators.Calculator;
-import cytoscape.visual.mappings.BoundaryRangeValues;
-import cytoscape.visual.mappings.ContinuousMapping;
-import cytoscape.visual.mappings.Interpolator;
-import cytoscape.visual.mappings.LinearNumberToColorInterpolator;
-import cytoscape.visual.mappings.LinearNumberToNumberInterpolator;
-import cytoscape.visual.mappings.ObjectMapping;
+import cytoscape.visual.mappings.*;
 import java.awt.Color;
 import java.io.BufferedReader;
 import java.io.File;
@@ -20,9 +15,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+
 
 /*
  * To change this template, choose Tools | Templates

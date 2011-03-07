@@ -110,12 +110,16 @@ public class CytoSpade extends CytoscapePlugin {
     private javax.swing.JSpinner clusterTargetSpinner;
     private javax.swing.JSpinner downsampleTargetSpinner;
 
+    private SPADEContext spadeCxt;
     private VisualMapping visualMapping;
 
     /**
      * Creates an action and adds it to the Plugins menu.
      */
     public CytoSpade() {
+        // Initialized internal state keeping
+        spadeCxt = new SPADEContext();
+        
         //create a new action to respond to menu activation
         SPADEdraw action = new SPADEdraw();
         //set the preferred menu
@@ -1488,10 +1492,17 @@ public class CytoSpade extends CytoscapePlugin {
          * This method is called when the user selects the menu item.
          */
         public void actionPerformed(ActionEvent ae) {
+            
             WorkflowWizard wf = new WorkflowWizard(Cytoscape.getDesktop());
 
-            WorkflowWizard.PanelDescriptor intro = new WorkflowWizardPanels.Intro();
+            WorkflowWizard.PanelDescriptor intro = new WorkflowWizardPanels.Intro(spadeCxt);
             wf.registerWizardPanel(WorkflowWizardPanels.Intro.IDENTIFIER, intro);
+
+            WorkflowWizard.PanelDescriptor cluster = new WorkflowWizardPanels.ClusterMarkerSelect(spadeCxt);
+            wf.registerWizardPanel(WorkflowWizardPanels.ClusterMarkerSelect.IDENTIFIER, cluster);
+
+            WorkflowWizard.PanelDescriptor panels = new WorkflowWizardPanels.PanelCreator(spadeCxt);
+            wf.registerWizardPanel(WorkflowWizardPanels.PanelCreator.IDENTIFIER, panels);
 
             wf.setCurrentPanel(WorkflowWizardPanels.Intro.IDENTIFIER);
             wf.showModalDialog();

@@ -81,6 +81,17 @@ public class WorkflowWizard {
         wizardModel.registerPanel(id, panel);
     }
 
+    public void setNextButtonEnabled(boolean enabled) { nextButton.setEnabled(enabled); }
+
+    public void setTitle(String s) {
+        wizardDialog.setTitle(s);
+    }
+   
+    public String getTitle() {
+        return wizardDialog.getTitle();
+    }
+
+
     private void initWizardComponents() {
         wizardController = new Controller(this);
 
@@ -161,8 +172,17 @@ public class WorkflowWizard {
             targetPanel = new JPanel();
         }
 
+        public PanelDescriptor(Object id) {
+            panelIdentifier = id;
+            targetPanel = new JPanel();
+        }
+
         public PanelDescriptor(Object id, Component panel) {
             panelIdentifier = id;
+            targetPanel = panel;
+        }
+
+        public void setPanelComponent(Component panel) {
             targetPanel = panel;
         }
 
@@ -180,6 +200,10 @@ public class WorkflowWizard {
 
         public void setWizard(WorkflowWizard aThis) {
             wizard = aThis;
+        }
+
+        public final WorkflowWizard getWizard() {
+            return wizard;
         }
 
         public void aboutToHidePanel() {}

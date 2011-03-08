@@ -1,6 +1,9 @@
 
 import java.awt.Component;
 import java.io.File;
+import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.*;
 
 /*
@@ -704,12 +707,26 @@ public class WorkflowWizardPanels {
         }
 
         private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {
-            // TODO add your handling code here:
+            try {
+                cxt.authorRunSpade();
+                RController r = new RController();
+                int status = r.run("runSPADE.R",cxt.getPath());
+                if (status == 0)
+                    JOptionPane.showMessageDialog(null, "Successfully ran SPADE analysis. Close and restart plugin to analyze results.");
+                else
+                    JOptionPane.showMessageDialog(null, "SPADE analysis failed");
+            } catch (IOException ex) {
+                Logger.getLogger(WorkflowWizardPanels.class.getName()).log(Level.SEVERE, null, ex);
+            }
         }
 
         private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {
-            cxt.authorRunSpade();
-            JOptionPane.showMessageDialog(null, "runSPADE.R file successfully written");
+            try {
+                cxt.authorRunSpade();
+                JOptionPane.showMessageDialog(null, "runSPADE.R file successfully written");
+            } catch(IOException ex) {
+                JOptionPane.showMessageDialog(null, "Error writing runSPADE.R file: " + ex.getMessage());
+            }
         }
       
 

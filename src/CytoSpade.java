@@ -88,18 +88,7 @@ public class CytoSpade extends CytoscapePlugin {
         Cytoscape.getDesktop().getCyMenus().addAction(action);
     }
 
-    
-
-    /**
-     * Sets up the CanvasSettings and drawPlot method used to generated the
-     * FACS plots.
-     * @throws IOException
-     */
-    private void drawScatter() throws IOException {
-        
-    }
-
-    
+     
 
     /**
      * Closes the SOUTH CytoSPADE pane
@@ -1562,6 +1551,9 @@ public class CytoSpade extends CytoscapePlugin {
             WorkflowWizard.PanelDescriptor panels = new WorkflowWizardPanels.PanelCreator(spadeCxt);
             wf.registerWizardPanel(WorkflowWizardPanels.PanelCreator.IDENTIFIER, panels);
 
+            WorkflowWizard.PanelDescriptor summary = new WorkflowWizardPanels.SummaryAndRun(spadeCxt);
+            wf.registerWizardPanel(WorkflowWizardPanels.SummaryAndRun.IDENTIFIER, summary);
+
             wf.setCurrentPanel(WorkflowWizardPanels.Intro.IDENTIFIER);
             int showModalDialog = wf.showModalDialog();
 
@@ -1597,24 +1589,7 @@ public class CytoSpade extends CytoscapePlugin {
                 Cytoscape.getDesktop().pack();
             }
 
-            /*
-            //This stupid setPrefferedSize(getSize + 1), setPrefferedSize(getSize - 1)
-            //is seemingly required to prevent violent behavior of the pack
-            //method and to force pack to actually relayout the components
-            Cytoscape.getDesktop().setPreferredSize(new Dimension(
-                    Cytoscape.getDesktop().getSize().width + 1,
-                    Cytoscape.getDesktop().getSize().height + 1
-                    ));
-           Cytoscape.getDesktop().setPreferredSize(new Dimension(
-                    Cytoscape.getDesktop().getSize().width - 1,
-                    Cytoscape.getDesktop().getSize().height - 1
-                    ));
-            Cytoscape.getDesktop().pack();
-
-
-            }
-            */
-
+           
 
             /*
             JOptionPane.showMessageDialog(null, "To author runSPADE file, please select directory containing input FCS files.\nTo analyze SPADE data, please select SPADE output directory.");

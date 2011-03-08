@@ -365,7 +365,7 @@ public class WorkflowWizardPanels {
 
         @Override
         public Object getNextPanelDescriptor() {
-            return WorkflowWizard.PanelDescriptor.FINISH;
+            return SummaryAndRun.IDENTIFIER;
         }
 
         @Override
@@ -607,6 +607,120 @@ public class WorkflowWizardPanels {
         private javax.swing.JScrollPane jScrollPane7;
         private javax.swing.JTextArea jTextArea1;
         private javax.swing.JTextField jTextField1;
+        // End of variables declaration
+    }
+
+    public static class SummaryAndRun extends WorkflowWizard.PanelDescriptor {
+
+        public static final String IDENTIFIER = "SUMMARY_AND_RUN_PANEL";
+
+        public SummaryAndRun(SPADEContext cxt) {
+            super(IDENTIFIER);
+
+            this.cxt = cxt;
+
+            setPanelComponent(createPanel());
+        }
+
+        @Override
+        public Object getBackPanelDescriptor() {
+            return PanelCreator.IDENTIFIER;
+        }
+
+        @Override
+        public Object getNextPanelDescriptor() {
+            return WorkflowWizard.PanelDescriptor.FINISH;
+        }
+
+        @Override
+        public void aboutToDisplayPanel() {
+            this.getWizard().setTitle("Summary and Run");
+        }
+
+        @Override
+        public void displayingPanel() {
+            jTextArea1.setText(cxt.getContextAsFormattedString());
+        }
+
+        @Override
+        public void aboutToHidePanel() {
+          
+        }
+
+        private JPanel createPanel() {
+            contentPanel = new JPanel();
+            // <editor-fold defaultstate="collapsed" desc="Generated Code">
+            jScrollPane1 = new javax.swing.JScrollPane();
+            jTextArea1 = new javax.swing.JTextArea();
+            jButton1 = new javax.swing.JButton();
+            jButton2 = new javax.swing.JButton();
+
+            jTextArea1.setColumns(20);
+            jTextArea1.setRows(5);
+            jScrollPane1.setViewportView(jTextArea1);
+
+            jButton1.setText("Run SPADE");
+            jButton1.addActionListener(new java.awt.event.ActionListener() {
+                public void actionPerformed(java.awt.event.ActionEvent evt) {
+                    jButton1ActionPerformed(evt);
+                }
+            });
+
+            jButton2.setText("Generate runSPADE Script");
+            jButton2.addActionListener(new java.awt.event.ActionListener() {
+                public void actionPerformed(java.awt.event.ActionEvent evt) {
+                    jButton2ActionPerformed(evt);
+                }
+            });
+
+            org.jdesktop.layout.GroupLayout layout = new org.jdesktop.layout.GroupLayout(contentPanel);
+            contentPanel.setLayout(layout);
+            layout.setHorizontalGroup(
+                layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                .add(org.jdesktop.layout.GroupLayout.TRAILING, layout.createSequentialGroup()
+                    .addContainerGap()
+                    .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING)
+                        .add(layout.createSequentialGroup()
+                            .add(jButton2)
+                            .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                            .add(jButton1))
+                        .add(jScrollPane1, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 568, Short.MAX_VALUE))
+                    .addContainerGap())
+            );
+            layout.setVerticalGroup(
+                layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                .add(layout.createSequentialGroup()
+                    .addContainerGap()
+                    .add(jScrollPane1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 332, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(18, 18, 18)
+                    .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                        .add(jButton1)
+                        .add(jButton2))
+                    .addContainerGap(18, Short.MAX_VALUE))
+            );
+
+            // </editor-fold>
+            return contentPanel;
+        }
+
+        private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {
+            // TODO add your handling code here:
+        }
+
+        private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {
+            cxt.authorRunSpade();
+            JOptionPane.showMessageDialog(null, "runSPADE.R file successfully written");
+        }
+      
+
+        private SPADEContext cxt;
+
+        private javax.swing.JPanel contentPanel;
+         // Variables declaration - do not modify
+        private javax.swing.JButton jButton1;
+        private javax.swing.JButton jButton2;
+        private javax.swing.JScrollPane jScrollPane1;
+        private javax.swing.JTextArea jTextArea1;
         // End of variables declaration
     }
 

@@ -76,6 +76,10 @@ public class SPADEContext {
     public void setPath(File path) {
         this.path = path;
 
+        // Flush any previously existing path data
+        this.analysisPanels.clear();
+        this.selectedClusteringMarkers = null;
+
         // Determine analysis kind
         gmlFiles = path.listFiles(new FilenameFilter() {
             public boolean accept(File f, String name) {
@@ -130,6 +134,16 @@ public class SPADEContext {
      */
     public File[] getFCSFiles() {
         return fcsFiles;
+    }
+
+    public File[] getFCSFilesNotInPanel() {
+        HashSet f = new HashSet(Arrays.asList(fcsFiles));
+        Iterator it = analysisPanels.entrySet().iterator();
+        while (it.hasNext()) {
+            AnalysisPanel p = (AnalysisPanel)(((Map.Entry)it.next()).getValue());
+            f.removeAll(Arrays.asList(p.panel_files));
+        }
+        return (File[])f.toArray(new File[0]);
     }
 
     /**
@@ -206,6 +220,15 @@ public class SPADEContext {
         analysisPanels.put(name, panel);
     }
 
+
+    public void removeAnalysisPanel(String name) {
+        analysisPanels.remove(name);
+    }
+
+    public AnalysisPanel getAnalysisPanel(String name) {
+        return (AnalysisPanel)analysisPanels.get(name);
+    }
+
     public String[] getAnalysisPanelsNames() {
         return (String[])(analysisPanels.keySet().toArray(new String[0]));
     }
@@ -219,7 +242,7 @@ public class SPADEContext {
             .append("  Arcsinh Cofactor:  ").append(this.getArcsinh()).append("\n")
             .append("  Target Downsampled Cells:  ").append(this.getTargetDownsample()).append("\n")
             .append("  Target Number of Clusters:  ").append(this.getTargetClusters()).append("\n")
-            .append("  Clustering Markers:  ").append(SPADEContext.join(Arrays.asList(this.getSelectedClusteringMarkers()), ",")).append("\n")
+            .append("  Clustering Markers:  ").append(SPADEContext.join(Arrays.asList(this.getSelectedClusteringMarkers()), ", ")).append("\n")
             .append("Panels:\n")
             ;
         Iterator it = analysisPanels.entrySet().iterator();
@@ -228,10 +251,10 @@ public class SPADEContext {
             AnalysisPanel p = (AnalysisPanel)(me.getValue());
             str
                 .append("  ").append(me.getKey()).append(":\n")
-                .append("    Panel Files:  ").append(SPADEContext.join(Arrays.asList(p.panel_files),",")).append("\n")
+                .append("    Panel Files:  ").append(SPADEContext.join(Arrays.asList(p.panel_files),", ")).append("\n")
                 .append("    Median Markers:  All\n")
-                .append("    Reference Files:  ").append(SPADEContext.join(Arrays.asList(p.reference_files),",")).append("\n")
-                .append("    Fold-change Markers:  ").append(SPADEContext.join(Arrays.asList(p.fold_markers),",")).append("\n")
+                .append("    Reference Files:  ").append(SPADEContext.join(Arrays.asList(p.reference_files),", ")).append("\n")
+                .append("    Fold-change Markers:  ").append(SPADEContext.join(Arrays.asList(p.fold_markers),", ")).append("\n")
                 ;
         }
         return str.toString();

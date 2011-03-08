@@ -375,6 +375,9 @@ public class WorkflowWizardPanels {
         public void aboutToDisplayPanel() {
             this.getWizard().setTitle("Create Median and Fold Change Calculation Panels");
 
+            // Fill in previously defined panels
+            jList6.setListData(cxt.getAnalysisPanelsNames());
+
             ListCellRenderer fileRenderer = new javax.swing.ListCellRenderer() {
                 public Component getListCellRendererComponent(JList jlist, Object o, int idx, boolean isSelected, boolean bln1) {
                     JLabel label = new JLabel(((File)o).getName());
@@ -387,13 +390,13 @@ public class WorkflowWizardPanels {
                 }
             };
 
-            // Initialize the panel file list
+            // Initialize the panel file list as files not already in panels
             jList3.setModel(new javax.swing.AbstractListModel() {
-                File[] files = cxt.getFCSFiles();
+                File[] files = cxt.getFCSFilesNotInPanel();
                 public int getSize() { return files.length; }
                 public Object getElementAt(int i) { return files[i]; }
             });
-            
+
             jList3.setCellRenderer(fileRenderer);
             jList2.setCellRenderer(fileRenderer);
         }
@@ -401,7 +404,7 @@ public class WorkflowWizardPanels {
         @Override
         public void aboutToHidePanel() {
             // Collect values from input and update context
-           
+            
         }
 
         private JPanel createPanel() {
@@ -473,8 +476,6 @@ public class WorkflowWizardPanels {
                 }
             });
 
-            
-
             jButton2.setText("Delete");
             jButton2.addActionListener(new java.awt.event.ActionListener() {
                 public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -543,15 +544,41 @@ public class WorkflowWizardPanels {
         }
 
         private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {
+            if (cxt.getAnalysisPanel(jTextField1.getText()) != null) {
+                JOptionPane.showMessageDialog(contentPanel, "Panel with that name already exists. Please use a different name.");
+                return;
+            }
+
+            // Record analysis panel
             cxt.addAnalysisPanel(
                 jTextField1.getText(),
                 new SPADEContext.AnalysisPanel(jList3.getSelectedValues(), null, jList2.getSelectedValues(), jList4.getSelectedValues())
             );
             jList6.setListData(cxt.getAnalysisPanelsNames());
+
+            // Update panel file listing, now that some have been removed
+            jList3.setModel(new javax.swing.AbstractListModel() {
+                File[] files = cxt.getFCSFilesNotInPanel();
+                public int getSize() { return files.length; }
+                public Object getElementAt(int i) { return files[i]; }
+            });
         }
 
         private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {
-            // TODO add your handling code here:
+            // Deleting a panel removes it from the list and adds it files
+            // back to the potential set of panel files
+            if (jList6.getSelectedIndex() >= 0) {
+                cxt.removeAnalysisPanel((String)jList6.getSelectedValue());
+
+                // Update panel file listing, now that some have added
+                jList3.setModel(new javax.swing.AbstractListModel() {
+                    File[] files = cxt.getFCSFilesNotInPanel();
+                    public int getSize() { return files.length; }
+                    public Object getElementAt(int i) { return files[i]; }
+                });
+
+                jList6.setListData(cxt.getAnalysisPanelsNames());
+            }
         }
         
         // Selection of panel files changed

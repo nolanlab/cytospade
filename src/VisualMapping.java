@@ -156,10 +156,10 @@ public class VisualMapping {
      * @param csBox - JComboBox to populate
      */
     public static void populateNumericAttributeComboBox(javax.swing.JComboBox csBox) {
+        csBox.removeAllItems();
         CyAttributes cyNodeAttrs = Cytoscape.getNodeAttributes();
         for (String name : cyNodeAttrs.getAttributeNames()) {
             if (isNumericAttribute(name)) {
-                System.err.println(name);
                 csBox.addItem(name);
             }
         }

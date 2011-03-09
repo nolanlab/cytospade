@@ -1,10 +1,17 @@
 
+import cytoscape.Cytoscape;
+import cytoscape.logger.CyLogger;
+import java.awt.BorderLayout;
 import java.awt.Component;
+import java.awt.Insets;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 
 /*
  * To change this template, choose Tools | Templates
@@ -735,27 +742,101 @@ public class WorkflowWizardPanels {
 
         private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {
             try {
-                cxt.authorRunSpade();
-                RController r = new RController();
-                int status = r.run("runSPADE.R",cxt.getPath());
-                if (status == 0)
-                    JOptionPane.showMessageDialog(null, "Successfully ran SPADE analysis. Close and restart plugin to analyze results.");
-                else
-                    JOptionPane.showMessageDialog(null, "SPADE analysis failed");
+                cxt.authorRunSpade("runSPADE.R");
+                execScriptWithDialog();
             } catch (IOException ex) {
-                Logger.getLogger(WorkflowWizardPanels.class.getName()).log(Level.SEVERE, null, ex);
+                CyLogger.getLogger(CytoSpade.class.getName()).error(null, ex);
             }
         }
 
         private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {
             try {
-                cxt.authorRunSpade();
-                JOptionPane.showMessageDialog(null, "runSPADE.R file successfully written");
+                cxt.authorRunSpade("runSPADE.R");
+                JOptionPane.showMessageDialog(null, "runSPADE.R script file successfully written");
             } catch(IOException ex) {
                 JOptionPane.showMessageDialog(null, "Error writing runSPADE.R file: " + ex.getMessage());
             }
         }
-      
+
+        private void execScriptWithDialog() {
+            final JDialog outDialog = new JDialog(Cytoscape.getDesktop());
+            outDialog.getContentPane().setLayout(new BorderLayout());
+            outDialog.setTitle("SPADE Execution Console");
+
+            // Text area for displaying updating output from script execution
+            final javax.swing.JTextArea outArea = new javax.swing.JTextArea();
+            outArea.setColumns(60);
+            outArea.setRows(20);
+            outArea.setEditable(false);
+            
+            javax.swing.JScrollPane outAreaWrapper = new javax.swing.JScrollPane();
+            outAreaWrapper.setViewportView(outArea);
+
+            outDialog.getContentPane().add(outAreaWrapper, java.awt.BorderLayout.CENTER);
+
+            javax.swing.JPanel     buttonPanel = new JPanel();
+            javax.swing.JSeparator separator = new JSeparator();
+            final javax.swing.JButton    doneButton = new JButton();
+
+            // Buttons at the bottom of the panel
+            doneButton.setText("Done");
+            doneButton.setEnabled(false); // Disable until script completes
+
+            buttonPanel.setLayout(new BorderLayout());
+            buttonPanel.add(separator, BorderLayout.NORTH);
+            buttonPanel.add(doneButton, java.awt.BorderLayout.EAST);
+
+            outDialog.getContentPane().add(buttonPanel, java.awt.BorderLayout.SOUTH);
+
+            doneButton.addActionListener(new java.awt.event.ActionListener() {
+                public void actionPerformed(java.awt.event.ActionEvent evt) {
+                    outDialog.dispose();
+                }
+            });
+
+
+            (new SwingWorker<Integer, Void>() {
+                int exit_status = 1;
+
+                protected Integer doInBackground() {
+                    ProcessBuilder pb = new ProcessBuilder("Rscript", "runSPADE.R");
+                    pb.directory(cxt.getPath());
+                    pb.redirectErrorStream(true);
+
+                    try {
+                        Process p = pb.start();
+                        BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
+                        String line;
+                        while ((line = reader.readLine()) != null) {
+                            outArea.append(line+"\n");
+                        }
+                        reader.close();
+                        exit_status = p.waitFor();
+                    } catch (IOException ex) {
+                        CyLogger.getLogger(CytoSpade.class.getName()).error(null, ex);
+                    } catch (InterruptedException ex) {
+                        CyLogger.getLogger(CytoSpade.class.getName()).error(null, ex);
+                    }
+                    return exit_status;
+                }
+
+                @Override
+                protected void done() {
+                    if (exit_status == 0) {
+                        JOptionPane.showMessageDialog(null, "Successfully ran SPADE. Close and restart plugin to analyze the results.");
+                    } else {
+                        JOptionPane.showMessageDialog(null, "Execution failed. See output dialog for clues.");
+                    }
+                    doneButton.setEnabled(true);
+                }
+            }).execute();
+
+
+            outDialog.setModal(true);
+            outDialog.pack();
+            outDialog.setLocationRelativeTo(outDialog.getParent());
+            outDialog.show();   
+        }
 
         private SPADEContext cxt;
 

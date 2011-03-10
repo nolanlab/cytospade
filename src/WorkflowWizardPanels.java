@@ -551,6 +551,11 @@ public class WorkflowWizardPanels {
         }
 
         private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {
+            if (jTextField1.getText() == null || jTextField1.getText().equals("")) {
+                JOptionPane.showMessageDialog(contentPanel, "Please enter a name for the panel.");
+                return;
+            }
+            
             if (cxt.getAnalysisPanel(jTextField1.getText()) != null) {
                 JOptionPane.showMessageDialog(contentPanel, "Panel with that name already exists. Please use a different name.");
                 return;

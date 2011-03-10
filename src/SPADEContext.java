@@ -117,7 +117,7 @@ public class SPADEContext {
             });
             if (fcsFiles.length == 0)
                 throw new IllegalArgumentException("No FCS files found in directory");
-
+            Arrays.sort(fcsFiles);
             workflowKind = WorkflowKind.PROCESSING;
         }
     }
@@ -245,17 +245,27 @@ public class SPADEContext {
             .append("  Clustering Markers:  ").append(SPADEContext.join(Arrays.asList(this.getSelectedClusteringMarkers()), ", ")).append("\n")
             .append("Panels:\n")
             ;
-        Iterator it = analysisPanels.entrySet().iterator();
-        while (it.hasNext()) {
-            Map.Entry me = (Map.Entry)it.next();
-            AnalysisPanel p = (AnalysisPanel)(me.getValue());
+        if (analysisPanels.isEmpty()) {
             str
-                .append("  ").append(me.getKey()).append(":\n")
-                .append("    Panel Files:  ").append(SPADEContext.join(Arrays.asList(p.panel_files),", ")).append("\n")
+                .append("  Default:\n")
+                .append("    Panel Files:  All\n")
                 .append("    Median Markers:  All\n")
-                .append("    Reference Files:  ").append(SPADEContext.join(Arrays.asList(p.reference_files),", ")).append("\n")
-                .append("    Fold-change Markers:  ").append(SPADEContext.join(Arrays.asList(p.fold_markers),", ")).append("\n")
+                .append("    Reference Files:  None\n")
+                .append("    Fold-change Markers:  None\n")
                 ;
+        } else {
+            Iterator it = analysisPanels.entrySet().iterator();
+            while (it.hasNext()) {
+                Map.Entry me = (Map.Entry)it.next();
+                AnalysisPanel p = (AnalysisPanel)(me.getValue());
+                str
+                    .append("  ").append(me.getKey()).append(":\n")
+                    .append("    Panel Files:  ").append(SPADEContext.join(Arrays.asList(p.panel_files),", ")).append("\n")
+                    .append("    Median Markers:  All\n")
+                    .append("    Reference Files:  ").append(SPADEContext.join(Arrays.asList(p.reference_files),", ")).append("\n")
+                    .append("    Fold-change Markers:  ").append(SPADEContext.join(Arrays.asList(p.fold_markers),", ")).append("\n")
+                    ;
+            }
         }
         return str.toString();
     }
@@ -433,7 +443,9 @@ public class SPADEContext {
             else // Make common markers the intersection of the available markers
                 common_markers.retainAll(file_markers);
         }
-        return (String[])common_markers.toArray(new String[0]);
+        String[] markers = (String[])common_markers.toArray(new String[0]);
+        Arrays.sort(markers);
+        return markers;
     }
 
     private static String join( Iterable< ? extends Object > pColl, String separator ) {

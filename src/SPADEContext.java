@@ -337,10 +337,10 @@ public class SPADEContext {
 
 
         if (!analysisPanels.isEmpty()) {
-            out.write("PANELS=list(list(\n");
+            out.write("PANELS=list(\n");
             Iterator it = analysisPanels.entrySet().iterator();
             while (it.hasNext()) {
-
+                out.write("list(\n");
                 AnalysisPanel p = (AnalysisPanel)(((Map.Entry)it.next()).getValue());
 
                 out.write("panel_files=c(");
@@ -378,9 +378,11 @@ public class SPADEContext {
                   out.write("fold_cols=NULL\n");
 
                 if (it.hasNext())
-                    out.write(",\n");
+                    out.write("),\n");
+                else
+                    out.write(")");
             }
-            out.write("))\n");
+            out.write(")\n");
 
 
         } else {

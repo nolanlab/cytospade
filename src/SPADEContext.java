@@ -143,7 +143,9 @@ public class SPADEContext {
             AnalysisPanel p = (AnalysisPanel)(((Map.Entry)it.next()).getValue());
             f.removeAll(Arrays.asList(p.panel_files));
         }
-        return (File[])f.toArray(new File[0]);
+        File[] files = (File[])f.toArray(new File[0]);
+        Arrays.sort(files);
+        return files;
     }
 
     /**

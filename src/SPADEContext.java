@@ -272,6 +272,21 @@ public class SPADEContext {
         return str.toString();
     }
 
+    public void authorPlotSpade(String filename) throws IOException {
+        FileWriter fstream;
+        fstream = new FileWriter(new File(this.getPath(), filename).getAbsolutePath());
+
+        BufferedWriter out = new BufferedWriter(fstream);
+        out.write("LIBRARY_PATH=NULL\n"
+        + "library(\"spade\",lib.loc=LIBRARY_PATH)\n"
+        + "OUTPUT_DIR=\"./\"\n"
+        + "LAYOUT_TABLE <- read.table(paste(OUTPUT_DIR,\"layout.table\",sep=\"\"))\n"
+        + "MST_GRAPH <- read.graph(paste(OUTPUT_DIR,\"mst.gml\",sep=\"\"),format=\"gml\")\n"
+        + "SPADE.plot.trees(MST_GRAPH,OUTPUT_DIR,file_pattern=\"*fcs*Rsave\",layout=as.matrix(LAYOUT_TABLE),out_dir=paste(OUTPUT_DIR,\"pdf\",sep=\"\"))\n"
+        );
+        out.close();
+    }
+
     public void authorRunSpade(String filename) throws IOException {
         FileWriter fstream;
         fstream = new FileWriter(new File(this.getPath(), filename).getAbsolutePath());

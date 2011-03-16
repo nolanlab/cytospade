@@ -3,7 +3,7 @@ import cytoscape.util.CytoscapeAction;
 import cytoscape.view.cytopanels.CytoPanelImp;
 import cytoscape.*;
 import cytoscape.actions.LoadNetworkTask;
-import cytoscape.data.CyAttributes;
+
 import cytoscape.data.SelectEventListener;
 import cytoscape.logger.CyLogger;
 import cytoscape.view.CyNetworkView;
@@ -12,14 +12,7 @@ import cytoscape.visual.VisualMappingManager;
 import cytoscape.visual.VisualPropertyDependency;
 import cytoscape.visual.VisualPropertyType;
 import cytoscape.visual.VisualStyle;
-import cytoscape.visual.calculators.BasicCalculator;
-import cytoscape.visual.calculators.Calculator;
-import cytoscape.visual.mappings.BoundaryRangeValues;
-import cytoscape.visual.mappings.ContinuousMapping;
-import cytoscape.visual.mappings.Interpolator;
-import cytoscape.visual.mappings.LinearNumberToColorInterpolator;
-import cytoscape.visual.mappings.LinearNumberToNumberInterpolator;
-import cytoscape.visual.mappings.ObjectMapping;
+
 
 import facs.CanvasSettings;
 import facs.Plot2D;
@@ -29,7 +22,6 @@ import giny.view.NodeView;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
-import java.awt.FileDialog;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
@@ -497,7 +489,6 @@ public class CytoSpade extends CytoscapePlugin {
 
             javax.swing.JButton drawPlotsButton = new javax.swing.JButton();
             drawPlotsButton.setText("Produce PDFs");
-            drawPlotsButton.setEnabled(false);
 
             javax.swing.JLabel FilenameLbl = new javax.swing.JLabel("File");
             filenameComboBox = new javax.swing.JComboBox(spadeCxt.getFCSFiles());
@@ -584,7 +575,14 @@ public class CytoSpade extends CytoscapePlugin {
 
             drawPlotsButton.addActionListener(new java.awt.event.ActionListener() {
                 public void actionPerformed(java.awt.event.ActionEvent evt) {
-                    // TODO Enable plot generation
+                    try {
+                        saveLandscaping(false);
+                        spadeCxt.authorPlotSpade("plotSPADE.R");
+                        SPADEController ctl = new SPADEController(spadeCxt.getPath(), "plotSPADE.R");
+                        ctl.exec();
+                    } catch (IOException ex) {
+                        CyLogger.getLogger(CytoSpade.class.getName()).error(null, ex);
+                    }
                 }
             });
 

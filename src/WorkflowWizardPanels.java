@@ -748,7 +748,8 @@ public class WorkflowWizardPanels {
         private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {
             try {
                 cxt.authorRunSpade("runSPADE.R");
-                execScriptWithDialog();
+                SPADEController ctl = new SPADEController(cxt.getPath(), "runSPADE.R");
+                ctl.exec();
             } catch (IOException ex) {
                 CyLogger.getLogger(CytoSpade.class.getName()).error(null, ex);
             }
@@ -763,6 +764,7 @@ public class WorkflowWizardPanels {
             }
         }
 
+        /*
         private void execScriptWithDialog() {
             final JDialog outDialog = new JDialog(Cytoscape.getDesktop());
             outDialog.getContentPane().setLayout(new BorderLayout());
@@ -881,9 +883,10 @@ public class WorkflowWizardPanels {
             outDialog.setLocationRelativeTo(outDialog.getParent());
             outDialog.show();   
         }
+*/
 
-        private SPADEContext cxt;
-
+        private SPADEContext    cxt;
+        
         private javax.swing.JPanel contentPanel;
          // Variables declaration - do not modify
         private javax.swing.JButton jButton1;

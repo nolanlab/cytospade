@@ -16,6 +16,7 @@ import java.util.Map;
  */
 
 /**
+ * Container for SPADE state, script generation for backend, etc.
  *
  * @author mlinderm
  */
@@ -71,6 +72,10 @@ public class SPADEContext {
     }
 
     /**
+     * Sets the path for the current analysis or processing run. That analysis
+     * or processing is being performed is determined during 'setting' by the
+     * presence of "median" GML files in the directory pointed to by argument
+     * 
      * @param path the path to set
      */
     public void setPath(File path) {
@@ -136,6 +141,9 @@ public class SPADEContext {
         return fcsFiles;
     }
 
+    /**
+     * @return the FCS files not currently used in any analysis panel
+     */
     public File[] getFCSFilesNotInPanel() {
         HashSet f = new HashSet(Arrays.asList(fcsFiles));
         Iterator it = analysisPanels.entrySet().iterator();
@@ -236,6 +244,12 @@ public class SPADEContext {
     }
 
 
+    /**
+     * Generates formatted listing of processing to be performed. Only
+     * relevant when in processing mode.
+     *
+     * @return pretty-printed context
+     */
     public String getContextAsFormattedString() {
         StringBuilder str = new StringBuilder();
         str
@@ -272,6 +286,13 @@ public class SPADEContext {
         return str.toString();
     }
 
+    /**
+     * Generate short R script for generating plots for SPADE results in
+     * this context's path. Only relevant for analysis contexts.
+     *
+     * @param filename the filename to write script to
+     * @throws IOException
+     */
     public void authorPlotSpade(String filename) throws IOException {
         FileWriter fstream;
         fstream = new FileWriter(new File(this.getPath(), filename).getAbsolutePath());
@@ -287,6 +308,13 @@ public class SPADEContext {
         out.close();
     }
 
+    /**
+     * Generate fully documented script for running SPADE over FCS files in
+     * this context's path. Only relevant for processing contexts.
+     * 
+     * @param filename
+     * @throws IOException
+     */
     public void authorRunSpade(String filename) throws IOException {
         FileWriter fstream;
         fstream = new FileWriter(new File(this.getPath(), filename).getAbsolutePath());
@@ -347,7 +375,7 @@ public class SPADEContext {
             if (i > 0)
                 out.write(',');
             String m = this.selectedClusteringMarkers[i];
-            out.write(String.format("\"%s\"",m.substring(0, m.indexOf(":"))));
+            out.write(String.format("\"%s\"",getShortNameFromFormattedName(m)));
 
         }
         out.write(")\n");
@@ -388,7 +416,7 @@ public class SPADEContext {
                         if (i > 0)
                             out.write(",");
                         String m = p.fold_markers[i];
-                        out.write(String.format("\"%s\"",m.substring(0, m.indexOf(":"))));
+                        out.write(String.format("\"%s\"",getShortNameFromFormattedName(m)));
                     }
                     out.write(")\n");
                 } else
@@ -441,6 +469,11 @@ public class SPADEContext {
         out.close();
     }
 
+    /**
+     *
+     * @param fcs_files
+     * @return formatted channel names for channels in all input fcs_files
+     */
     static public String[] getCommonMarkers(Object[] fcs_files) {
         HashSet common_markers = null;
         for (Object f : fcs_files) {
@@ -454,7 +487,7 @@ public class SPADEContext {
 
             HashSet file_markers = new HashSet();
             for (int i=0; i<fcs.getNumChannels(); i++) {
-                file_markers.add(fcs.getChannelShortName(i)+"::"+fcs.getChannelName(i));
+                file_markers.add(getFCSChannelFormattedName(fcs,i));
             }
 
             if (common_markers == null)
@@ -465,6 +498,16 @@ public class SPADEContext {
         String[] markers = (String[])common_markers.toArray(new String[0]);
         Arrays.sort(markers);
         return markers;
+    }
+
+    static private String getFCSChannelFormattedName(fcsFile fcs, int channel_id) {
+        String desc = fcs.getChannelName(channel_id);
+        return fcs.getChannelShortName(channel_id) + (desc.isEmpty() ? "" : ("::" + desc));
+    }
+
+    static private String getShortNameFromFormattedName(String name) {
+        int divider = name.indexOf(':');
+        return (divider == -1) ? name : name.substring(0, divider);
     }
 
     private static String join( Iterable< ? extends Object > pColl, String separator ) {

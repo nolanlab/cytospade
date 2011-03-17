@@ -38,9 +38,7 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 
 import java.text.DecimalFormat;
-import java.text.SimpleDateFormat;
 
-import java.util.Date;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.logging.Level;
@@ -50,8 +48,6 @@ import javax.swing.SwingWorker;
 import javax.swing.ImageIcon;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JFileChooser;
-import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JMenuItem;
@@ -78,250 +74,7 @@ public class CytoSpade extends CytoscapePlugin {
         //and add it to the menus
         Cytoscape.getDesktop().getCyMenus().addAction(action);
     }
-
-    /**
-     * Platform-dependent finder of Rscript
-     * @return - the full path to Rscript
-     */
-    private String findR() {
-        String RPath = null;
-        if( getOS().matches("windows")) {
-            //We can query the registry
-            //Don't try R64, because SPADE isn't yet compatible with it.
-            ////Try R64 first
-            //RPath = queryRegistry("HKLM\\SOFTWARE\\R-core\\R64","InstallPath");
-            if (RPath == null) {
-                //Try R[32] second
-                RPath = queryRegistry("HKLM\\SOFTWARE\\R-core\\R","InstallPath");
-                if (RPath == null) {
-                    //Give up
-                    JOptionPane.showMessageDialog(null, "Unable to locate R. Please select the location of Rscript.exe.");
-                    JFileChooser RfileChooser = new JFileChooser();
-                    int returnValue = RfileChooser.showOpenDialog(RfileChooser);
-                    if(returnValue == JFileChooser.APPROVE_OPTION) {
-                        RPath = RfileChooser.getSelectedFile().getPath();
-                        if (!RPath.endsWith("Rscript.exe")) {
-                            JOptionPane.showMessageDialog(null, "Invalid selection. Please make sure you selected Rscript.exe, not R.exe");
-                            return null;
-                        } else {
-                            return RPath;
-                        }
-                    } else if (returnValue == JFileChooser.CANCEL_OPTION) {
-                        return null;
-                    } else {
-                        return null;
-                    }
-                } else {
-                    //We found R[32]
-                    return RPath + "\\bin\\Rscript.exe";
-                }
-            } else {
-                //Won't evaluate without trying R64 first
-                //We found R64
-                return RPath + "\\bin\\x64\\Rscript.exe";
-            }
-
-        } else {
-
-            RPath = posixWhich("Rscript");
-            
-            //Give up
-            if (RPath == null) {
-                JOptionPane.showMessageDialog(null, "Unable to locate R. Please select the location of Rscript.");
-                JFileChooser RfileChooser = new JFileChooser();
-                int returnValue = RfileChooser.showOpenDialog(RfileChooser);
-                if(returnValue == JFileChooser.APPROVE_OPTION) {
-                    RPath = RfileChooser.getSelectedFile().getPath();
-                    if (!RPath.endsWith("Rscript")) {
-                        JOptionPane.showMessageDialog(null, "Invalid selection. Please make sure you selected Rscript, not R");
-                        return null;
-                    } else {
-                        return RPath;
-                    }
-                } else if (returnValue == JFileChooser.CANCEL_OPTION) {
-                    return null;
-                } else {
-                    return null;
-                }
-            } else {
-                return RPath;
-            }
-
-
-        }
-
-    }
-
-    /**
-     * Runs runSPADE.R
-     * @param evt
-     * @param plotsOnly - whether to run runSPADE.R or printPDFs.R
-     */
-    private void runSPADE(java.awt.event.ActionEvent evt, boolean plotsOnly) {
-        JOptionPane.showMessageDialog(null, "All status and error messages from SPADE will be written to log.runSPADE.(date).txt.");
-
-        SimpleDateFormat erinDateFormat = new SimpleDateFormat("yyMMdd_kk-mm-ss");
-        String erinsDate = erinDateFormat.format(new Date());
-
-        String RPath = findR();
-
-        //This is an absolutely retarded way to run R files, but is the only way
-        //I've managed to do it given that Java internalizes stdout/stderr, that
-        //the path/to/R can contain spaces, and the way R behaves.
-
-        try {
-
-            FileWriter temp;
-            if( getOS().matches("windows")) {
-                //Write a .bat file
-                temp = new FileWriter(new File(spadeCxt.getPath(), "runspade.bat").getAbsolutePath());
-            } else {
-                //Posix breed, write a .sh
-                temp = new FileWriter(new File(spadeCxt.getPath(), "runspade.sh").getAbsolutePath());
-            }
-
-            BufferedWriter out = new BufferedWriter(temp);
-
-            if( !getOS().matches("windows")) {
-                //Posix breed
-                out.write("cd \""+ spadeCxt.getPath().getAbsolutePath() + "\"" + "\n");
-            }
-
-            if( getOS().matches("windows")) {
-                out.write("cmd /c \"");
-            } else {
-                //Posix breed
-                out.write("/bin/sh -c \"");
-            }
-
-            //Note: Windows will almost always have spaces in the path to R, e.g.
-            //C:\Program Files\R, so it for sure needs the quotes around the path.
-            //Not sure if posix needs quotes, since the path/to/R probably won't
-            //have spaces in it.
-            if( getOS().matches("windows")) {
-                out.write("\"");
-                out.write(RPath);
-                out.write("\"");
-            } else {
-                out.write(RPath);
-            }
-            
-            out.write(" --vanilla ");
-
-            if(!plotsOnly) {
-                if (getOS().matches("windows")) {
-                    out.write("\"" + new File(spadeCxt.getPath(), "runSPADE.R").getAbsolutePath()+ "\"");
-                } else {
-                    out.write("runSPADE.R");
-                }
-            } else {
-                out.write("printPDFs.R");
-            }
-            out.write(" -num_threads=");
-            out.write(String.valueOf(Runtime.getRuntime().availableProcessors()));
-            out.write("\" >\"");
-            out.write(new File(spadeCxt.getPath(),"log.runSPADE."+erinsDate+".txt").getAbsolutePath());
-            out.write("\" 2>&1");
-
-            if(plotsOnly) {
-                //Delete printPDFs file
-                if( getOS().matches("windows")) {
-                    out.write("\r\n");
-                    out.write("rm \"" + new File(spadeCxt.getPath(), "printPDFs.R").getAbsolutePath()+"\n");
-                } else {
-                    //Posix breed
-                    out.write("\n");
-                    out.write("rm \"" + new File(spadeCxt.getPath(), "printPDFs.R").getAbsolutePath()+"\"");
-                }
-            }
-
-            //Make batch/shell file delete itself
-            if( getOS().matches("windows")) {
-                out.write("\r\n");
-                out.write("rm \"" + new File(spadeCxt.getPath(), "runspade.bat").getAbsolutePath()+"\n");
-            } else {
-                //Posix breed
-                out.write("\n");
-                out.write("rm \"" + new File(spadeCxt.getPath(), "runspade.sh").getAbsolutePath()+"\"");
-            }
-
-            out.close();
-
-            //Exec the file
-            if( getOS().matches("windows")) {
-                Process pp = Runtime.getRuntime().exec(new File(spadeCxt.getPath(), "runspade.bat").getAbsolutePath());
-            } else {
-                //Posix breed
-                //Make executable first
-                String[] chmod = {"chmod","+x", new File(spadeCxt.getPath(), "runspade.sh").getAbsolutePath()};
-                Process ppp = Runtime.getRuntime().exec(chmod);
-                Process pp = Runtime.getRuntime().exec(new String[] {new File(spadeCxt.getPath(), "runspade.sh").getAbsolutePath(), ""});
-            }
-
-        } catch (IOException e) {
-            JOptionPane.showMessageDialog(null, e);
-            return;
-        }
-
-
-    }
-
-    /**
-     * Wrapper for WHICH in posix environment
-     * @param app - path to key
-     * @return - returns value if it exists, null if not exists
-     */
-    private String posixWhich(String app) {
-        String line;
-        try {
-            Process p = Runtime.getRuntime().exec("which " + app);
-            BufferedReader reader = new BufferedReader(new java.io.InputStreamReader(p.getInputStream()));
-            p.waitFor();
-            line=reader.readLine(); //contains the value
-            if (p.exitValue() != 0) {
-                //semi-sloppy way of knowing the key doesn't exist
-                return null;
-            }
-            return line;
-        } catch (Exception e) {
-            return null;
-        }
-
-    }
-
-
-    /**
-     * Queries the Windows registry
-     * @param path - path to key
-     * @param key - key to query
-     * @return - returns value if it exists, null if not exists
-     */
-    private String queryRegistry(String path, String key) {
-        String line;
-        try {
-            Process p = Runtime.getRuntime().exec("REG QUERY " + '"'+ path + "\" /v " + key);
-            BufferedReader reader = new BufferedReader(new java.io.InputStreamReader(p.getInputStream()));
-            p.waitFor();
-            reader.readLine(); //null
-            reader.readLine(); //echo
-            line=reader.readLine(); //contains the value
-            if (p.exitValue() != 0) {
-                //semi-sloppy way of knowing the key doesn't exist
-                return null;
-            }
-            String[] parsed = line.split("    ");
-            return parsed[parsed.length-1];
-        } catch (Exception e) {
-            //JOptionPane.showMessageDialog(null, e);
-            return null;
-        }
-
-    }
-
-
     
-
-
     /**
      * Event to save the user-defined network landscaping when Cytoscape exits.
      */
@@ -457,7 +210,7 @@ public class CytoSpade extends CytoscapePlugin {
 
     
     /**
-     * Creates the SPADE controls panel.
+     * SPADE analysis control panel.
      */
     class SpadePanel extends JPanel {
 

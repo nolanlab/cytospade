@@ -7,15 +7,15 @@ import javax.swing.border.EmptyBorder;
 
 
 
-
-
 /*
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
 
 /**
- *
+ * Basic infrastructure for implementing modal wizard.
+ * Adapted from: http://java.sun.com/developer/technicalArticles/GUI/swing/wizard/
+ * 
  * @author mlinderm
  */
 public class WorkflowWizard {
@@ -158,6 +158,9 @@ public class WorkflowWizard {
         wizardDialog.dispose();
     }
 
+    /**
+     * Parent class for all wizard panels
+     */
     public static class PanelDescriptor {
         private static final String DEFAULT_PANEL_IDENTIFIER = "defaultPanelIdentifier";
         public static final FinishIdentifier FINISH = new FinishIdentifier();
@@ -206,12 +209,18 @@ public class WorkflowWizard {
             return wizard;
         }
 
+        /*
+         * Callbacks invoked by wizard
+         */
         public void aboutToHidePanel() {}
 
         public void aboutToDisplayPanel() {}
 
         public void displayingPanel() {}
 
+        public void nextButtonPressed() {}
+
+        
         static class FinishIdentifier {
             public static final String ID = "FINISH";
         }
@@ -242,6 +251,8 @@ public class WorkflowWizard {
 
             Model model = wizard.getModel();
             PanelDescriptor descriptor = model.getCurrentPanelDescriptor();
+
+            descriptor.nextButtonPressed();
 
             //  If it is a finishable panel, close down the dialog. Otherwise,
             //  get the ID that the current panel identifies as the next panel,

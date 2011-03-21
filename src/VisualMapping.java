@@ -87,9 +87,9 @@ public class VisualMapping {
         Interpolator numToSize = new LinearNumberToNumberInterpolator();
         cm.setInterpolator(numToSize);
 
-        BoundaryRangeValues bv0 = new BoundaryRangeValues(10, 10, 10);
-        BoundaryRangeValues bv1 = new BoundaryRangeValues(10, 30, 30);
-        BoundaryRangeValues bv2 = new BoundaryRangeValues(150, 150, 150);
+        BoundaryRangeValues bv0 = new BoundaryRangeValues(20, 20, 20);
+        BoundaryRangeValues bv1 = new BoundaryRangeValues(20, 20, 20);
+        BoundaryRangeValues bv2 = new BoundaryRangeValues(50, 50, 50);
 
         cm.addPoint(0, bv0);
         cm.addPoint(rng.min, bv1);

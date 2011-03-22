@@ -13,6 +13,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 
@@ -158,7 +159,9 @@ public class VisualMapping {
     public static void populateNumericAttributeComboBox(javax.swing.JComboBox csBox) {
         csBox.removeAllItems();
         CyAttributes cyNodeAttrs = Cytoscape.getNodeAttributes();
-        for (String name : cyNodeAttrs.getAttributeNames()) {
+        String[] names = cyNodeAttrs.getAttributeNames();
+        Arrays.sort(names);
+        for (String name : names) {
             if (isNumericAttribute(name)) {
                 csBox.addItem(name);
             }

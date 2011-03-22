@@ -38,6 +38,7 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 
 import java.text.DecimalFormat;
+import java.util.Arrays;
 
 import java.util.Iterator;
 import java.util.Set;
@@ -545,13 +546,20 @@ public class CytoSpade extends CytoscapePlugin {
                     return;
                 }
 
-                for (int i=0; i<FCSInputFile.getChannelCount(); i++) {
-                    menuItem = new JMenuItem(FCSInputFile.getChannelShortName(i));
-                    menuItem.addActionListener(new SpadePanel.XactionPerformed());
-                    xAxisPopup.add(menuItem);
-                    menuItem = new JMenuItem(FCSInputFile.getChannelShortName(i));
-                    menuItem.addActionListener(new SpadePanel.YactionPerformed());
-                    yAxisPopup.add(menuItem);
+                {  // Build alphabetized channel selector
+                    String[] names = new String[FCSInputFile.getChannelCount()];
+                    for (int i=0; i<FCSInputFile.getChannelCount(); i++) {
+                        names[i] = FCSInputFile.getChannelShortName(i);
+                    }
+                    Arrays.sort(names);
+                    for (int i=0; i<FCSInputFile.getChannelCount(); i++) {
+                        menuItem = new JMenuItem(names[i]);
+                        menuItem.addActionListener(new SpadePanel.XactionPerformed());
+                        xAxisPopup.add(menuItem);
+                        menuItem = new JMenuItem(names[i]);
+                        menuItem.addActionListener(new SpadePanel.YactionPerformed());
+                        yAxisPopup.add(menuItem);
+                    }
                 }
                 
                 // Initialize plot axes parameters
@@ -736,12 +744,14 @@ public class CytoSpade extends CytoscapePlugin {
                     for( int clust = 0; clust < selectedClust.length; clust ++) {
                         for (int i = 0; i < num_events; i++) {
                             if (events[clustChan][i] == selectedClust[clust]) {
-                                datax[i] = events[xChan][i];
-                                datay[i] = events[yChan][i];
+                                datax[eventcount] = events[xChan][i];
+                                datay[eventcount] = events[yChan][i];
                                 eventcount++;
                             }
                         }
                     }
+                    
+
                     countLabel.setText("Displaying " + df.format((int)eventcount) + " of " + df.format(num_events) + " events");
                     COUNT = eventcount;
                 }

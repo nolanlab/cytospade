@@ -750,7 +750,9 @@ public class CytoSpade extends CytoscapePlugin {
                             }
                         }
                     }
-                    
+
+                    datax = Arrays.copyOf(datax, eventcount);
+                    datay = Arrays.copyOf(datay, eventcount);
 
                     countLabel.setText("Displaying " + df.format((int)eventcount) + " of " + df.format(num_events) + " events");
                     COUNT = eventcount;

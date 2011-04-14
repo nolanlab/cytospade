@@ -251,7 +251,7 @@ public final class Plot2D {
                     //drawDots(bkgbins, g, Color.LIGHT_GRAY, cs.getPlotHeight());
                     double[][] bkgDensityValues = facs.PopulationL.getTriweightKernelDensityValues(bkgbins, cs.getSmoothing() * 2.5d);
                     double[][] bkgSortedDensityValues = facs.PopulationL.sortDensityValues(bkgDensityValues);
-                    drawBkgContours(bkgbins, eventCount, bkgDensityValues, bkgSortedDensityValues, g, cs);
+                    drawBkgContours(bkgbins, xChanAllEvents.length, bkgDensityValues, bkgSortedDensityValues, g, cs);
                 }
 
                 if (plotType == Representation.DOT_PLOT) {

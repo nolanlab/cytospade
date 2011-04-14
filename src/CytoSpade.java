@@ -652,12 +652,30 @@ public class CytoSpade extends CytoscapePlugin {
                         dotSize = 1;
                     } else if (COUNT > 1000) {
                         dotSize = 2;
+                    } else if (COUNT > 10) {
+                        dotSize = 3;
                     } else {
+                        // Very small numbers of events make contours meaningless
+                        // so we automatically switch to dot plots in this scenario
+                        plottype = facs.Illustration.DOT_PLOT;
                         dotSize = 3;
                     }
-
-                    CanvasSettings cs = CanvasSettings.getCanvasSettings(10, 10, 0, 1, 2, plottype, facs.Illustration.DEFAULT_COLOR_SET, false, true, true, true, true, false, 300, 1.0d, 1.0d, 10.0d, 10.0d, facs.Illustration.DEFAULT_POPULATION_TYPE, COUNT, dotSize);
-                    BufferedImage image = facs.Plot2D.drawPlot(cs, datax, datay, dataAx, dataAy, (String)xChanParam, (String)yChanParam, xChanMax, yChanMax, xDisplay, yDisplay);
+                    // TODO: Document these options!
+                    CanvasSettings cs = CanvasSettings.getCanvasSettings(
+                            10, 10, 0, 1, 2,
+                            plottype, facs.Illustration.DEFAULT_COLOR_SET,
+                            false, true, true, true, true, false, 300, 1.0d, 1.0d,
+                            10.0d,  // Note this choices interact with small event check above
+                            10.0d,
+                            facs.Illustration.DEFAULT_POPULATION_TYPE, COUNT, dotSize
+                            );
+                    BufferedImage image = facs.Plot2D.drawPlot(
+                            cs,
+                            datax, datay, dataAx, dataAy,
+                            (String)xChanParam, (String)yChanParam,
+                            xChanMax, yChanMax,
+                            xDisplay, yDisplay
+                            );
                     jLabelPlot.setIcon(new ImageIcon(image));
                     return 0;
                 } catch (IOException ex) {

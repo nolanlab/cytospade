@@ -321,7 +321,7 @@ public class SPADEContext {
 
         BufferedWriter out = new BufferedWriter(fstream);
         // <editor-fold defaultstate="collapsed" desc="runSPADE header">
-        out.write("#!/share/apps/R/R-2.11.1/bin/Rscript\n"
+        out.write("#!/usr/bin/env Rscript\n"
         + "# ^^set this to your Rscript path\n"
         + "#\n"
         + "# runSPADE:  R wrapper script for SPADE tree construction\n"

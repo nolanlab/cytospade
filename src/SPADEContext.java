@@ -300,10 +300,11 @@ public class SPADEContext {
         BufferedWriter out = new BufferedWriter(fstream);
         out.write("LIBRARY_PATH=NULL\n"
         + "library(\"spade\",lib.loc=LIBRARY_PATH)\n"
+        + "NODE_SIZE_SCALE_FACTOR=1.2\n"
         + "OUTPUT_DIR=\"./\"\n"
         + "LAYOUT_TABLE <- read.table(paste(OUTPUT_DIR,\"layout.table\",sep=\"\"))\n"
         + "MST_GRAPH <- read.graph(paste(OUTPUT_DIR,\"mst.gml\",sep=\"\"),format=\"gml\")\n"
-        + "SPADE.plot.trees(MST_GRAPH,OUTPUT_DIR,file_pattern=\"*fcs*Rsave\",layout=as.matrix(LAYOUT_TABLE),out_dir=paste(OUTPUT_DIR,\"pdf\",sep=\"\"))\n"
+        + "SPADE.plot.trees(MST_GRAPH,OUTPUT_DIR,file_pattern=\"*fcs*Rsave\",layout=as.matrix(LAYOUT_TABLE),out_dir=paste(OUTPUT_DIR,\"pdf\",sep=\"\"),size_scale_factor=NODE_SIZE_SCALE_FACTOR)\n"
         );
         out.close();
     }
@@ -440,6 +441,7 @@ public class SPADEContext {
 
         out.write("CLUSTERING_SAMPLES=50000\n");
         out.write("DOWNSAMPLING_EXCLUDE_PCTILE=0.01\n");
+        out.write("NODE_SIZE_SCALE_FACTOR=1.2\n");
         out.write("NORMALIZE=\"global\"\n");
         out.write("OUTPUT_DIR=\"output/\"\n");
 
@@ -462,7 +464,7 @@ public class SPADEContext {
         + "SPADE.driver(FILE_TO_PROCESS, file_pattern=\"*.fcs\", out_dir=OUTPUT_DIR, cluster_cols=CLUSTERING_MARKERS, panels=PANELS, arcsinh_cofactor=ARCSINH_COFACTOR, layout=LAYOUT_FUNCTION, downsampling_samples=DOWNSAMPLED_EVENTS, downsampling_exclude_pctile=DOWNSAMPLING_EXCLUDE_PCTILE, k=TARGET_CLUSTERS, clustering_samples=CLUSTERING_SAMPLES)\n"
         + "LAYOUT_TABLE <- read.table(paste(OUTPUT_DIR,\"layout.table\",sep=\"\"))\n"
         + "MST_GRAPH <- read.graph(paste(OUTPUT_DIR,\"mst.gml\",sep=\"\"),format=\"gml\")\n"
-        + "SPADE.plot.trees(MST_GRAPH,OUTPUT_DIR,file_pattern=\"*fcs*Rsave\",layout=as.matrix(LAYOUT_TABLE),out_dir=paste(OUTPUT_DIR,\"pdf\",sep=\"\"))\n"
+        + "SPADE.plot.trees(MST_GRAPH,OUTPUT_DIR,file_pattern=\"*fcs*Rsave\",layout=as.matrix(LAYOUT_TABLE),out_dir=paste(OUTPUT_DIR,\"pdf\",sep=\"\"),size_scale_factor=NODE_SIZE_SCALE_FACTOR)\n"
         + "Sys.unsetenv(\"OMP_NUM_THREADS\")\n"
         );
 

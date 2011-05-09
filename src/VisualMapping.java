@@ -90,7 +90,7 @@ public class VisualMapping {
 
         BoundaryRangeValues bv0 = new BoundaryRangeValues(20, 20, 20);
         BoundaryRangeValues bv1 = new BoundaryRangeValues(20, 20, 20);
-        BoundaryRangeValues bv2 = new BoundaryRangeValues(50, 50, 50);
+        BoundaryRangeValues bv2 = new BoundaryRangeValues(65, 65, 65);
 
         cm.addPoint(0, bv0);
         cm.addPoint(rng.min, bv1);

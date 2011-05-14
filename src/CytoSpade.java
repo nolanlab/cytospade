@@ -454,7 +454,7 @@ public class CytoSpade extends CytoscapePlugin {
                     e.getActionCommand().matches("Arcsinh: Fluor") ) {
                     xChanScale = e.getActionCommand();
                 } else {
-                    xChanParam = e.getActionCommand();
+                    xChanParam = SPADEContext.getShortNameFromFormattedName(e.getActionCommand());
                 }
                 (new drawScatterThread()).execute();
             }
@@ -468,7 +468,7 @@ public class CytoSpade extends CytoscapePlugin {
                     e.getActionCommand().matches("Arcsinh: Fluor") ) {
                     yChanScale = e.getActionCommand();
                 } else {
-                    yChanParam = e.getActionCommand();
+                    yChanParam = SPADEContext.getShortNameFromFormattedName(e.getActionCommand());
                 }
                 (new drawScatterThread()).execute();
             }
@@ -552,7 +552,7 @@ public class CytoSpade extends CytoscapePlugin {
                 {  // Build alphabetized channel selector
                     String[] names = new String[FCSInputFile.getChannelCount()];
                     for (int i=0; i<FCSInputFile.getChannelCount(); i++) {
-                        names[i] = FCSInputFile.getChannelShortName(i);
+                        names[i] = SPADEContext.getFCSChannelFormattedName(FCSInputFile, i);
                     }
                     Arrays.sort(names);
                     for (int i=0; i<FCSInputFile.getChannelCount(); i++) {

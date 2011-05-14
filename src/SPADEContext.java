@@ -502,12 +502,12 @@ public class SPADEContext {
         return markers;
     }
 
-    static private String getFCSChannelFormattedName(fcsFile fcs, int channel_id) {
+    static public String getFCSChannelFormattedName(fcsFile fcs, int channel_id) {
         String desc = fcs.getChannelName(channel_id);
         return fcs.getChannelShortName(channel_id) + (desc.isEmpty() ? "" : ("::" + desc));
     }
 
-    static private String getShortNameFromFormattedName(String name) {
+    static public String getShortNameFromFormattedName(String name) {
         int divider = name.indexOf(':');
         return (divider == -1) ? name : name.substring(0, divider);
     }

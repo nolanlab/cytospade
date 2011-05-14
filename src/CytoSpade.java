@@ -518,7 +518,10 @@ public class CytoSpade extends CytoscapePlugin {
 
                 // Update the parameter combo box
                 VisualMapping.populateNumericAttributeComboBox(colorscaleComboBox);
+                
+                colorscaleComboBox.setMaximumRowCount(colorscaleComboBox.getItemCount());
                 colorscaleComboBox.setSelectedIndex(0);
+                
 
                 // Update plot combo boxes with channels in new FCS files
                 xAxisPopup = new javax.swing.JPopupMenu();

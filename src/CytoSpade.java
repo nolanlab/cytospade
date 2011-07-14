@@ -244,6 +244,7 @@ public class CytoSpade extends CytoscapePlugin {
 
             javax.swing.JButton drawPlotsButton = new javax.swing.JButton();
             drawPlotsButton.setText("Produce PDFs");
+            drawPlotsButton.setToolTipText("Generate PDF tree plots using current Cytoscape layout");
 
             javax.swing.JLabel FilenameLbl = new javax.swing.JLabel("File");
             filenameComboBox = new javax.swing.JComboBox(spadeCxt.getFCSFiles());
@@ -282,6 +283,7 @@ public class CytoSpade extends CytoscapePlugin {
                     colorscaleComboBoxActionPerformed(evt);
                 }
             });
+            colorscaleComboBox.setToolTipText("Select attribute for coloring nodes");
 
             javax.swing.JLabel colorrangeLabel = new javax.swing.JLabel("Coloring range");
             colorrangeComboBox = new javax.swing.JComboBox();
@@ -295,6 +297,7 @@ public class CytoSpade extends CytoscapePlugin {
                     colorrangeComboBoxActionPerformed(evt);
                 }
             });
+            colorrangeComboBox.setToolTipText("Global sets colorscale using min/max across all files, local uses min/max of selected file");
 
             javax.swing.JLabel howtoadjust = new javax.swing.JLabel("Click axis label to change parameter and scale");
 

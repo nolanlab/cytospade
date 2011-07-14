@@ -274,21 +274,25 @@ public class WorkflowWizardPanels {
                     jList1ValueChanged(evt);
                 }
             });
+            jList1.setToolTipText("Select markers are used to calculate 'distance' between cells from those common to all files");
             jScrollPane1.setViewportView(jList1);
 
             jLabel1.setText("Select Clustering Markers");
 
-            jLabel2.setText("Arcsinh Value (CyToF=5, Optical=150)");
+            jLabel2.setText("Arcsinh Cofactor (CyToF=5, Optical=150)");
 
             jSpinner1.setModel(new javax.swing.SpinnerNumberModel(Integer.valueOf(cxt.getArcsinh()), Integer.valueOf(0), null, Integer.valueOf(1)));
+            jSpinner1.setToolTipText("Set cofactor used in Arcsinh transformation: arcsinh(data/<COFACTOR>)");
 
             jLabel3.setText("Target Number of Clusters");
 
             jSpinner2.setModel(new javax.swing.SpinnerNumberModel(Integer.valueOf(cxt.getTargetClusters()), Integer.valueOf(0), null, Integer.valueOf(1)));
+            jSpinner2.setToolTipText("SPADE will automatically stop clustering when number of clusters is within 50% of this target");
 
             jLabel4.setText("Target Number of Downsampled Events");
 
             jSpinner3.setModel(new javax.swing.SpinnerNumberModel(Integer.valueOf(cxt.getTargetDownsample()), Integer.valueOf(0), null, Integer.valueOf(100)));
+            jSpinner3.setToolTipText("Each input file will be downsampled to the smaller of this number of events, or total events in file");
 
             org.jdesktop.layout.GroupLayout layout = new org.jdesktop.layout.GroupLayout(contentPanel);
             contentPanel.setLayout(layout);
@@ -451,12 +455,14 @@ public class WorkflowWizardPanels {
             jScrollPane6.setViewportView(jList5);
 
             jLabel2.setText("1. Files in Panel");
+            jScrollPane3.setViewportView(jList3);
             jList3.addListSelectionListener(new javax.swing.event.ListSelectionListener() {
                 public void valueChanged(javax.swing.event.ListSelectionEvent evt) {
                     jList3ValueChanged(evt);
                 }
             });
-            jScrollPane3.setViewportView(jList3);
+            jList3.setToolTipText("Select files with common staining panel for computing medians and optionally fold change");
+            
 
             jLabel3.setText("2. Reference Files (Optional)");
             jScrollPane2.setViewportView(jList2);
@@ -465,10 +471,12 @@ public class WorkflowWizardPanels {
                     jList2ValueChanged(evt);
                 }
             });
+            jList2.setToolTipText("Select reference (basal) files for use in fold change analysis. Panel must have multiple files to enable fold change analysis.");
 
             jLabel4.setText("3. Fold-change Markers");
             jScrollPane4.setViewportView(jList4);
-
+            jList4.setToolTipText("Select markers for fold changes analysis. Reference files must be specified to select fold change parameters");
+            
             jLabel1.setText("Panels");
             jList6.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
             jScrollPane7.setViewportView(jList6);
@@ -728,6 +736,7 @@ public class WorkflowWizardPanels {
                     jButton1ActionPerformed(evt);
                 }
             });
+            jButton1.setToolTipText("Run SPADE R package (generating new runSPADE script beforehand)");
 
             jButton2.setText("Generate runSPADE Script");
             jButton2.addActionListener(new java.awt.event.ActionListener() {
@@ -735,6 +744,7 @@ public class WorkflowWizardPanels {
                     jButton2ActionPerformed(evt);
                 }
             });
+            jButton2.setToolTipText("Generate runSPADE script, but do not actually run SPADE");
 
             org.jdesktop.layout.GroupLayout layout = new org.jdesktop.layout.GroupLayout(contentPanel);
             contentPanel.setLayout(layout);

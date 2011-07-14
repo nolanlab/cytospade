@@ -89,12 +89,10 @@ public class VisualMapping {
         cm.setInterpolator(numToSize);
 
         BoundaryRangeValues bv0 = new BoundaryRangeValues(20, 20, 20);
-        BoundaryRangeValues bv1 = new BoundaryRangeValues(20, 20, 20);
-        BoundaryRangeValues bv2 = new BoundaryRangeValues(65, 65, 65);
+        BoundaryRangeValues bv1 = new BoundaryRangeValues(65, 65, 65);
 
-        cm.addPoint(0, bv0);
-        cm.addPoint(rng.min, bv1);
-        cm.addPoint(rng.max, bv2);
+        cm.addPoint(rng.min, bv0);
+        cm.addPoint(rng.max, bv1);
 
         return new BasicCalculator("SPADE Size Calculator", cm, VisualPropertyType.NODE_SIZE);
     }

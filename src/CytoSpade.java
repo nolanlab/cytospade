@@ -333,14 +333,7 @@ public class CytoSpade extends CytoscapePlugin {
 
             drawPlotsButton.addActionListener(new java.awt.event.ActionListener() {
                 public void actionPerformed(java.awt.event.ActionEvent evt) {
-                    try {
-                        saveLandscaping(false);
-                        spadeCxt.authorPlotSpade("plotSPADE.R");
-                        SPADEController ctl = new SPADEController(spadeCxt.getPath(), "plotSPADE.R");
-                        ctl.exec();
-                    } catch (IOException ex) {
-                        CyLogger.getLogger(CytoSpade.class.getName()).error(null, ex);
-                    }
+                    generatePDFsClicked(evt);
                 }
             });
 
@@ -875,6 +868,25 @@ public class CytoSpade extends CytoscapePlugin {
             } else {
                 return;
             }
+        }
+
+        private void generatePDFsClicked(ActionEvent evt) {
+            // Save current landscaping before generating PDFs
+            saveLandscaping(false);
+            
+            // Create the workflow wizard to walk user through setting up PDF generation
+            WorkflowWizard wf = new WorkflowWizard(Cytoscape.getDesktop());
+
+            WorkflowWizard.PanelDescriptor genPDFs = new WorkflowWizardPanels.GeneratePDFs(spadeCxt);
+            wf.registerWizardPanel(WorkflowWizardPanels.GeneratePDFs.IDENTIFIER, genPDFs);
+
+            wf.setCurrentPanel(WorkflowWizardPanels.GeneratePDFs.IDENTIFIER);
+            int showModalDialog = wf.showModalDialog();
+
+            if (showModalDialog == WorkflowWizard.CANCEL_RETURN_CODE)
+                return;
+            else if (showModalDialog != WorkflowWizard.FINISH_RETURN_CODE)
+                JOptionPane.showMessageDialog(null, "Error occured in workflow wizard.");
         }
 
         private SPADEContext spadeCxt;

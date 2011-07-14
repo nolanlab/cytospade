@@ -807,4 +807,125 @@ public class WorkflowWizardPanels {
         // End of variables declaration
     }
 
+    public static class GeneratePDFs extends WorkflowWizard.PanelDescriptor {
+
+        public static final String IDENTIFIER = "GENERATE_PDFS_PANEL";
+
+        public GeneratePDFs(SPADEContext cxt) {
+            super(IDENTIFIER);
+
+            this.cxt = cxt;
+
+            setPanelComponent(createPanel());
+        }
+
+        @Override
+        public Object getNextPanelDescriptor() {
+            return WorkflowWizard.PanelDescriptor.FINISH;
+        }
+
+        @Override
+        public void aboutToDisplayPanel() {
+            this.getWizard().setTitle("Generate PDFs");
+        }
+
+        @Override
+        public void displayingPanel() {
+            
+        }
+
+        @Override
+        public void aboutToHidePanel() {
+            ctl = null;
+        }
+
+
+        @Override
+        public void nextButtonPressed() {
+            
+        }
+
+
+        private JPanel createPanel() {                   
+            contentPanel = new JPanel();
+            // <editor-fold defaultstate="collapsed" desc="Generated Code">
+            jLabel1 = new javax.swing.JLabel();
+            jLabel2 = new javax.swing.JLabel();
+            jButton1 = new javax.swing.JButton();
+            jTextField1 = new javax.swing.JTextField();
+
+            jLabel1.setText("Node Size Scale Factor");
+
+            jLabel2.setText("Set parameters for PDF Generation");
+
+            jButton1.setText("Generate PDFs");
+            jButton1.addActionListener(new java.awt.event.ActionListener() {
+                public void actionPerformed(java.awt.event.ActionEvent evt) {
+                    jButton1ActionPerformed(evt);
+                }
+            });
+
+            jTextField1.setHorizontalAlignment(javax.swing.JTextField.TRAILING);
+            jTextField1.setText(Double.toString(cxt.getNodeSizeScaleFactor()));
+            jTextField1.setToolTipText("Increase scaling factor to increase node size in PDFs");
+
+            org.jdesktop.layout.GroupLayout layout = new org.jdesktop.layout.GroupLayout(contentPanel);
+            contentPanel.setLayout(layout);
+            layout.setHorizontalGroup(
+                layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                .add(layout.createSequentialGroup()
+                    .addContainerGap()
+                    .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                        .add(layout.createSequentialGroup()
+                            .add(jLabel1)
+                            .add(18, 18, 18)
+                            .add(jTextField1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 100, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                        .add(jLabel2))
+                    .addContainerGap(253, Short.MAX_VALUE))
+                .add(org.jdesktop.layout.GroupLayout.TRAILING, layout.createSequentialGroup()
+                    .addContainerGap(381, Short.MAX_VALUE)
+                    .add(jButton1)
+                    .addContainerGap())
+            );
+            layout.setVerticalGroup(
+                layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                .add(layout.createSequentialGroup()
+                    .add(21, 21, 21)
+                    .add(jLabel2)
+                    .add(24, 24, 24)
+                    .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING)
+                        .add(jLabel1)
+                        .add(jTextField1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                    .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED, 223, Short.MAX_VALUE)
+                    .add(jButton1)
+                    .addContainerGap())
+            );
+
+            // </editor-fold>
+            return contentPanel;
+        }
+
+        private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {
+            try {
+                cxt.setNodeSizeScaleFactor(Double.parseDouble(jTextField1.getText()));
+
+                cxt.authorPlotSpade("plotSPADE.R");
+                ctl = new SPADEController(cxt.getPath(), "plotSPADE.R");
+                ctl.exec();
+            } catch (IOException ex) {
+                CyLogger.getLogger(CytoSpade.class.getName()).error(null, ex);
+            }
+        }
+
+        private SPADEContext    cxt;
+        private SPADEController ctl = null;
+
+        private javax.swing.JPanel contentPanel;
+        // Variables declaration - do not modify
+        private javax.swing.JButton jButton1;
+        private javax.swing.JLabel jLabel1;
+        private javax.swing.JLabel jLabel2;
+        private javax.swing.JTextField jTextField1;
+        // End of variables declaration
+    }
 }

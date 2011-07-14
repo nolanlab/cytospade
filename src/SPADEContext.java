@@ -63,6 +63,7 @@ public class SPADEContext {
     private int arcsinh          = 5;
     private int targetClusters   = 200;
     private int targetDownsample = 5000;
+    private double nodeSizeScaleFactor = 1.2;
 
     /**
      * @return the path
@@ -198,6 +199,14 @@ public class SPADEContext {
         this.arcsinh = arcsinh;
     }
 
+    public double getNodeSizeScaleFactor() {
+        return nodeSizeScaleFactor;
+    }
+
+    public void setNodeSizeScaleFactor(double nodeSizeScaleFactor) {
+        this.nodeSizeScaleFactor = nodeSizeScaleFactor;
+    }
+    
     /**
      * @return the targetClusters
      */
@@ -299,9 +308,9 @@ public class SPADEContext {
 
         BufferedWriter out = new BufferedWriter(fstream);
         out.write("LIBRARY_PATH=NULL\n"
-        + "library(\"spade\",lib.loc=LIBRARY_PATH)\n"
-        + "NODE_SIZE_SCALE_FACTOR=1.2\n"
-        + "OUTPUT_DIR=\"./\"\n"
+        + "library(\"spade\",lib.loc=LIBRARY_PATH)\n");
+        out.write(String.format("NODE_SIZE_SCALE_FACTOR=%f\n",this.getNodeSizeScaleFactor()));
+        out.write("OUTPUT_DIR=\"./\"\n"
         + "LAYOUT_TABLE <- read.table(paste(OUTPUT_DIR,\"layout.table\",sep=\"\"))\n"
         + "MST_GRAPH <- read.graph(paste(OUTPUT_DIR,\"mst.gml\",sep=\"\"),format=\"gml\")\n"
         + "SPADE.plot.trees(MST_GRAPH,OUTPUT_DIR,file_pattern=\"*fcs*Rsave\",layout=as.matrix(LAYOUT_TABLE),out_dir=paste(OUTPUT_DIR,\"pdf\",sep=\"\"),size_scale_factor=NODE_SIZE_SCALE_FACTOR)\n"

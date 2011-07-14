@@ -7,6 +7,7 @@ import cytoscape.actions.LoadNetworkTask;
 import cytoscape.data.SelectEventListener;
 import cytoscape.logger.CyLogger;
 import cytoscape.view.CyNetworkView;
+import cytoscape.visual.GlobalAppearanceCalculator;
 import cytoscape.visual.NodeAppearanceCalculator;
 import cytoscape.visual.VisualMappingManager;
 import cytoscape.visual.VisualPropertyDependency;
@@ -818,6 +819,11 @@ public class CytoSpade extends CytoscapePlugin {
                 spadeVS = new VisualStyle("SPADEVisualStyle");
 
                 // Update with new calculators
+                GlobalAppearanceCalculator globalAppCalc = new GlobalAppearanceCalculator();
+                globalAppCalc.setDefaultNodeSelectionColor(Color.MAGENTA);
+                globalAppCalc.setDefaultEdgeSelectionColor(Color.MAGENTA);
+                spadeVS.setGlobalAppearanceCalculator(globalAppCalc);
+
                 NodeAppearanceCalculator nodeAppCalc = new NodeAppearanceCalculator();
                 nodeAppCalc.setCalculator(visualMapping.createColorCalculator());
                 nodeAppCalc.setCalculator(visualMapping.createSizeCalculator());

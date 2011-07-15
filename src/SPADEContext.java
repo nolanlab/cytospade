@@ -23,6 +23,7 @@ import java.util.Map;
 public class SPADEContext {
 
     public enum WorkflowKind { PROCESSING, ANALYSIS }
+    public enum DownsampleKind { EVENTS, PERCENTILE }
 
     static public class AnalysisPanel {
         public File[]   panel_files;
@@ -62,7 +63,10 @@ public class SPADEContext {
 
     private int arcsinh          = 5;
     private int targetClusters   = 200;
-    private int targetDownsample = 5000;
+    private DownsampleKind downsampleKind;
+    private int targetDownsampleEvents = 5000;
+    private int targetDownsamplePctile = 5;
+
     private double nodeSizeScaleFactor = 1.2;
 
     /**
@@ -221,18 +225,28 @@ public class SPADEContext {
         this.targetClusters = targetClusters;
     }
 
-    /**
-     * @return the targetDownsample
-     */
-    public int getTargetDownsample() {
-        return targetDownsample;
+    public DownsampleKind getDownsampleKind() {
+        return downsampleKind;
     }
 
-    /**
-     * @param targetDownsample the targetDownsample to set
-     */
-    public void setTargetDownsample(int targetDownsample) {
-        this.targetDownsample = targetDownsample;
+    public void setDownsampleKind(DownsampleKind downsampleKind) {
+        this.downsampleKind = downsampleKind;
+    }
+
+    public int getTargetDownsamplePctile() {
+        return targetDownsamplePctile;
+    }
+
+    public void setTargetDownsamplePctile(int targetDownsamplePctile) {
+        this.targetDownsamplePctile = targetDownsamplePctile;
+    }
+
+    public int getTargetDownsampleEvents() {
+        return targetDownsampleEvents;
+    }
+
+    public void setTargetDownsampleEvents(int targetDownsampleEvents) {
+        this.targetDownsampleEvents = targetDownsampleEvents;
     }
 
     public void addAnalysisPanel(String name, AnalysisPanel panel) {
@@ -264,8 +278,17 @@ public class SPADEContext {
         str
             .append("Directory: ").append(this.getPath()).append("\n")
             .append("Clustering Parameters:\n")
-            .append("  Arcsinh Cofactor:  ").append(this.getArcsinh()).append("\n")
-            .append("  Target Downsampled Cells:  ").append(this.getTargetDownsample()).append("\n")
+            .append("  Arcsinh Cofactor:  ").append(this.getArcsinh()).append("\n");
+        switch(this.getDownsampleKind()) {
+            case PERCENTILE:
+                str.append("  Downsample Percentile:  ").append(this.getTargetDownsamplePctile()).append("\n");
+                break;
+            case EVENTS:
+            default:
+                str.append("  Target Downsampled Cells:  ").append(this.getTargetDownsampleEvents()).append("\n");
+                break;
+        }
+        str
             .append("  Target Number of Clusters:  ").append(this.getTargetClusters()).append("\n")
             .append("  Clustering Markers:  ").append(SPADEContext.join(Arrays.asList(this.getSelectedClusteringMarkers()), ", ")).append("\n")
             .append("Panels:\n")
@@ -445,7 +468,17 @@ public class SPADEContext {
         }
 
         out.write(String.format("ARCSINH_COFACTOR=%d\n",this.getArcsinh()));
-        out.write(String.format("DOWNSAMPLED_EVENTS=%d\n",this.getTargetDownsample()));
+        switch(this.getDownsampleKind()) {
+            case PERCENTILE:
+                out.write("DOWNSAMPLED_EVENTS=NULL\n");
+                out.write(String.format("DOWNSAMPLING_TARGET_PCTILE=(%d/100.0)\n",this.getTargetDownsamplePctile()));
+                break;
+            case EVENTS:
+            default:
+                out.write(String.format("DOWNSAMPLED_EVENTS=%d\n",this.getTargetDownsampleEvents()));
+                out.write("DOWNSAMPLING_TARGET_PCTILE=NULL\n");
+                break;
+        }
         out.write(String.format("TARGET_CLUSTERS=%d\n",this.getTargetClusters()));
 
         out.write("CLUSTERING_SAMPLES=50000\n");
@@ -470,7 +503,7 @@ public class SPADEContext {
         + "Sys.setenv(\"OMP_NUM_THREADS\"=NUM_THREADS)\n"
         + "library(\"spade\",lib.loc=LIBRARY_PATH)\n"
         + "LAYOUT_FUNCTION=layout.kamada.kawai\n"
-        + "SPADE.driver(FILE_TO_PROCESS, file_pattern=\"*.fcs\", out_dir=OUTPUT_DIR, cluster_cols=CLUSTERING_MARKERS, panels=PANELS, arcsinh_cofactor=ARCSINH_COFACTOR, layout=LAYOUT_FUNCTION, downsampling_samples=DOWNSAMPLED_EVENTS, downsampling_exclude_pctile=DOWNSAMPLING_EXCLUDE_PCTILE, k=TARGET_CLUSTERS, clustering_samples=CLUSTERING_SAMPLES)\n"
+        + "SPADE.driver(FILE_TO_PROCESS, file_pattern=\"*.fcs\", out_dir=OUTPUT_DIR, cluster_cols=CLUSTERING_MARKERS, panels=PANELS, arcsinh_cofactor=ARCSINH_COFACTOR, layout=LAYOUT_FUNCTION, downsampling_samples=DOWNSAMPLED_EVENTS, downsampling_target_pctile=DOWNSAMPLING_TARGET_PCTILE, downsampling_exclude_pctile=DOWNSAMPLING_EXCLUDE_PCTILE, k=TARGET_CLUSTERS, clustering_samples=CLUSTERING_SAMPLES)\n"
         + "LAYOUT_TABLE <- read.table(paste(OUTPUT_DIR,\"layout.table\",sep=\"\"))\n"
         + "MST_GRAPH <- read.graph(paste(OUTPUT_DIR,\"mst.gml\",sep=\"\"),format=\"gml\")\n"
         + "SPADE.plot.trees(MST_GRAPH,OUTPUT_DIR,file_pattern=\"*fcs*Rsave\",layout=as.matrix(LAYOUT_TABLE),out_dir=paste(OUTPUT_DIR,\"pdf\",sep=\"\"),size_scale_factor=NODE_SIZE_SCALE_FACTOR)\n"

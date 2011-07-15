@@ -245,7 +245,15 @@ public class WorkflowWizardPanels {
             }
             cxt.setArcsinh((Integer)jSpinner1.getValue());
             cxt.setTargetClusters((Integer)jSpinner2.getValue());
-            cxt.setTargetDownsample((Integer)jSpinner3.getValue());
+            if (jRadioButton1.isSelected())
+                cxt.setDownsampleKind(SPADEContext.DownsampleKind.EVENTS);
+            else if (jRadioButton2.isSelected())
+                cxt.setDownsampleKind(SPADEContext.DownsampleKind.PERCENTILE);
+            else  // Set events as the default
+                cxt.setDownsampleKind(SPADEContext.DownsampleKind.EVENTS);
+
+            cxt.setTargetDownsampleEvents((Integer)jSpinner3.getValue());
+            cxt.setTargetDownsamplePctile((Integer)jSpinner4.getValue());
         }
 
         private JPanel createPanel() {
@@ -261,8 +269,11 @@ public class WorkflowWizardPanels {
             jSpinner2 = new javax.swing.JSpinner();
             jLabel4 = new javax.swing.JLabel();
             jSpinner3 = new javax.swing.JSpinner();
+            jSpinner4 = new javax.swing.JSpinner();
 
-           
+            buttonGroup1 = new javax.swing.ButtonGroup();
+            jRadioButton1 = new javax.swing.JRadioButton();
+            jRadioButton2 = new javax.swing.JRadioButton();
 
             jList1.setModel(new javax.swing.AbstractListModel() {
                 String[] strings = {};
@@ -289,10 +300,17 @@ public class WorkflowWizardPanels {
             jSpinner2.setModel(new javax.swing.SpinnerNumberModel(Integer.valueOf(cxt.getTargetClusters()), Integer.valueOf(0), null, Integer.valueOf(1)));
             jSpinner2.setToolTipText("SPADE will automatically stop clustering when number of clusters is within 50% of this target");
 
-            jLabel4.setText("Target Number of Downsampled Events");
+            jLabel4.setText("Downsample to Percentile or Target Number of Events");
+            jRadioButton1.setText("Events");
+            jRadioButton1.setSelected(true);
+            buttonGroup1.add(jRadioButton1);
+            jRadioButton2.setText("Percentile");
+            buttonGroup1.add(jRadioButton2);
 
-            jSpinner3.setModel(new javax.swing.SpinnerNumberModel(Integer.valueOf(cxt.getTargetDownsample()), Integer.valueOf(0), null, Integer.valueOf(100)));
-            jSpinner3.setToolTipText("Each input file will be downsampled to the smaller of this number of events, or total events in file");
+            jSpinner3.setModel(new javax.swing.SpinnerNumberModel(Integer.valueOf(cxt.getTargetDownsampleEvents()), Integer.valueOf(0), null, Integer.valueOf(100)));
+            jSpinner3.setToolTipText("Each input file will be downsampled to retain the smaller of this number of events, or total events in file");
+            jSpinner4.setModel(new javax.swing.SpinnerNumberModel(Integer.valueOf(cxt.getTargetDownsamplePctile()), Integer.valueOf(0), Integer.valueOf(100), Integer.valueOf(1)));
+            jSpinner4.setToolTipText("Each input file will be downsampled to retain events with density below this percentile");
 
             org.jdesktop.layout.GroupLayout layout = new org.jdesktop.layout.GroupLayout(contentPanel);
             contentPanel.setLayout(layout);
@@ -310,7 +328,14 @@ public class WorkflowWizardPanels {
                         .add(jLabel3)
                         .add(jSpinner2, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 108, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                         .add(jLabel4)
-                        .add(jSpinner3, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 108, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                        .add(layout.createSequentialGroup()
+                            .add(jRadioButton1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 108, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                            .add(jSpinner3, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 108, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                        .add(18, 18, 18)
+                        .add(layout.createSequentialGroup()
+                            .add(jRadioButton2, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 108, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                            .add(jSpinner4, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 108, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                    )
                     .addContainerGap(36, Short.MAX_VALUE))
             );
             layout.setVerticalGroup(
@@ -334,7 +359,14 @@ public class WorkflowWizardPanels {
                             .add(18, 18, 18)
                             .add(jLabel4, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 16, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                             .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                            .add(jSpinner3, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
+                            .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                                .add(jRadioButton1)
+                                .add(jSpinner3, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                            .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                            .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                                .add(jRadioButton2)
+                                .add(jSpinner4, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                    ))
                     .addContainerGap())
             );
             // </editor-fold>
@@ -358,6 +390,10 @@ public class WorkflowWizardPanels {
         private javax.swing.JSpinner jSpinner1;
         private javax.swing.JSpinner jSpinner2;
         private javax.swing.JSpinner jSpinner3;
+        private javax.swing.JSpinner jSpinner4;
+        private javax.swing.ButtonGroup buttonGroup1;
+        private javax.swing.JRadioButton jRadioButton1;
+        private javax.swing.JRadioButton jRadioButton2;
         // End of variables declaration
     }
 

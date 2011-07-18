@@ -1637,26 +1637,41 @@ public final class fcsFile {
             return new double[0][0];
         }
 
-        // Otherwise, get the "$SPILL, $spillover or $COMP" property from settings.
+        // Otherwise, get the "SPILL, SPILLOVER, spillover or $COMP" property
+        // from settings.
         String compString = null;
         String propertyUsed = null;
-
-        if ((compString = settings.getProperty("$SPILL")) != null) {
-            propertyUsed = "$SPILL";
+        
+        if ((compString = settings.getProperty("SPILL")) != null) {
+            propertyUsed = "SPILL";
         } else if ((compString = settings.getProperty("$spillover")) != null) {
             propertyUsed = "$spillover";
+        } else if ((compString = settings.getProperty("$SPILLOVER")) != null) {
+            propertyUsed = "$SPILLOVER";
         } else if ((compString = settings.getProperty("$COMP")) != null) {
             propertyUsed = "$COMP";
         } else {
-            // If the "$COMP" property is null, then return an empty
+            // If no compensation found then return an empty
             // compensation matrix.
             return new double[0][0];
         }
-
+        
         int numParameters = parameters;
 
         // Split the compensation string into its values
+        //
+        // The basic structure for $COMP is:
+        // $COMP/n,f1,f2,f3,.../ $COMP/3,0.0,-0.1,0.0,-40.0,0.0,-0.6,0.0,-36.4,0.0/
+        // The matrix has n rowsand n columns where n represents the number
+        // of acquisition parameters. f1, f2, f3 are floating point values.
+        //
+        // The basic structure for SPILL* is:
+        // $SPILLOVER/n,string1,string2,...,f1,f2,f3,f4,.../
+        // The key difference is the inclusion of names.
+
         String[] compValues = compString.split(",");
+        String[] compNames  = null;
+        String[] compData   = null;
 
         // Initialize the number of acquisition parameters to 0
         int n = 0;
@@ -1664,20 +1679,21 @@ public final class fcsFile {
         try {
             // Try to parse the number of acquisition parameters
             n = Integer.parseInt(compValues[0]);
+            if (n <= 0)
+                return new double[0][0];
         } catch (NumberFormatException nfe) {
-            // If a NumberFormatException occurred, then return an empty
-            // compensation matrix.
             return new double[0][0];
         }
 
-        if ((n <= 0) || (compValues.length < ((n * n) + 1))) {
-            // If the number of acquisition parameters is less than or equal
-            // to 0 or the number of compensation values in the array of
-            // compensation values is less than the number of elements in
-            // the compensation matrix, then return an empty compensation
-            // matrix.
-            return new double[0][0];
+        if ("$COMP".equals(propertyUsed)) {
+            compData = Arrays.copyOfRange(compValues, 1, compValues.length);
+        } else {
+            compNames = Arrays.copyOfRange(compValues, 1, n+1);
+            compData  = Arrays.copyOfRange(compValues, n+1, compValues.length);
         }
+
+        if (compData.length != (n*n))
+            return new double[0][0];
 
         /**
          * Populate the compensation matrix --- The values are stored in
@@ -1686,28 +1702,16 @@ public final class fcsFile {
          */
         // Allocate the compensation matrix
         double[][] matrix = new double[n][n];
-
-        int row, column;
-
+        
         // Loop through the array of compensation values
-        for (int i = 1; i < compValues.length; i++) {
-            // Calculate the index of the row
-            row = (i - 1) / numParameters;
-
-            // Calculate the index of the column
-            column = (i - 1) % numParameters;
-
-            if ((row < n) && (column < n)) {
-                // If the row and column indices are valid, then set the
-                // value of the matrix element.
+        for (int i=0; i<n; i++) {
+            for (int j=0; j<n; j++) {
                 try {
-                    // Try to parse the value of the current compensation
-                    // value
-                    matrix[row][column] = Double.parseDouble(compValues[i]);
+                    // Try to parse the value of the current compensation value
+                    matrix[i][j] = Double.parseDouble(compData[i*n+j]);
                 } catch (NumberFormatException nfe) {
-                    // If a NumberFormatException occurred, the set the
-                    // value to 0.0.
-                    matrix[row][column] = 0.0d;
+                    // Set default value If a NumberFormatException occurred
+                    matrix[i][j] = 0.0d;
                 }
             }
         }
@@ -1721,7 +1725,7 @@ public final class fcsFile {
             // Return the compensation matrix as is
             return matrix;
         } else {
-            MatrixManipulation matrixTypecast = new MatrixManipulation(); 
+            MatrixManipulation matrixTypecast = new MatrixManipulation();
             matrixTypecast.createMatrix(matrix);
             MatrixManipulation matrixInverse = new MatrixManipulation();
             matrixInverse = matrixTypecast.generateInverse();

@@ -745,10 +745,10 @@ public class CytoSpade extends CytoscapePlugin {
                 //Calculate "transpose(compMatrix * transpose(events))" to 
                 //account for spill-over and assign this value to events
                 MatrixManipulation matrix = new MatrixManipulation();
-                events = matrix.calculateCompensation (compData, events);
+                //events = matrix.calculateCompensation (compData, events);
 
                 int num_events = FCSInputFile.getEventCount();
-
+                
                 //The cluster channel is always the last
                 int clustChan = FCSInputFile.getChannelCount() - 1;
 

@@ -1,3 +1,4 @@
+
 /**
  * fcsFile.java
  * ---
@@ -30,9 +31,9 @@
  *
  * http://www.cytobank.org
  */
-
 import java.io.*;
 import java.util.*;
+import java.lang.Object;
 
 // Use the new I/O for speed
 import java.nio.*;
@@ -51,37 +52,30 @@ import java.nio.charset.*;
  * subclassed and is highly file-dependent, respectively.
  * </p>
  */
-
 public final class fcsFile {
     // The ENCODING to use for decoding the text data in the file
     // ISO-8859-1 is the standard extension of ASCII
+
     private static final String ENCODING = "ISO-8859-1";
     private static final Charset charset = Charset.forName(ENCODING);
-
     // Size of the version string in bytes
     private static final int VERSION_SIZE = 6;
-
     // Default prefix for FCS files to check whether the file is a FCS file.
     private static final String FCS_PREFIX = "FCS";
-
     // Default behavior for whether to extract events
     private static final boolean EXTRACTP = false;
-
     /**
      * Decoder for parsing the text portions
      */
     private CharsetDecoder decoder;
-
     /**
      * The underlying file
      */
     private File file;
-
     /**
      * Boolean flag of whether the file is an FCS file.
      */
     private boolean isFCSP;
-
     /**
      * File Information
      */
@@ -96,7 +90,6 @@ public final class fcsFile {
     public int supplementalEnd = 0;
     public char delimiter = '\\'; // TEXT segment delimiter character
     public String text = null; // The entire TEXT segment
-
     /**
      * settings ---
      * <p>
@@ -109,7 +102,6 @@ public final class fcsFile {
      * </p>
      */
     private Properties settings = null;
-
     /**
      * All the public fields ---
      * <p>
@@ -126,9 +118,7 @@ public final class fcsFile {
      * the Properties settings object instead.
      * </p>
      */
-
     public boolean littleEndianP;
-
     public int parameters = 0;
     public String sampleName = null;
     public String dataType = null;
@@ -155,20 +145,16 @@ public final class fcsFile {
     public String comment = null;
     public String spillString = null;
     public boolean applyCompensation = false;
-
     public String source = null;
     public String nextData = null;
     public String endsText = null;
     public String bTime = null;
-
     public double timeStep = 0;
     public boolean[] isLog = null;
-
     public int lasers = 0;
     public String[] laserASF = null;
     public String[] laserName = null;
     public String[] laserDelay = null;
-
     public String[] channelName = null;
     public String[] channelShortname = null;
     public String[] channelGain = null;
@@ -178,7 +164,6 @@ public final class fcsFile {
     public String[] channelVoltage = null;
     public boolean[] displayLog = null;
     public double[] ampValue = null;
-
     public int totalEvents = 0;
     protected double[][] eventList = null;
 
@@ -360,7 +345,6 @@ public final class fcsFile {
          * At this point, we are pretty sure that the file is an FCS file. So,
          * we parse it.
          */
-
         /**
          * Get the standard HEADER stuff
          */
@@ -418,7 +402,6 @@ public final class fcsFile {
         /**
          * Use NIO to read the OTHER and TEXT segments
          */
-
         // Get the channel for the input file
         FileChannel fc = fis.getChannel();
 
@@ -450,7 +433,6 @@ public final class fcsFile {
         /**
          * Close the file since we have the string version of the TEXT segment
          */
-
         // Close the file channel
         fc.close();
 
@@ -460,7 +442,6 @@ public final class fcsFile {
         /**
          * Decode the TEXT segment
          */
-
         // The first character of the primary TEXT segment contains the
         // delimiter character
         delimiter = text.charAt(0);
@@ -468,7 +449,6 @@ public final class fcsFile {
         /**
          * Key/Value Pairs
          */
-
         // Generate all the pairs
         String[] pairs;
 
@@ -506,7 +486,6 @@ public final class fcsFile {
         /**
          * Extract Events
          */
-
         if (extractEventsP) {
             // If we are extracting data, then do so.
             extractEvents();
@@ -535,7 +514,6 @@ public final class fcsFile {
         /**
          * At this point, we know settings is not null.
          */
-
         if (settings.isEmpty()) {
             // If settings is empty, then quit.
             return;
@@ -545,7 +523,6 @@ public final class fcsFile {
          * At this point, we know settings has some mappings, so try to load
          * them.
          */
-
         if ((settings.getProperty("$BEGINSTEXT") != null) && (settings.getProperty("$ENDSTEXT") != null)) {
             // If the byte offset keywords for the supplemental TEXT segment are
             // not null, then parse the byte offsets.
@@ -825,30 +802,30 @@ public final class fcsFile {
 
             if ((channelVoltage[i - 1] == null) && (cytometer != null) && cytometer.equals("FACSCalibur")) {
                 switch (i - 1) {
-                case 2:
-                    channelVoltage[i - 1] = settings.getProperty("BD$WORD3");
-                    break;
-                case 3:
-                    channelVoltage[i - 1] = settings.getProperty("BD$WORD5");
-                    break;
-                case 4:
-                    channelVoltage[i - 1] = settings.getProperty("BD$WORD7");
-                    break;
-                case 5:
-                    channelVoltage[i - 1] = settings.getProperty("BD$WORD9");
-                    break;
-                case 6:
-                    channelVoltage[i - 1] = settings.getProperty("BD$WORD11");
-                    break;
-                case 7:
-                    channelVoltage[i - 1] = settings.getProperty("BD$WORD55");
-                    break;
-                case 8:
-                    channelVoltage[i - 1] = settings.getProperty("BD$WORD24");
-                    break;
-                default:
-                    channelVoltage[i - 1] = "";
-                    break;
+                    case 2:
+                        channelVoltage[i - 1] = settings.getProperty("BD$WORD3");
+                        break;
+                    case 3:
+                        channelVoltage[i - 1] = settings.getProperty("BD$WORD5");
+                        break;
+                    case 4:
+                        channelVoltage[i - 1] = settings.getProperty("BD$WORD7");
+                        break;
+                    case 5:
+                        channelVoltage[i - 1] = settings.getProperty("BD$WORD9");
+                        break;
+                    case 6:
+                        channelVoltage[i - 1] = settings.getProperty("BD$WORD11");
+                        break;
+                    case 7:
+                        channelVoltage[i - 1] = settings.getProperty("BD$WORD55");
+                        break;
+                    case 8:
+                        channelVoltage[i - 1] = settings.getProperty("BD$WORD24");
+                        break;
+                    default:
+                        channelVoltage[i - 1] = "";
+                        break;
                 }
             }
         }
@@ -857,7 +834,6 @@ public final class fcsFile {
          * Calculate the number of events in the flow file based on the number
          * of bits in each event
          */
-
         // Initialize the number of bits in each event to 0
         int numBitsPerEvent = 0;
 
@@ -912,8 +888,7 @@ public final class fcsFile {
 
         try {
             data = fc.map(FileChannel.MapMode.READ_ONLY, dataStart, dataEnd - dataStart + 1);
-        }
-        catch (Throwable t) {
+        } catch (Throwable t) {
             // Try again with a workaround to see if we can compensate for off-by-one errors that
             // some FCS files have been known to incorporate in the ENDDATA property.
             data = fc.map(FileChannel.MapMode.READ_ONLY, dataStart, dataEnd - dataStart);
@@ -923,7 +898,6 @@ public final class fcsFile {
          * We don't need to worry about endian-ness here since ASCII is one
          * byte, and float and double are IEEE standards.
          */
-
         if (dataType != null) {
             if (dataType.equalsIgnoreCase("I")) {
                 // If the data type is "I", then it is binary integer.
@@ -978,7 +952,7 @@ public final class fcsFile {
                 // Calculate the number of bytes used from the number of bits
                 // used
                 // Round up to the next full byte
-                numBytes = (int) Math.ceil( ((double)channelBits[j]) / Byte.SIZE );
+                numBytes = (int) Math.ceil(((double) channelBits[j]) / Byte.SIZE);
 
 
                 // Get the range of the current parameter - will let us build
@@ -1023,7 +997,6 @@ public final class fcsFile {
                  * values to insure that erroneous values are not read from the
                  * unused bits.
                  */
-
                 // Mask the value based on the range
                 value &= (range - 1);
 
@@ -1114,7 +1087,6 @@ public final class fcsFile {
         /**
          * Calculate the number of characters in each event of the flow file
          */
-
         // Initialize the number of characters in each event to 0
         int numCharsPerEvent = 0;
 
@@ -1181,7 +1153,6 @@ public final class fcsFile {
     /**
      * Accessors
      */
-
     /**
      * isFCS ---
      * <p>
@@ -1352,7 +1323,7 @@ public final class fcsFile {
         return getChannelHelper(true);
     }
 
-     /**
+    /**
      * getChannelShortName ---
      * <p>
      * Returns the $PN of the channel with number channelNumber.
@@ -1372,7 +1343,7 @@ public final class fcsFile {
             return "Error reading this channel!";
         }
 
-        
+
         if (channelShortname[channelNumber] == null) {
             // If the channel short name for the channel is also null, then
             // return "Channel #" as the channel name.
@@ -1382,7 +1353,6 @@ public final class fcsFile {
             return channelShortname[channelNumber];
         }
     }
-
 
     /**
      * getChannelName ---
@@ -1635,7 +1605,7 @@ public final class fcsFile {
      * getCompensation ---
      * <p>
      * Returns the fluorescence compensation matrix stored under the keyword in
-     * COMP.
+     * SPILL.
      * </p>
      *
      * <p>
@@ -1660,82 +1630,102 @@ public final class fcsFile {
      *         matrix.
      */
     public double[][] getCompensation() {
+
         if ((settings == null) || (parameters <= 0)) {
             // If settings is null or the number of parameters is less than or
             // equal to 0, then return an empty compensation matrix.
             return new double[0][0];
+        }
+
+        // Otherwise, get the "$SPILL, $spillover or $COMP" property from settings.
+        String compString = null;
+        String propertyUsed = null;
+
+        if ((compString = settings.getProperty("$SPILL")) != null) {
+            propertyUsed = "$SPILL";
+        } else if ((compString = settings.getProperty("$spillover")) != null) {
+            propertyUsed = "$spillover";
+        } else if ((compString = settings.getProperty("$COMP")) != null) {
+            propertyUsed = "$COMP";
         } else {
-            // Otherwise, get the "$COMP" property from settings.
-            String compString = settings.getProperty("$COMP");
+            // If the "$COMP" property is null, then return an empty
+            // compensation matrix.
+            return new double[0][0];
+        }
 
-            if (compString == null) {
-                // If the "$COMP" property is null, then return an empty
-                // compensation matrix.
-                return new double[0][0];
-            }
+        int numParameters = parameters;
 
-            int numParameters = parameters;
+        // Split the compensation string into its values
+        String[] compValues = compString.split(",");
 
-            // Split the compensation string into its values
-            String[] compValues = compString.split(",");
+        // Initialize the number of acquisition parameters to 0
+        int n = 0;
 
-            // Initialize the number of acquisition parameters to 0
-            int n = 0;
+        try {
+            // Try to parse the number of acquisition parameters
+            n = Integer.parseInt(compValues[0]);
+        } catch (NumberFormatException nfe) {
+            // If a NumberFormatException occurred, then return an empty
+            // compensation matrix.
+            return new double[0][0];
+        }
 
-            try {
-                // Try to parse the number of acquisition parameters
-                n = Integer.parseInt(compValues[0]);
-            } catch (NumberFormatException nfe) {
-                // If a NumberFormatException occurred, then return an empty
-                // compensation matrix.
-                return new double[0][0];
-            }
+        if ((n <= 0) || (compValues.length < ((n * n) + 1))) {
+            // If the number of acquisition parameters is less than or equal
+            // to 0 or the number of compensation values in the array of
+            // compensation values is less than the number of elements in
+            // the compensation matrix, then return an empty compensation
+            // matrix.
+            return new double[0][0];
+        }
 
-            if ((n <= 0) || (compValues.length < ((n * n) + 1))) {
-                // If the number of acquisition parameters is less than or equal
-                // to 0 or the number of compensation values in the array of
-                // compensation values is less than the number of elements in
-                // the compensation matrix, then return an empty compensation
-                // matrix.
-                return new double[0][0];
-            }
+        /**
+         * Populate the compensation matrix --- The values are stored in
+         * row-major order, i.e., the elements in the first row appear
+         * first.
+         */
+        // Allocate the compensation matrix
+        double[][] matrix = new double[n][n];
 
-            /**
-             * Populate the compensation matrix --- The values are stored in
-             * row-major order, i.e., the elements in the first row appear
-             * first.
-             */
+        int row, column;
 
-            // Allocate the compensation matrix
-            double[][] matrix = new double[n][n];
+        // Loop through the array of compensation values
+        for (int i = 1; i < compValues.length; i++) {
+            // Calculate the index of the row
+            row = (i - 1) / numParameters;
 
-            int row, column;
+            // Calculate the index of the column
+            column = (i - 1) % numParameters;
 
-            // Loop through the array of compensation values
-            for (int i = 1; i < compValues.length; i++) {
-                // Calculate the index of the row
-                row = (i - 1) / numParameters;
-
-                // Calculate the index of the column
-                column = (i - 1) % numParameters;
-
-                if ((row < n) && (column < n)) {
-                    // If the row and column indices are valid, then set the
-                    // value of the matrix element.
-                    try {
-                        // Try to parse the value of the current compensation
-                        // value
-                        matrix[row][column] = Double.parseDouble(compValues[i]);
-                    } catch (NumberFormatException nfe) {
-                        // If a NumberFormatException occurred, the set the
-                        // value to 0.0.
-                        matrix[row][column] = 0.0d;
-                    }
+            if ((row < n) && (column < n)) {
+                // If the row and column indices are valid, then set the
+                // value of the matrix element.
+                try {
+                    // Try to parse the value of the current compensation
+                    // value
+                    matrix[row][column] = Double.parseDouble(compValues[i]);
+                } catch (NumberFormatException nfe) {
+                    // If a NumberFormatException occurred, the set the
+                    // value to 0.0.
+                    matrix[row][column] = 0.0d;
                 }
             }
+        }
 
-            // Return the compensation matrix
+        // In case $COMP property had been used to get compString, we can 
+        // return the compensation matrix as is. In case $SPILL or $spillover
+        // property had been used, we need to return the inverse of the 
+        // compmatrix
+
+        if ("$COMP".equals(propertyUsed)) {
+            // Return the compensation matrix as is
             return matrix;
+        } else {
+            MatrixManipulation matrixTypecast = new MatrixManipulation(); 
+            matrixTypecast.createMatrix(matrix);
+            MatrixManipulation matrixInverse = new MatrixManipulation();
+            matrixInverse = matrixTypecast.generateInverse();
+            return matrixInverse.toArray();
         }
     }
 
@@ -1856,7 +1846,6 @@ public final class fcsFile {
      * Different testing functions to exercise different parts of the class.
      * </p>
      */
-
     /**
      * printFCSFile ---
      * <p>

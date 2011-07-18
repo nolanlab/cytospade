@@ -39,6 +39,7 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 
 import java.text.DecimalFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 
 import java.util.Iterator;
@@ -683,6 +684,9 @@ public class CytoSpade extends CytoscapePlugin {
                     return 1;
                 }
             }
+            
+
+
 
             /**
              * Populates the data[A]{X,Y} arrays based on the selected file and the
@@ -734,6 +738,14 @@ public class CytoSpade extends CytoscapePlugin {
                         yChan = i;
                     }
                 }
+                
+                //Pull the Compensation matrix from the FCS file
+                double[][] compData = FCSInputFile.getCompensation();
+                
+                //Calculate "transpose(compMatrix * transpose(events))" to 
+                //account for spill-over and assign this value to events
+                MatrixManipulation matrix = new MatrixManipulation();
+                events = matrix.calculateCompensation (compData, events);
 
                 int num_events = FCSInputFile.getEventCount();
 

@@ -1,5 +1,4 @@
-package CytoSpade;
-
+package cytospade;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;

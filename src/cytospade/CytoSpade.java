@@ -1,4 +1,4 @@
-package CytoSpade;
+package cytospade;
 
 import cytoscape.plugin.CytoscapePlugin;
 import cytoscape.util.CytoscapeAction;
@@ -57,8 +57,6 @@ import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JMenuItem;
 import javax.swing.SwingConstants;
-
-import org.apache.commons.math.linear.Array2DRowRealMatrix;
 
 /**
  * Cytoscape plugin that draws scatter plots for SPADE trees
@@ -748,7 +746,8 @@ public class CytoSpade extends CytoscapePlugin {
                 
                 //Calculate "transpose(compMatrix * transpose(events))" to 
                 //account for spill-over and assign this value to events
-           //     events = FCSInputFile.calculateCompensation (compData, events);
+                MatrixManipulation matrix = new MatrixManipulation();
+                //events = matrix.calculateCompensation (compData, events);
 
                 int num_events = FCSInputFile.getEventCount();
                 

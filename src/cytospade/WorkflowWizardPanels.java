@@ -1,4 +1,4 @@
-
+package cytospade;
 import cytoscape.Cytoscape;
 import cytoscape.logger.CyLogger;
 import java.awt.BorderLayout;

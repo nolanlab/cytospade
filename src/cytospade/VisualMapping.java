@@ -1,4 +1,4 @@
-
+package cytospade;
 import cytoscape.CyNode;
 import cytoscape.Cytoscape;
 import cytoscape.data.CyAttributes;

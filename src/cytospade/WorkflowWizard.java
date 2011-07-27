@@ -1,5 +1,4 @@
-package CytoSpade;
-
+package cytospade;
 import java.awt.*;
 import java.awt.event.ActionListener;
 import java.util.HashMap;

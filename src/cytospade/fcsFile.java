@@ -31,14 +31,18 @@ package cytospade;
  *
  * http://www.cytobank.org
  */
+import cytoscape.logger.CyLogger;
 import java.io.*;
 import java.util.*;
-import java.lang.Object;
 
 // Use the new I/O for speed
 import java.nio.*;
 import java.nio.channels.*;
 import java.nio.charset.*;
+import org.apache.commons.math.linear.Array2DRowRealMatrix;
+import org.apache.commons.math.linear.BlockRealMatrix;
+import org.apache.commons.math.linear.LUDecompositionImpl;
+import org.apache.commons.math.linear.RealMatrix;
 
 /**
  * fcsFile ---
@@ -1126,7 +1130,7 @@ public final class fcsFile {
      * Returns the event list.
      * <p>
      *
-     * @return array of int arrays containing the events.
+     * @return array of double arrays containing the events.
      */
     public double[][] getEventList() {
         if (eventList == null) {
@@ -1148,6 +1152,103 @@ public final class fcsFile {
 
         // Return the array of events
         return eventList;
+    }
+
+    /**
+     * getCompensatedEventList ---
+     * <p>
+     * Returns the event list compensated by the SPILL matrix.
+     * <p>
+     *
+     * @return array of double arrays containing the events.
+     */
+    public double[][] getCompensatedEventList() {
+        double[][] events = this.getEventList();
+        if (events.length != this.getNumChannels())
+            return events;  // Unable to extract the underlying events
+
+        // Convert the SPILL string to a compensation matrix
+        String compString = this.getSpillString();
+        if (compString == null)
+            return events;  // No compensation, just return the events
+
+        // Split the compensation string into its values
+        //
+        // The basic structure for SPILL* is:
+        // $SPILLOVER/n,string1,string2,...,f1,f2,f3,f4,.../
+
+        String[] compValues = compString.split(",");
+        String[] compNames  = null;
+        String[] compData   = null;
+        int compDataStart   = 0;
+
+        int n = 0;
+        try {
+            // Try to parse the number of acquisition parameters
+            n = Integer.parseInt(compValues[0]);
+            if (n <= 0 || n > this.parameters)
+                throw new NumberFormatException();
+        } catch (NumberFormatException nfe) {
+            CyLogger.getLogger().error("Failed to parse parameter count in spill string",nfe);
+            return events;
+        }
+
+        compNames = Arrays.copyOfRange(compValues, 1, n+1);
+
+        // Match names in spill string to columns in parameter lists
+        compDataStart = Arrays.asList(this.channelShortname).indexOf(compNames[0]);
+        if (compDataStart < 0) {
+            CyLogger.getLogger().error("Failed to match channel "+compNames[0]+" to parameter in file");
+            return events;  // Failure match spill string names to channels
+        }
+        for (int i = 0; i < n; i++) {
+            if (!compNames[i].equals(this.channelShortname[compDataStart + i])) {
+                CyLogger.getLogger().error("Spill channel are not continguous parameters in file");
+                return events;  // Spill string columns not in order
+            }
+        }
+
+       // Extract actual compensation data
+        compData  = Arrays.copyOfRange(compValues, n+1, compValues.length);
+        if (compData.length != (n*n))
+            return events;
+
+        /**
+         * Populate the compensation matrix --- The values are stored in
+         * row-major order, i.e., the elements in the first row appear
+         * first.
+         */
+        double[][] matrix = new double[n][n];
+
+        // Loop through the array of compensation values
+        for (int i=0; i<n; i++) {
+            for (int j=0; j<n; j++) {
+                try {
+                    matrix[i][j] = Double.parseDouble(compData[i*n+j]);
+                } catch (NumberFormatException nfe) {
+                    // Set default value If a NumberFormatException occurred
+                    matrix[i][j] = 0.0d;
+                }
+            }
+        }
+
+        // Compute the inverse of the compensation data and then apply
+        // to data matrix (which is column major). Specifically compute
+        // transpose(inverse(<SPILL MATRIX>)) * data
+        RealMatrix comp =
+                (new LUDecompositionImpl(new Array2DRowRealMatrix(matrix)))
+                .getSolver()
+                .getInverse();
+        RealMatrix data = new BlockRealMatrix(events);
+        data.setSubMatrix(  // Update compensated portion of data matrix
+                comp
+                .transpose()
+                .multiply(data.getSubMatrix(compDataStart, compDataStart+n-1, 0, this.getEventCount()-1))
+                .getData(),
+                
+                compDataStart, 0
+                );
+        return data.getData();
     }
 
     /**
@@ -1599,138 +1700,6 @@ public final class fcsFile {
      */
     public int getEventCount() {
         return totalEvents;
-    }
-
-    /**
-     * getCompensation ---
-     * <p>
-     * Returns the fluorescence compensation matrix stored under the keyword in
-     * SPILL.
-     * </p>
-     *
-     * <p>
-     * The keyword stores an n by n matrix, where n represents the number of
-     * acquisition parameters. Both positive and negative values are allowed. A
-     * positive or unsigned value indicates that compensation has been additive
-     * while a negative value indicates the more common case of subtractive
-     * compensation. The elements are stored in row-major order, i.e., the
-     * elements in the first row appear first. The matrix element Cij is the
-     * percentage of FLj that has been subtracted electronically from FLi.
-     * </p>
-     *
-     * <p>
-     * The good news about this setup is that the compensation matrix is
-     * oriented correctly (or at least the familiar way in which we like to work
-     * with them). The bad news about this setup is that the compensation matrix
-     * is opposite in sign from the familiar way in which we like to work with
-     * them.
-     * </p>
-     *
-     * @return array of double arrays containing the fluorescence compensation
-     *         matrix.
-     */
-    public double[][] getCompensation() {
-
-        if ((settings == null) || (parameters <= 0)) {
-            // If settings is null or the number of parameters is less than or
-            // equal to 0, then return an empty compensation matrix.
-            return new double[0][0];
-        }
-
-        // Otherwise, get the "SPILL, SPILLOVER, spillover or $COMP" property
-        // from settings.
-        String compString = null;
-        String propertyUsed = null;
-        
-        if ((compString = settings.getProperty("SPILL")) != null) {
-            propertyUsed = "SPILL";
-        } else if ((compString = settings.getProperty("$spillover")) != null) {
-            propertyUsed = "$spillover";
-        } else if ((compString = settings.getProperty("$SPILLOVER")) != null) {
-            propertyUsed = "$SPILLOVER";
-        } else if ((compString = settings.getProperty("$COMP")) != null) {
-            propertyUsed = "$COMP";
-        } else {
-            // If no compensation found then return an empty
-            // compensation matrix.
-            return new double[0][0];
-        }
-        
-        int numParameters = parameters;
-
-        // Split the compensation string into its values
-        //
-        // The basic structure for $COMP is:
-        // $COMP/n,f1,f2,f3,.../ $COMP/3,0.0,-0.1,0.0,-40.0,0.0,-0.6,0.0,-36.4,0.0/
-        // The matrix has n rowsand n columns where n represents the number
-        // of acquisition parameters. f1, f2, f3 are floating point values.
-        //
-        // The basic structure for SPILL* is:
-        // $SPILLOVER/n,string1,string2,...,f1,f2,f3,f4,.../
-        // The key difference is the inclusion of names.
-
-        String[] compValues = compString.split(",");
-        String[] compNames  = null;
-        String[] compData   = null;
-
-        // Initialize the number of acquisition parameters to 0
-        int n = 0;
-
-        try {
-            // Try to parse the number of acquisition parameters
-            n = Integer.parseInt(compValues[0]);
-            if (n <= 0)
-                return new double[0][0];
-        } catch (NumberFormatException nfe) {
-            return new double[0][0];
-        }
-
-        if ("$COMP".equals(propertyUsed)) {
-            compData = Arrays.copyOfRange(compValues, 1, compValues.length);
-        } else {
-            compNames = Arrays.copyOfRange(compValues, 1, n+1);
-            compData  = Arrays.copyOfRange(compValues, n+1, compValues.length);
-        }
-
-        if (compData.length != (n*n))
-            return new double[0][0];
-
-        /**
-         * Populate the compensation matrix --- The values are stored in
-         * row-major order, i.e., the elements in the first row appear
-         * first.
-         */
-        // Allocate the compensation matrix
-        double[][] matrix = new double[n][n];
-        
-        // Loop through the array of compensation values
-        for (int i=0; i<n; i++) {
-            for (int j=0; j<n; j++) {
-                try {
-                    // Try to parse the value of the current compensation value
-                    matrix[i][j] = Double.parseDouble(compData[i*n+j]);
-                } catch (NumberFormatException nfe) {
-                    // Set default value If a NumberFormatException occurred
-                    matrix[i][j] = 0.0d;
-                }
-            }
-        }
-
-        // In case $COMP property had been used to get compString, we can 
-        // return the compensation matrix as is. In case $SPILL or $spillover
-        // property had been used, we need to return the inverse of the 
-        // compmatrix
-
-        if ("$COMP".equals(propertyUsed)) {
-            // Return the compensation matrix as is
-            return matrix;
-        } else {
-            MatrixManipulation matrixTypecast = new MatrixManipulation();
-            matrixTypecast.createMatrix(matrix);
-            MatrixManipulation matrixInverse = new MatrixManipulation();
-            matrixInverse = matrixTypecast.generateInverse();
-            return matrixInverse.toArray();
-        }
     }
 
     /**

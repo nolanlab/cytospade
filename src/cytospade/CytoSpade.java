@@ -725,7 +725,7 @@ public class CytoSpade extends CytoscapePlugin {
                 }
 
                 //Pull the events list
-                double[][] events = FCSInputFile.getEventList();
+                double[][] events = FCSInputFile.getCompensatedEventList();
 
                 //Find the columns with the appropriate parameters
                 int xChan = 0;
@@ -741,14 +741,6 @@ public class CytoSpade extends CytoscapePlugin {
                     }
                 }
                 
-                //Pull the Compensation matrix from the FCS file
-                double[][] compData = FCSInputFile.getCompensation();
-                
-                //Calculate "transpose(compMatrix * transpose(events))" to 
-                //account for spill-over and assign this value to events
-                MatrixManipulation matrix = new MatrixManipulation();
-                //events = matrix.calculateCompensation (compData, events);
-
                 int num_events = FCSInputFile.getEventCount();
                 
                 //The cluster channel is always the last

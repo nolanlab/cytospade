@@ -31,6 +31,10 @@ public class SPADEContext {
         public File[]   reference_files;
         public String[] fold_markers;
 
+        public AnalysisPanel(Object[] panel_files) {
+            this(panel_files, null, null, null);
+        }
+
         public AnalysisPanel(Object[] panel_files, Object[] median_markers, Object[] reference_files, Object[] fold_markers) {
             this.panel_files = new File[panel_files.length];
             for (int i=0; i<panel_files.length; i++) { this.panel_files[i] = (File)panel_files[i]; }
@@ -42,11 +46,19 @@ public class SPADEContext {
                 for (int i=0; i<panel_files.length; i++) { this.median_markers[i] = (File)median_markers[i]; }
             }
 
-            this.reference_files = new File[reference_files.length];
-            for (int i=0; i<reference_files.length; i++) { this.reference_files[i] = (File)reference_files[i]; }
+            if (reference_files == null)
+                this.reference_files = new File[0];
+            else {
+                this.reference_files = new File[reference_files.length];
+                for (int i=0; i<reference_files.length; i++) { this.reference_files[i] = (File)reference_files[i]; }
+            }
 
-            this.fold_markers = new String[fold_markers.length];
-            for (int i=0; i<fold_markers.length; i++) { this.fold_markers[i] = (String)fold_markers[i]; }
+            if (fold_markers == null)
+                this.fold_markers = new String[0];
+            else {
+                this.fold_markers = new String[fold_markers.length];
+                for (int i=0; i<fold_markers.length; i++) { this.fold_markers[i] = (String)fold_markers[i]; }
+            }
         }
     };
 

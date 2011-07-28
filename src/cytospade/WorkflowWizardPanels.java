@@ -1,18 +1,10 @@
 package cytospade;
-import cytoscape.Cytoscape;
 import cytoscape.logger.CyLogger;
-import java.awt.BorderLayout;
 import java.awt.Component;
-import java.awt.Insets;
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.concurrent.ExecutionException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.swing.*;
-import javax.swing.border.EmptyBorder;
 
 /*
  * To change this template, choose Tools | Templates
@@ -450,9 +442,9 @@ public class WorkflowWizardPanels {
         }
 
         @Override
-        public void aboutToHidePanel() {
-            // Collect values from input and update context
-            
+        public void nextButtonPressed() {
+           // Create "catch-all" panel with any files not currently in a panel
+           cxt.addAnalysisPanel("catchall", new SPADEContext.AnalysisPanel(cxt.getFCSFilesNotInPanel()));
         }
 
         private JPanel createPanel() {

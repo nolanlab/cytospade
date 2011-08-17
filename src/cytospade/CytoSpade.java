@@ -249,6 +249,10 @@ public class CytoSpade extends CytoscapePlugin {
             drawPlotsButton.setText("Produce PDFs");
             drawPlotsButton.setToolTipText("Generate PDF tree plots using current Cytoscape layout");
 
+            javax.swing.JButton makePivotTableButton = new javax.swing.JButton();
+            makePivotTableButton.setText("Produce Tables");
+            makePivotTableButton.setToolTipText("Generate CSV tables for each attributes with columns for all files");
+
             javax.swing.JLabel FilenameLbl = new javax.swing.JLabel("File");
             filenameComboBox = new javax.swing.JComboBox(spadeCxt.getFCSFiles());
             filenameComboBox.setMaximumRowCount(20);
@@ -340,6 +344,12 @@ public class CytoSpade extends CytoscapePlugin {
                 }
             });
 
+            makePivotTableButton.addActionListener(new java.awt.event.ActionListener() {
+                public void actionPerformed(ActionEvent ae) {
+                    makePivotTableClicked(ae);
+                }
+            });
+
             xAxisPopup = new javax.swing.JPopupMenu();
             yAxisPopup = new javax.swing.JPopupMenu();
             
@@ -395,7 +405,10 @@ public class CytoSpade extends CytoscapePlugin {
                             .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                             .addComponent(colorrangeComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, 165, javax.swing.GroupLayout.PREFERRED_SIZE))
                         .addComponent(countLabel)
-                        .addComponent(drawPlotsButton)
+                        .addGroup(layout.createSequentialGroup()
+                            .addComponent(drawPlotsButton)
+                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                            .addComponent(makePivotTableButton))
                         .addComponent(closeButtonWest))
                     .addContainerGap())
             );
@@ -426,7 +439,9 @@ public class CytoSpade extends CytoscapePlugin {
                     .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                     .addComponent(countLabel)
                     .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                    .addComponent(drawPlotsButton)
+                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addComponent(drawPlotsButton)
+                        .addComponent(makePivotTableButton))
                     .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                     .addComponent(closeButtonWest)
                     .addContainerGap(19, Short.MAX_VALUE))
@@ -893,6 +908,16 @@ public class CytoSpade extends CytoscapePlugin {
                 return;
             else if (showModalDialog != WorkflowWizard.FINISH_RETURN_CODE)
                 JOptionPane.showMessageDialog(null, "Error occured in workflow wizard.");
+        }
+
+        private void makePivotTableClicked(ActionEvent ae) {
+            try {
+                spadeCxt.authorMakePivot("pivotSPADE.R");
+                SPADEController ctl = new SPADEController(spadeCxt.getPath(), "pivotSPADE.R");
+                ctl.exec();
+            } catch (IOException ex) {
+                CyLogger.getLogger(CytoSpade.class.getName()).error(null, ex);
+            }
         }
 
         private SPADEContext spadeCxt;

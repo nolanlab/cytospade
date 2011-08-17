@@ -331,6 +331,34 @@ public class SPADEContext {
     }
 
     /**
+     * Generate short R script for creating pivot tables in
+     * this context's path. Only relevant for analysis contexts.
+     *
+     * @param filename the filename to write script to
+     * @throws IOException
+     */
+    public void authorMakePivot(String filename) throws IOException {
+        FileWriter fstream;
+        fstream = new FileWriter(new File(this.getPath(), filename).getAbsolutePath());
+
+        BufferedWriter out = new BufferedWriter(fstream);
+
+        out.write("OUTPUT_DIR='./'\n"
+        + "params <- as.character(read.table(paste(OUTPUT_DIR,'global_boundaries.table',sep=''))[,1])\n"
+        + "files <- dir(OUTPUT_DIR,pattern=glob2rx(\"*.anno.Rsave\"))\n"
+        + "dir.create(paste(OUTPUT_DIR,'pivot',sep=''),recursive=TRUE,showWarnings=FALSE)\n"
+        + "for (p in params) {\n"
+        + " cat('Generating table for',p,\"\\n\")\n"
+        + " pivot <- c(); names <- c();\n"
+        + " for (f in files) { load(f); if (p %in% colnames(anno)) { pivot <- cbind(pivot, anno[,p]); names <- c(names, f); }}\n"
+        + " colnames(pivot) <- names\n"
+        + " if (ncol(pivot) > 0) { write.csv(pivot, file=paste(OUTPUT_DIR,'pivot/',p,'_pivot','.csv',sep='')) }\n"
+        + "}\n"
+        );
+        out.close();
+    }
+
+    /**
      * Generate short R script for generating plots for SPADE results in
      * this context's path. Only relevant for analysis contexts.
      *

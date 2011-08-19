@@ -58,6 +58,10 @@ import javax.swing.JList;
 import javax.swing.JMenuItem;
 import javax.swing.SwingConstants;
 
+import org.apache.commons.math.stat.inference.TTestImpl;
+import org.apache.commons.math.linear.Array2DRowRealMatrix;
+import org.apache.commons.lang.ArrayUtils;
+
 /**
  * Cytoscape plugin that draws scatter plots for SPADE trees
  */
@@ -71,7 +75,7 @@ public class CytoSpade extends CytoscapePlugin {
     public CytoSpade() {
         // Initialized internal state keeping
         spadeCxt = new SPADEContext();
-        
+
         //create a new action to respond to menu activation
         SPADEdraw action = new SPADEdraw();
         //set the preferred menu
@@ -79,7 +83,7 @@ public class CytoSpade extends CytoscapePlugin {
         //and add it to the menus
         Cytoscape.getDesktop().getCyMenus().addAction(action);
     }
-    
+
     /**
      * Event to save the user-defined network landscaping when Cytoscape exits.
      */
@@ -96,7 +100,7 @@ public class CytoSpade extends CytoscapePlugin {
         CyNetworkView cnv = Cytoscape.getCurrentNetworkView();
         GraphPerspective network = (GraphPerspective) Cytoscape.getCurrentNetwork();
         Iterator<CyNode> nodesIt;
-        if(!network.nodesList().isEmpty()) {
+        if (!network.nodesList().isEmpty()) {
             try {
                 FileWriter fstream = new FileWriter(new File(spadeCxt.getPath(), "layout.table").getAbsolutePath());
                 BufferedWriter out = new BufferedWriter(fstream);
@@ -113,16 +117,16 @@ public class CytoSpade extends CytoscapePlugin {
                     if (nodeView == null) {
                         JOptionPane.showMessageDialog(null, "Error: null nodeView");
                     }
-                    xPositions[ii]=nodeView.getXPosition();
+                    xPositions[ii] = nodeView.getXPosition();
                     //Multiply by -1 to flip map
-                    yPositions[ii]= -1*nodeView.getYPosition();
+                    yPositions[ii] = -1 * nodeView.getYPosition();
                     ii--;
                 }
 
                 //Now write the list out
                 for (int i = 0; i < network.nodesList().size(); i++) {
-                        out.write(xPositions[i]+" ");
-                        out.write(yPositions[i]+"\n");
+                    out.write(xPositions[i] + " ");
+                    out.write(yPositions[i] + "\n");
                 }
 
                 out.close();
@@ -163,7 +167,7 @@ public class CytoSpade extends CytoscapePlugin {
             //This stupid iterator runs backward. So reverse the list first
             double[] xPositions = new double[network.nodesList().size()];
             double[] yPositions = new double[network.nodesList().size()];
-            for (int i = network.nodesList().size()-1; i > -1; i--) {
+            for (int i = network.nodesList().size() - 1; i > -1; i--) {
                 try {
                     line = in.readLine().split(" ");
                 } catch (IOException ex) {
@@ -182,7 +186,7 @@ public class CytoSpade extends CytoscapePlugin {
                 if (nodeView != null) {
                     nodeView.setXPosition(xPositions[ii]);
                     //Multiply by -1 to flip the map
-                    nodeView.setYPosition(-1*yPositions[ii]);
+                    nodeView.setYPosition(-1 * yPositions[ii]);
                     ii++;
                 }
 
@@ -192,8 +196,6 @@ public class CytoSpade extends CytoscapePlugin {
             Logger.getLogger(CytoSpade.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-
-
 
     /**
      * Gets the OS
@@ -212,32 +214,31 @@ public class CytoSpade extends CytoscapePlugin {
         }
     }
 
-
-    
     /**
      * SPADE analysis control panel.
      */
     class SpadePanel extends JPanel {
 
-        public SpadePanel(SPADEContext spadeCxt){
+        public SpadePanel(SPADEContext spadeCxt) {
             this.spadeCxt = spadeCxt;
 
-             // Find the global_boundaries.table file it exists, and create appropiate visual mapping
+            // Find the global_boundaries.table file it exists, and create appropiate visual mapping
             File[] boundaryFiles = spadeCxt.getPath().listFiles(new FilenameFilter() {
+
                 public boolean accept(File f, String name) {
                     return (name.matches("global_boundaries.table"));
                 }
             });
-            if (boundaryFiles.length == 1)
+            if (boundaryFiles.length == 1) {
                 this.visualMapping = new VisualMapping(boundaryFiles[0]);
-            else if (boundaryFiles.length == 0)
+            } else if (boundaryFiles.length == 0) {
                 this.visualMapping = new VisualMapping();
-            else {
+            } else {
                 JOptionPane.showMessageDialog(null, "Error: Found more than one global_boundaries.table file.");
                 return;
             }
 
-            initComponents(); 
+            initComponents();
         }
 
         private void initComponents() {
@@ -258,16 +259,17 @@ public class CytoSpade extends CytoscapePlugin {
             filenameComboBox.setMaximumRowCount(20);
             filenameComboBox.setRenderer(new javax.swing.ListCellRenderer() {
                 // Render FCS files as just File name (no path information, or long extensions)
+
                 public Component getListCellRendererComponent(JList jlist, Object o, int idx, boolean isSelected, boolean bln1) {
                     String name = "";
                     if (o != null) {
-                        name = ((File)o).getName();
+                        name = ((File) o).getName();
                         name = name.substring(0, name.lastIndexOf(".density.fcs.cluster.fcs"));
                     }
                     JLabel label = new JLabel(name);
 
-                    label.setBackground(isSelected ? jlist.getSelectionBackground(): jlist.getBackground());
-                    label.setForeground(isSelected ? jlist.getSelectionForeground(): jlist.getForeground());
+                    label.setBackground(isSelected ? jlist.getSelectionBackground() : jlist.getBackground());
+                    label.setForeground(isSelected ? jlist.getSelectionForeground() : jlist.getForeground());
                     label.setEnabled(jlist.isEnabled());
                     label.setFont(jlist.getFont());
                     label.setOpaque(true);
@@ -277,6 +279,7 @@ public class CytoSpade extends CytoscapePlugin {
             });
             filenameComboBox.setSelectedIndex(-1);
             filenameComboBox.addActionListener(new java.awt.event.ActionListener() {
+
                 public void actionPerformed(java.awt.event.ActionEvent evt) {
                     filenameComboBoxActionPerformed(evt);
                 }
@@ -286,6 +289,7 @@ public class CytoSpade extends CytoscapePlugin {
             javax.swing.JLabel colorscaleLabel = new javax.swing.JLabel("Coloring attribute");
             colorscaleComboBox = new javax.swing.JComboBox();
             colorscaleComboBox.addActionListener(new java.awt.event.ActionListener() {
+
                 public void actionPerformed(java.awt.event.ActionEvent evt) {
                     colorscaleComboBoxActionPerformed(evt);
                 }
@@ -295,11 +299,11 @@ public class CytoSpade extends CytoscapePlugin {
             javax.swing.JLabel colorrangeLabel = new javax.swing.JLabel("Coloring range");
             colorrangeComboBox = new javax.swing.JComboBox();
             colorrangeComboBox.setModel(new javax.swing.DefaultComboBoxModel(
-                    visualMapping.globalRangeAvailable() ?
-                        new VisualMapping.RangeKind[] { VisualMapping.RangeKind.GLOBAL, VisualMapping.RangeKind.LOCAL } :
-                        new VisualMapping.RangeKind[] { VisualMapping.RangeKind.LOCAL }
-            ));
+                    visualMapping.globalRangeAvailable()
+                    ? new VisualMapping.RangeKind[]{VisualMapping.RangeKind.GLOBAL, VisualMapping.RangeKind.LOCAL}
+                    : new VisualMapping.RangeKind[]{VisualMapping.RangeKind.LOCAL}));
             colorrangeComboBox.addActionListener(new java.awt.event.ActionListener() {
+
                 public void actionPerformed(java.awt.event.ActionEvent evt) {
                     colorrangeComboBoxActionPerformed(evt);
                 }
@@ -310,35 +314,38 @@ public class CytoSpade extends CytoscapePlugin {
 
             javax.swing.JLabel StyleLbl = new javax.swing.JLabel("Style");
             plotStyleComboBox = new javax.swing.JComboBox();
-            plotStyleComboBox.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Shaded Contour", "Dot", "Density Dot", "Shadow", "Contour", "Density" }));
+            plotStyleComboBox.setModel(new javax.swing.DefaultComboBoxModel(new String[]{"Shaded Contour", "Dot", "Density Dot", "Shadow", "Contour", "Density"}));
 
 
             jLabelPlot = new javax.swing.JLabel();
-            jLabelPlot.setBounds(0,0,358,358);
+            jLabelPlot.setBounds(0, 0, 358, 358);
 
             countLabel = new javax.swing.JLabel();
             xAxisClickable = new javax.swing.JLabel();
-            xAxisClickable.setBounds(48,311,308,46);
+            xAxisClickable.setBounds(48, 311, 308, 46);
 
             yAxisClickable = new javax.swing.JLabel();
-            yAxisClickable.setBounds(0,0,46,308);
+            yAxisClickable.setBounds(0, 0, 46, 308);
 
             plotArea = new javax.swing.JLayeredPane();
-            
+
 
             plotStyleComboBox.addActionListener(new java.awt.event.ActionListener() {
+
                 public void actionPerformed(java.awt.event.ActionEvent evt) {
                     plotStyleComboActionPerformed(evt);
                 }
             });
 
             closeButtonWest.addActionListener(new java.awt.event.ActionListener() {
+
                 public void actionPerformed(java.awt.event.ActionEvent evt) {
                     closeButtonWestClicked(evt);
                 }
             });
 
             drawPlotsButton.addActionListener(new java.awt.event.ActionListener() {
+
                 public void actionPerformed(java.awt.event.ActionEvent evt) {
                     generatePDFsClicked(evt);
                 }
@@ -352,18 +359,20 @@ public class CytoSpade extends CytoscapePlugin {
 
             xAxisPopup = new javax.swing.JPopupMenu();
             yAxisPopup = new javax.swing.JPopupMenu();
-            
+
             xAxisClickable.addMouseListener(new MouseAdapter() {
+
                 @Override
                 public void mouseReleased(MouseEvent me) {
-                    xAxisPopup.show(xAxisClickable,154,23);
+                    xAxisPopup.show(xAxisClickable, 154, 23);
                 }
             });
 
             yAxisClickable.addMouseListener(new MouseAdapter() {
+
                 @Override
                 public void mouseReleased(MouseEvent me) {
-                    yAxisPopup.show(yAxisClickable,23,154);
+                    yAxisPopup.show(yAxisClickable, 23, 154);
                 }
             });
 
@@ -446,6 +455,7 @@ public class CytoSpade extends CytoscapePlugin {
                     .addComponent(closeButtonWest)
                     .addContainerGap(19, Short.MAX_VALUE))
             );
+
             // </editor-fold>
         }
 
@@ -454,19 +464,21 @@ public class CytoSpade extends CytoscapePlugin {
          */
         public class HandleSelect implements SelectEventListener {
 
-            public HandleSelect() { }
+            public HandleSelect() {
+            }
 
             public void onSelectEvent(cytoscape.data.SelectEvent e) {
                 (new drawScatterThread()).execute();
             }
         }
 
-         public class XactionPerformed implements ActionListener {
+        public class XactionPerformed implements ActionListener {
+
             public void actionPerformed(ActionEvent e) {
-                if (e.getActionCommand().matches("Linear")         ||
-                    e.getActionCommand().matches("Log")            ||
-                    e.getActionCommand().matches("Arcsinh: CyTOF") ||
-                    e.getActionCommand().matches("Arcsinh: Fluor") ) {
+                if (e.getActionCommand().matches("Linear")
+                        || e.getActionCommand().matches("Log")
+                        || e.getActionCommand().matches("Arcsinh: CyTOF")
+                        || e.getActionCommand().matches("Arcsinh: Fluor")) {
                     xChanScale = e.getActionCommand();
                 } else {
                     xChanParam = SPADEContext.getShortNameFromFormattedName(e.getActionCommand());
@@ -476,11 +488,12 @@ public class CytoSpade extends CytoscapePlugin {
         }
 
         public class YactionPerformed implements ActionListener {
+
             public void actionPerformed(ActionEvent e) {
-                if (e.getActionCommand().matches("Linear")         ||
-                    e.getActionCommand().matches("Log")            ||
-                    e.getActionCommand().matches("Arcsinh: CyTOF") ||
-                    e.getActionCommand().matches("Arcsinh: Fluor") ) {
+                if (e.getActionCommand().matches("Linear")
+                        || e.getActionCommand().matches("Log")
+                        || e.getActionCommand().matches("Arcsinh: CyTOF")
+                        || e.getActionCommand().matches("Arcsinh: Fluor")) {
                     yChanScale = e.getActionCommand();
                 } else {
                     yChanParam = SPADEContext.getShortNameFromFormattedName(e.getActionCommand());
@@ -497,7 +510,7 @@ public class CytoSpade extends CytoscapePlugin {
          * @param evt
          */
         private void filenameComboBoxActionPerformed(java.awt.event.ActionEvent evt) {
-            
+
             CyNetworkView cnv = Cytoscape.getCurrentNetworkView();
             GraphPerspective network = (GraphPerspective) Cytoscape.getCurrentNetwork();
 
@@ -514,13 +527,14 @@ public class CytoSpade extends CytoscapePlugin {
 
                 //Find the layout.table file if it exists
                 File[] layoutFiles = spadeCxt.getPath().listFiles(new FilenameFilter() {
+
                     public boolean accept(File f, String name) {
                         return (name.matches("layout.table"));
                     }
                 });
                 if (layoutFiles.length == 1) {
                     readLandscaping(layoutFiles[0]);
-                } else if(layoutFiles.length > 1) {
+                } else if (layoutFiles.length > 1) {
                     JOptionPane.showMessageDialog(null, "Error: Found more than one layout.table file");
                     return;
                 }
@@ -533,15 +547,15 @@ public class CytoSpade extends CytoscapePlugin {
 
                 // Update the parameter combo box
                 VisualMapping.populateNumericAttributeComboBox(colorscaleComboBox);
-                
+
                 colorscaleComboBox.setMaximumRowCount(colorscaleComboBox.getItemCount());
                 colorscaleComboBox.setSelectedIndex(0);
-                
+
 
                 // Update plot combo boxes with channels in new FCS files
                 xAxisPopup = new javax.swing.JPopupMenu();
                 yAxisPopup = new javax.swing.JPopupMenu();
-                for (String scales: new String[] {"Linear","Log","Arcsinh: CyTOF","Arcsinh: Fluor"} ) {
+                for (String scales : new String[]{"Linear", "Log", "Arcsinh: CyTOF", "Arcsinh: Fluor"}) {
                     menuItem = new JMenuItem(scales);
                     menuItem.addActionListener(new SpadePanel.XactionPerformed());
                     xAxisPopup.add(menuItem);
@@ -552,10 +566,10 @@ public class CytoSpade extends CytoscapePlugin {
 
                 xAxisPopup.addSeparator();
                 yAxisPopup.addSeparator();
-                
+
                 fcsFile FCSInputFile = null;
                 try {
-                    FCSInputFile = new fcsFile((File)filenameComboBox.getSelectedItem(), true);
+                    FCSInputFile = new fcsFile((File) filenameComboBox.getSelectedItem(), true);
                 } catch (FileNotFoundException ex) {
                     JOptionPane.showMessageDialog(null, "File not found.");
                     return;
@@ -566,11 +580,11 @@ public class CytoSpade extends CytoscapePlugin {
 
                 {  // Build alphabetized channel selector
                     String[] names = new String[FCSInputFile.getChannelCount()];
-                    for (int i=0; i<FCSInputFile.getChannelCount(); i++) {
+                    for (int i = 0; i < FCSInputFile.getChannelCount(); i++) {
                         names[i] = SPADEContext.getFCSChannelFormattedName(FCSInputFile, i);
                     }
                     Arrays.sort(names);
-                    for (int i=0; i<FCSInputFile.getChannelCount(); i++) {
+                    for (int i = 0; i < FCSInputFile.getChannelCount(); i++) {
                         menuItem = new JMenuItem(names[i]);
                         menuItem.addActionListener(new SpadePanel.XactionPerformed());
                         xAxisPopup.add(menuItem);
@@ -579,7 +593,7 @@ public class CytoSpade extends CytoscapePlugin {
                         yAxisPopup.add(menuItem);
                     }
                 }
-                
+
                 // Initialize plot axes parameters
                 xChanScale = "Log";
                 yChanScale = "Log";
@@ -663,7 +677,7 @@ public class CytoSpade extends CytoscapePlugin {
                         plottype = facs.Illustration.DENSITY_PLOT;
                     }
 
-                  // Note that the size is set by axisBins
+                    // Note that the size is set by axisBins
 
                     int dotSize;
                     if (COUNT > 5000) {
@@ -683,17 +697,15 @@ public class CytoSpade extends CytoscapePlugin {
                             10, 10, 0, 1, 2,
                             plottype, facs.Illustration.DEFAULT_COLOR_SET,
                             false, true, true, true, true, false, 300, 1.0d, 1.0d,
-                            10.0d,  // Note this choices interact with small event check above
+                            10.0d, // Note this choices interact with small event check above
                             10.0d,
-                            facs.Illustration.DEFAULT_POPULATION_TYPE, COUNT, dotSize
-                            );
+                            facs.Illustration.DEFAULT_POPULATION_TYPE, COUNT, dotSize);
                     BufferedImage image = facs.Plot2D.drawPlot(
                             cs,
                             datax, datay, dataAx, dataAy,
-                            (String)xChanParam, (String)yChanParam,
+                            (String) xChanParam, (String) yChanParam,
                             xChanMax, yChanMax,
-                            xDisplay, yDisplay
-                            );
+                            xDisplay, yDisplay);
                     jLabelPlot.setIcon(new ImageIcon(image));
                     return 0;
                 } catch (IOException ex) {
@@ -701,9 +713,148 @@ public class CytoSpade extends CytoscapePlugin {
                     return 1;
                 }
             }
-            
 
+            /**
+             * Get selected nodes, return null if no nodes are selected
+             */
+            private int[] getSelectedNodes() {
+                int[] selectedClust = null;
+                CyNetwork current_network = Cytoscape.getCurrentNetwork();
+                if (current_network != null) {
+                    Set selectedNodes = current_network.getSelectedNodes();
+                    if (selectedNodes.isEmpty()) {
+                        //selectedClust = null; //Do nothing, selectedClust is initialized.
+                    } else if (selectedNodes.size() > 0) {
+                        Object[] nds = (Object[]) selectedNodes.toArray(new Object[1]);
+                        selectedClust = new int[nds.length];
+                        for (int i = 0; i < nds.length; i++) {
+                            selectedClust[i] = Integer.parseInt(nds[i].toString()) + 1; //Plus 1!
+                        }
+                    }
+                }
+                return selectedClust;
+            }
 
+            /**
+             * Populates selectedEvents
+             */
+            private double[][] populateSelectedEventsInitial(
+                    Array2DRowRealMatrix eventsInitial,
+                    int[] selectedClust,
+                    fcsFile FCSInputFile) {
+                //Get Cluster IDs from the row corresponding to 
+                //"cluster" in the events matrix
+                double[] allClustIds = new double[eventsInitial.getRowDimension()];
+                int[] allAttrIds = new int[eventsInitial.getColumnDimension()];
+
+                ArrayList<Integer> NodeIds = new ArrayList<Integer>();
+
+                //We want all attributes
+                for (int i = 0; i < eventsInitial.getRowDimension(); i++) {
+                    allAttrIds[i] = i;
+                }
+
+                //Get elements in "cluster" row
+                for (int i = 0; i < eventsInitial.getRowDimension(); i++) {
+                    if (FCSInputFile.getChannelShortName(i).contentEquals("cluster")) {
+                        allClustIds = eventsInitial.getRow(i);
+                        break;
+                    }
+                }
+
+                //Populate selectedEventsInitial                        
+                for (int i = 0; i < allClustIds.length; i++) {
+                    for (int j = 0; j < selectedClust.length; j++) {
+                        if (allClustIds[i] == selectedClust[j]) {
+                            NodeIds.add(i);
+                        }
+                    }
+                }
+
+                double[][] selectedEventsInitialTemp = new double[allAttrIds.length][NodeIds.size()];
+                //       System.out.println(selectedEventsInitialTemp.length);
+                //       System.out.println(selectedEventsInitialTemp[0].length);
+                //       System.out.println(allAttrIds.length);
+                //       System.out.println(ArrayUtils.toPrimitive(NodeIds.toArray(new Integer[0])).length);
+                // eventsInitial.copySubMatrix(allAttrIds, ArrayUtils.toPrimitive(NodeIds.toArray(new Integer[0])), selectedEventsInitialTemp);
+                eventsInitial.copySubMatrix(allAttrIds, ArrayUtils.toPrimitive(NodeIds.toArray(new Integer[0])), selectedEventsInitialTemp);
+
+                return selectedEventsInitialTemp;
+            }
+
+            /**
+             * Eliminate rows corresponding to attributes Time, Cluster and Density
+             * from both selectedEventsInitial and allEventsInitial
+             */
+            private int[] getAttrOfInterest(fcsFile FCSInputFile,
+                    Array2DRowRealMatrix eventsInitial,
+                    ArrayList<String> attributeNamesTemp) {
+                ArrayList<Integer> attrOfInterest = new ArrayList<Integer>();
+                int[] allNodeIds = new int[eventsInitial.getRowDimension()];
+
+                for (int i = 0; i < eventsInitial.getRowDimension(); i++) {
+                    if (FCSInputFile.getChannelShortName(i).contentEquals("time")
+                            || FCSInputFile.getChannelShortName(i).contentEquals("cluster")
+                            || FCSInputFile.getChannelShortName(i).contentEquals("density")) {
+                        continue;
+                    } else {
+                        attrOfInterest.add(i);
+                        attributeNamesTemp.add(FCSInputFile.getChannelShortName(i));
+                    }
+                }
+                return ArrayUtils.toPrimitive(attrOfInterest.toArray(new Integer[0]));
+            }
+
+            private double[][] eliminateAttr(
+                    Array2DRowRealMatrix eventsInitial,
+                    int[] attrOfInterest) {
+                double[][] doubleArray = new double[attrOfInterest.length][eventsInitial.getColumnDimension()];
+                int[] allNodeIds = new int[eventsInitial.getColumnDimension()];
+                for (int i = 0; i < eventsInitial.getColumnDimension(); i++) {
+                    allNodeIds[i] = i;
+                }
+                eventsInitial.copySubMatrix(attrOfInterest, allNodeIds, doubleArray);
+                return doubleArray;
+            }
+
+            /**
+             * T-distribution between selected nodes and all nodes
+             */
+            private double[] tDistribution(
+                    Array2DRowRealMatrix selectedEvents,
+                    Array2DRowRealMatrix allEvents,
+                    ArrayList<String> attributeNames) {
+                
+                //Find p-values between seleceted Nodes and all Nodes 
+                //using t-test and store them in an array
+                TTestImpl tTest = new TTestImpl();
+                double[] pValues = new double[attributeNames.size()];
+
+                for (int i = 0; i < attributeNames.size(); i++) {
+                    pValues[i] = tTest.t(selectedEvents.getRow(i), allEvents.getRow(i));
+                }
+
+                //Sorting the array containing pValues as well as corresponding 
+                //attribute names on the basis of absolute values. Using Bubble-sort
+                //which is inefficient, but since array length is limited to 50,
+                //performance will not take a hit. Sorting is being done in 
+                //descending order
+                double temp = 0;
+                String temp_str = null;
+                for (int i = 0; i < pValues.length; i++) {
+                    for (int j = 1; j < (pValues.length - i); j++) {
+                        if (Math.abs(pValues[j - 1]) < Math.abs(pValues[j])) {
+                            temp = pValues[j - 1];
+                            pValues[j - 1] = pValues[j];
+                            pValues[j] = temp;
+                            temp_str = attributeNames.get(j - 1);
+                            attributeNames.set(j - 1, attributeNames.get(j));
+                            attributeNames.set(j, temp_str);
+                        }
+                    }
+                }
+                return pValues;
+            }
 
             /**
              * Populates the data[A]{X,Y} arrays based on the selected file and the
@@ -711,28 +862,13 @@ public class CytoSpade extends CytoscapePlugin {
              */
             private void populateData() {
 
-                //Get the selected nodes; return 0 if no nodes selected
-                int[] selectedClust = null;
-                CyNetwork current_network = Cytoscape.getCurrentNetwork();
-                if (current_network != null) {
-                    Set selectedNodes = current_network.getSelectedNodes();
-                    if ( selectedNodes.isEmpty() ) {
-                        //selectedClust = null; //Do nothing, selectedClust is initialized.
-                    } else if ( selectedNodes.size() > 0 ) {
-                        Object[] nds = (Object[])selectedNodes.toArray(new Object[1]);
-                        selectedClust = new int[nds.length];
-                        for (int i = 0; i < nds.length; i++) {
-                            selectedClust[i] = Integer.parseInt(nds[i].toString())+1; //Plus 1!
-                        }
-                    } else {
-                        return;
-                    }
-                }
+                //Get the selected nodes; returns null if no nodes selected
+                int[] selectedClust = getSelectedNodes();
 
                 //Open the FCS file
                 fcsFile FCSInputFile = null;
                 try {
-                    FCSInputFile = new fcsFile((File)filenameComboBox.getSelectedItem(), true);
+                    FCSInputFile = new fcsFile((File) filenameComboBox.getSelectedItem(), true);
                 } catch (FileNotFoundException ex) {
                     JOptionPane.showMessageDialog(null, "File not found.");
                 } catch (IOException ex) {
@@ -742,22 +878,58 @@ public class CytoSpade extends CytoscapePlugin {
                 //Pull the events list
                 double[][] events = FCSInputFile.getCompensatedEventList();
 
+                //Populate eventsInitial
+                Array2DRowRealMatrix eventsInitial = new Array2DRowRealMatrix(events);
+
+                //Populate selectedEventsInitial (extract selected nodes into
+                //selectedEventsInitial)
+                double[][] selectedEventsInitialTemp = populateSelectedEventsInitial(eventsInitial, selectedClust,
+                        FCSInputFile);
+                Array2DRowRealMatrix selectedEventsInitial =
+                        new Array2DRowRealMatrix(selectedEventsInitialTemp);
+
+                //Eliminate rows corresponding to attributes Time, Cluster and Density
+                //from both selectedEventsInitial and allEventsInitial
+                ArrayList<String> attributeNames = new ArrayList<String>();
+
+                int[] attrOfInterest = getAttrOfInterest(FCSInputFile,
+                        eventsInitial, attributeNames);
+                double[][] allEventsTemp = eliminateAttr(eventsInitial,
+                        attrOfInterest);
+                double[][] selectedEventsTemp = eliminateAttr(selectedEventsInitial,
+                        attrOfInterest);
+                Array2DRowRealMatrix allEvents =
+                        new Array2DRowRealMatrix(allEventsTemp);
+                Array2DRowRealMatrix selectedEvents =
+                        new Array2DRowRealMatrix(selectedEventsTemp);
+
+                //Find pValues of selected nodes and all nodes corresponding
+                //to each attribute of interest
+                double[] pValues = tDistribution(
+                        selectedEvents, allEvents, attributeNames);
+                
+                //Displaying 5 of the highest valued pValues with sign
+                for (int i = 0; i < 5; i++) {
+                    System.out.println(attributeNames.get(i));
+                    System.out.println(pValues[i]);
+                }                
+
                 //Find the columns with the appropriate parameters
                 int xChan = 0;
                 for (int i = 0; i < FCSInputFile.getChannelCount(); i++) {
-                    if (FCSInputFile.getChannelShortName(i).contentEquals(xChanParam)){
+                    if (FCSInputFile.getChannelShortName(i).contentEquals(xChanParam)) {
                         xChan = i;
                     }
                 }
                 int yChan = 0;
                 for (int i = 0; i < FCSInputFile.getChannelCount(); i++) {
-                    if (FCSInputFile.getChannelShortName(i).contentEquals(yChanParam)){
+                    if (FCSInputFile.getChannelShortName(i).contentEquals(yChanParam)) {
                         yChan = i;
                     }
                 }
-                
+
                 int num_events = FCSInputFile.getEventCount();
-                
+
                 //The cluster channel is always the last
                 int clustChan = FCSInputFile.getChannelCount() - 1;
 
@@ -777,10 +949,10 @@ public class CytoSpade extends CytoscapePlugin {
 
                     //The primary events (selected only)
                     int eventcount = 0;
-                    datax  = new double[num_events];
-                    datay  = new double[num_events];
+                    datax = new double[num_events];
+                    datay = new double[num_events];
 
-                    for( int clust = 0; clust < selectedClust.length; clust ++) {
+                    for (int clust = 0; clust < selectedClust.length; clust++) {
                         for (int i = 0; i < num_events; i++) {
                             if (events[clustChan][i] == selectedClust[clust]) {
                                 datax[eventcount] = events[xChan][i];
@@ -793,15 +965,15 @@ public class CytoSpade extends CytoscapePlugin {
                     datax = Arrays.copyOf(datax, eventcount);
                     datay = Arrays.copyOf(datay, eventcount);
 
-                    countLabel.setText("Displaying " + df.format((int)eventcount) + " of " + df.format(num_events) + " events");
+                    countLabel.setText("Displaying " + df.format((int) eventcount) + " of " + df.format(num_events) + " events");
                     COUNT = eventcount;
+
                 }
 
                 xChanMax = FCSInputFile.getChannelRange(xChan);
                 yChanMax = FCSInputFile.getChannelRange(yChan);
 
             }
-
         }
 
         /**
@@ -809,7 +981,7 @@ public class CytoSpade extends CytoscapePlugin {
          */
         private void mapSizeAndColors() {
             // Skip mapping if no file is specified
-            if((filenameComboBox.getSelectedIndex() < 0) || (colorscaleComboBox.getSelectedIndex() < 0)) {
+            if ((filenameComboBox.getSelectedIndex() < 0) || (colorscaleComboBox.getSelectedIndex() < 0)) {
                 return;
             }
 
@@ -817,10 +989,9 @@ public class CytoSpade extends CytoscapePlugin {
                 visualMapping.setCurrentMarkersAndRangeKind(
                         "percenttotal",
                         colorscaleComboBox.getSelectedItem().toString(),
-                        (VisualMapping.RangeKind)colorrangeComboBox.getSelectedItem()
-                );
-            } catch(IllegalArgumentException e) {
-                JOptionPane.showMessageDialog(null, "Invalid choice of mapping parameters: "+e);
+                        (VisualMapping.RangeKind) colorrangeComboBox.getSelectedItem());
+            } catch (IllegalArgumentException e) {
+                JOptionPane.showMessageDialog(null, "Invalid choice of mapping parameters: " + e);
                 return;
             }
 
@@ -849,7 +1020,7 @@ public class CytoSpade extends CytoscapePlugin {
                 // Set a few defaults now that we have overwritten the calculators
                 VisualPropertyType.NODE_SHAPE.setDefault(spadeVS, cytoscape.visual.NodeShape.ELLIPSE);
                 VisualPropertyType.NODE_FILL_COLOR.setDefault(spadeVS, Color.LIGHT_GRAY);
-                spadeVS.getDependency().set(VisualPropertyDependency.Definition.NODE_SIZE_LOCKED,true);
+                spadeVS.getDependency().set(VisualPropertyDependency.Definition.NODE_SIZE_LOCKED, true);
 
                 cyVMM.getCalculatorCatalog().addVisualStyle(spadeVS);
                 cyVMM.setVisualStyle(spadeVS);
@@ -858,16 +1029,15 @@ public class CytoSpade extends CytoscapePlugin {
             } catch (RuntimeException e) {
                 JOptionPane.showMessageDialog(null, "Visual Mapping Error: " + e);
             }
-         }
-
+        }
 
         private void plotStyleComboActionPerformed(java.awt.event.ActionEvent evt) {
             (new drawScatterThread()).execute();
         }
 
         private void colorrangeComboBoxActionPerformed(java.awt.event.ActionEvent evt) {
-             mapSizeAndColors();
-             Cytoscape.getCurrentNetworkView().redrawGraph(true, true);
+            mapSizeAndColors();
+            Cytoscape.getCurrentNetworkView().redrawGraph(true, true);
         }
 
         private void colorscaleComboBoxActionPerformed(java.awt.event.ActionEvent evt) {
@@ -881,10 +1051,10 @@ public class CytoSpade extends CytoscapePlugin {
          */
         private void closeButtonWestClicked(java.awt.event.ActionEvent evt) {
             int returnvalue = JOptionPane.showConfirmDialog(null, "Close SPADE plug-in?", "Confirm close", JOptionPane.OK_CANCEL_OPTION);
-            if(returnvalue == JOptionPane.OK_OPTION) {
+            if (returnvalue == JOptionPane.OK_OPTION) {
                 saveLandscaping(true);
                 //FIXME This will fail if the user loads another plug-in after loading SPADE
-                Cytoscape.getDesktop().getCytoPanel(SwingConstants.WEST).remove(Cytoscape.getDesktop().getCytoPanel(SwingConstants.WEST).getCytoPanelComponentCount()-1);
+                Cytoscape.getDesktop().getCytoPanel(SwingConstants.WEST).remove(Cytoscape.getDesktop().getCytoPanel(SwingConstants.WEST).getCytoPanelComponentCount() - 1);
                 return;
             } else {
                 return;
@@ -894,7 +1064,7 @@ public class CytoSpade extends CytoscapePlugin {
         private void generatePDFsClicked(ActionEvent evt) {
             // Save current landscaping before generating PDFs
             saveLandscaping(false);
-            
+
             // Create the workflow wizard to walk user through setting up PDF generation
             WorkflowWizard wf = new WorkflowWizard(Cytoscape.getDesktop());
 
@@ -904,10 +1074,11 @@ public class CytoSpade extends CytoscapePlugin {
             wf.setCurrentPanel(WorkflowWizardPanels.GeneratePDFs.IDENTIFIER);
             int showModalDialog = wf.showModalDialog();
 
-            if (showModalDialog == WorkflowWizard.CANCEL_RETURN_CODE)
+            if (showModalDialog == WorkflowWizard.CANCEL_RETURN_CODE) {
                 return;
-            else if (showModalDialog != WorkflowWizard.FINISH_RETURN_CODE)
+            } else if (showModalDialog != WorkflowWizard.FINISH_RETURN_CODE) {
                 JOptionPane.showMessageDialog(null, "Error occured in workflow wizard.");
+            }
         }
 
         private void makePivotTableClicked(ActionEvent ae) {
@@ -922,12 +1093,10 @@ public class CytoSpade extends CytoscapePlugin {
 
         private SPADEContext spadeCxt;
         private VisualMapping visualMapping;
-
         private String xChanScale;
         private String yChanScale;
         private String xChanParam;
         private String yChanParam;
-
         //West panel controls
         private javax.swing.JComboBox plotStyleComboBox;
         private javax.swing.JComboBox colorscaleComboBox;
@@ -979,10 +1148,11 @@ public class CytoSpade extends CytoscapePlugin {
             int showModalDialog = wf.showModalDialog();
 
 
-            if (showModalDialog == WorkflowWizard.CANCEL_RETURN_CODE)
+            if (showModalDialog == WorkflowWizard.CANCEL_RETURN_CODE) {
                 return;
-            else if (showModalDialog != WorkflowWizard.FINISH_RETURN_CODE)
+            } else if (showModalDialog != WorkflowWizard.FINISH_RETURN_CODE) {
                 JOptionPane.showMessageDialog(null, "Error occured in workflow wizard.");
+            }
 
 
             if (spadeCxt.getWorkflowKind() == SPADEContext.WorkflowKind.ANALYSIS) {
@@ -993,25 +1163,20 @@ public class CytoSpade extends CytoscapePlugin {
 
                 //Set the focus on the panel
                 Cytoscape.getDesktop().getCytoPanel(SwingConstants.WEST).setSelectedIndex(
-                        Cytoscape.getDesktop().getCytoPanel(SwingConstants.WEST).getCytoPanelComponentCount()-1
-                );
+                        Cytoscape.getDesktop().getCytoPanel(SwingConstants.WEST).getCytoPanelComponentCount() - 1);
 
                 //This setPrefferedSize(getSize + 1), setPrefferedSize(getSize - 1)
                 //is seemingly required to prevent violent behavior of the pack
                 //method and to force pack to actually relayout the components
                 Cytoscape.getDesktop().setPreferredSize(new Dimension(
                         Cytoscape.getDesktop().getSize().width + 1,
-                        Cytoscape.getDesktop().getSize().height + 1
-                        ));
+                        Cytoscape.getDesktop().getSize().height + 1));
                 Cytoscape.getDesktop().setPreferredSize(new Dimension(
                         Cytoscape.getDesktop().getSize().width - 1,
-                        Cytoscape.getDesktop().getSize().height - 1
-                        ));
+                        Cytoscape.getDesktop().getSize().height - 1));
                 Cytoscape.getDesktop().pack();
             }
 
         }
-
     }
-
 }

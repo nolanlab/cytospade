@@ -43,6 +43,7 @@ import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 
 import java.util.Iterator;
 import java.util.Set;
@@ -57,10 +58,12 @@ import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JMenuItem;
 import javax.swing.SwingConstants;
+import org.apache.commons.math.MathException;
 
 import org.apache.commons.math.stat.inference.TTestImpl;
 import org.apache.commons.math.linear.Array2DRowRealMatrix;
 import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.math.linear.RealMatrix;
 
 /**
  * Cytoscape plugin that draws scatter plots for SPADE trees
@@ -738,122 +741,66 @@ public class CytoSpade extends CytoscapePlugin {
             /**
              * Populates selectedEvents
              */
-            private double[][] populateSelectedEventsInitial(
-                    Array2DRowRealMatrix eventsInitial,
+            private Array2DRowRealMatrix populateSelectedEvents(
+                    Array2DRowRealMatrix events,
                     int[] selectedClust,
-                    fcsFile FCSInputFile) {
-                //Get Cluster IDs from the row corresponding to 
-                //"cluster" in the events matrix
-                double[] allClustIds = new double[eventsInitial.getRowDimension()];
-                int[] allAttrIds = new int[eventsInitial.getColumnDimension()];
-
-                ArrayList<Integer> NodeIds = new ArrayList<Integer>();
-
-                //We want all attributes
-                for (int i = 0; i < eventsInitial.getRowDimension(); i++) {
-                    allAttrIds[i] = i;
-                }
-
-                //Get elements in "cluster" row
-                for (int i = 0; i < eventsInitial.getRowDimension(); i++) {
-                    if (FCSInputFile.getChannelShortName(i).contentEquals("cluster")) {
-                        allClustIds = eventsInitial.getRow(i);
-                        break;
-                    }
-                }
+                    int clusterColumn
+                    ) {
+                ArrayList<Integer> columns = new ArrayList<Integer>();
 
                 //Populate selectedEventsInitial                        
-                for (int i = 0; i < allClustIds.length; i++) {
+                for (int i = 0; i < events.getColumnDimension(); i++) {
+                    int cluster = (int) events.getEntry(clusterColumn,i);
                     for (int j = 0; j < selectedClust.length; j++) {
-                        if (allClustIds[i] == selectedClust[j]) {
-                            NodeIds.add(i);
+                        if (cluster == selectedClust[j]) {
+                            columns.add(i);
                         }
                     }
                 }
 
-                double[][] selectedEventsInitialTemp = new double[allAttrIds.length][NodeIds.size()];
-                //       System.out.println(selectedEventsInitialTemp.length);
-                //       System.out.println(selectedEventsInitialTemp[0].length);
-                //       System.out.println(allAttrIds.length);
-                //       System.out.println(ArrayUtils.toPrimitive(NodeIds.toArray(new Integer[0])).length);
-                // eventsInitial.copySubMatrix(allAttrIds, ArrayUtils.toPrimitive(NodeIds.toArray(new Integer[0])), selectedEventsInitialTemp);
-                eventsInitial.copySubMatrix(allAttrIds, ArrayUtils.toPrimitive(NodeIds.toArray(new Integer[0])), selectedEventsInitialTemp);
+                int[] rows = new int[events.getRowDimension()];
+                for (int i=0; i<rows.length; i++) rows[i] = i;
 
-                return selectedEventsInitialTemp;
+                return (Array2DRowRealMatrix) events.getSubMatrix(rows, ArrayUtils.toPrimitive(columns.toArray(new Integer[0])));
             }
 
-            /**
-             * Eliminate rows corresponding to attributes Time, Cluster and Density
-             * from both selectedEventsInitial and allEventsInitial
-             */
-            private int[] getAttrOfInterest(fcsFile FCSInputFile,
-                    Array2DRowRealMatrix eventsInitial,
-                    ArrayList<String> attributeNamesTemp) {
-                ArrayList<Integer> attrOfInterest = new ArrayList<Integer>();
-                int[] allNodeIds = new int[eventsInitial.getRowDimension()];
+            public class TTestResult implements Comparable {
 
-                for (int i = 0; i < eventsInitial.getRowDimension(); i++) {
-                    if (FCSInputFile.getChannelShortName(i).contentEquals("time")
-                            || FCSInputFile.getChannelShortName(i).contentEquals("cluster")
-                            || FCSInputFile.getChannelShortName(i).contentEquals("density")) {
-                        continue;
-                    } else {
-                        attrOfInterest.add(i);
-                        attributeNamesTemp.add(FCSInputFile.getChannelShortName(i));
-                    }
+                public TTestResult(String name, double pValue) {
+                    this.name = name;
+                    this.pValue = pValue;
                 }
-                return ArrayUtils.toPrimitive(attrOfInterest.toArray(new Integer[0]));
+
+                public int compareTo(Object t) {
+                    TTestResult rhs = (TTestResult)t;
+                    if (this.pValue < rhs.pValue) return -1;
+                    else if(this.pValue > rhs.pValue) return 1;
+                    else return 0;
+                }
+
+                public double pValue;
+                public String name;
+
             }
 
-            private double[][] eliminateAttr(
-                    Array2DRowRealMatrix eventsInitial,
-                    int[] attrOfInterest) {
-                double[][] doubleArray = new double[attrOfInterest.length][eventsInitial.getColumnDimension()];
-                int[] allNodeIds = new int[eventsInitial.getColumnDimension()];
-                for (int i = 0; i < eventsInitial.getColumnDimension(); i++) {
-                    allNodeIds[i] = i;
-                }
-                eventsInitial.copySubMatrix(attrOfInterest, allNodeIds, doubleArray);
-                return doubleArray;
-            }
 
             /**
              * T-distribution between selected nodes and all nodes
              */
-            private double[] tDistribution(
+            private double tTest(
                     Array2DRowRealMatrix selectedEvents,
                     Array2DRowRealMatrix allEvents,
-                    ArrayList<String> attributeNames) {
+                    int attribute) {
                 
-                //Find p-values between seleceted Nodes and all Nodes 
-                //using t-test and store them in an array
                 TTestImpl tTest = new TTestImpl();
-                double[] pValues = new double[attributeNames.size()];
-
-                for (int i = 0; i < attributeNames.size(); i++) {
-                    pValues[i] = tTest.t(selectedEvents.getRow(i), allEvents.getRow(i));
+                try {
+                    return tTest.tTest(selectedEvents.getDataRef()[attribute], allEvents.getDataRef()[attribute]);
+                } catch (IllegalArgumentException ex) {
+                    CyLogger.getLogger(SPADEController.class.getName()).error(null, ex);
+                } catch (MathException ex) {
+                    CyLogger.getLogger(SPADEController.class.getName()).error(null, ex);
                 }
-
-                //Sorting the array containing pValues as well as corresponding 
-                //attribute names on the basis of absolute values. Using Bubble-sort
-                //which is inefficient, but since array length is limited to 50,
-                //performance will not take a hit. Sorting is being done in 
-                //descending order
-                double temp = 0;
-                String temp_str = null;
-                for (int i = 0; i < pValues.length; i++) {
-                    for (int j = 1; j < (pValues.length - i); j++) {
-                        if (Math.abs(pValues[j - 1]) < Math.abs(pValues[j])) {
-                            temp = pValues[j - 1];
-                            pValues[j - 1] = pValues[j];
-                            pValues[j] = temp;
-                            temp_str = attributeNames.get(j - 1);
-                            attributeNames.set(j - 1, attributeNames.get(j));
-                            attributeNames.set(j, temp_str);
-                        }
-                    }
-                }
-                return pValues;
+                return 1.0;
             }
 
             /**
@@ -877,59 +824,19 @@ public class CytoSpade extends CytoscapePlugin {
 
                 //Pull the events list
                 double[][] events = FCSInputFile.getCompensatedEventList();
+                int        num_events = FCSInputFile.getEventCount();
 
-                //Populate eventsInitial
-                Array2DRowRealMatrix eventsInitial = new Array2DRowRealMatrix(events);
-
-                //Populate selectedEventsInitial (extract selected nodes into
-                //selectedEventsInitial)
-                double[][] selectedEventsInitialTemp = populateSelectedEventsInitial(eventsInitial, selectedClust,
-                        FCSInputFile);
-                Array2DRowRealMatrix selectedEventsInitial =
-                        new Array2DRowRealMatrix(selectedEventsInitialTemp);
-
-                //Eliminate rows corresponding to attributes Time, Cluster and Density
-                //from both selectedEventsInitial and allEventsInitial
-                ArrayList<String> attributeNames = new ArrayList<String>();
-
-                int[] attrOfInterest = getAttrOfInterest(FCSInputFile,
-                        eventsInitial, attributeNames);
-                double[][] allEventsTemp = eliminateAttr(eventsInitial,
-                        attrOfInterest);
-                double[][] selectedEventsTemp = eliminateAttr(selectedEventsInitial,
-                        attrOfInterest);
-                Array2DRowRealMatrix allEvents =
-                        new Array2DRowRealMatrix(allEventsTemp);
-                Array2DRowRealMatrix selectedEvents =
-                        new Array2DRowRealMatrix(selectedEventsTemp);
-
-                //Find pValues of selected nodes and all nodes corresponding
-                //to each attribute of interest
-                double[] pValues = tDistribution(
-                        selectedEvents, allEvents, attributeNames);
-                
-                //Displaying 5 of the highest valued pValues with sign
-                for (int i = 0; i < 5; i++) {
-                    System.out.println(attributeNames.get(i));
-                    System.out.println(pValues[i]);
-                }                
-
+               
                 //Find the columns with the appropriate parameters
-                int xChan = 0;
-                for (int i = 0; i < FCSInputFile.getChannelCount(); i++) {
-                    if (FCSInputFile.getChannelShortName(i).contentEquals(xChanParam)) {
-                        xChan = i;
-                    }
-                }
-                int yChan = 0;
-                for (int i = 0; i < FCSInputFile.getChannelCount(); i++) {
-                    if (FCSInputFile.getChannelShortName(i).contentEquals(yChanParam)) {
-                        yChan = i;
-                    }
-                }
+                int xChan = FCSInputFile.getChannelIdFromShortName(xChanParam);
+                if (xChan < 0)
+                    xChan = 0;
 
-                int num_events = FCSInputFile.getEventCount();
+                int yChan = FCSInputFile.getChannelIdFromShortName(yChanParam);
+                if (yChan < 0)
+                    yChan = 0;
 
+                
                 //The cluster channel is always the last
                 int clustChan = FCSInputFile.getChannelCount() - 1;
 
@@ -943,31 +850,34 @@ public class CytoSpade extends CytoscapePlugin {
                     COUNT = num_events;
                 } else {
 
-                    //The background events (all events)
-                    dataAx = events[xChan];
-                    dataAy = events[yChan];
+                    Array2DRowRealMatrix eventsInitl = new Array2DRowRealMatrix(events);
+                    Array2DRowRealMatrix eventsSlctd = populateSelectedEvents(
+                            eventsInitl,
+                            selectedClust,
+                            FCSInputFile.getChannelIdFromShortName("cluster")
+                            );
 
-                    //The primary events (selected only)
-                    int eventcount = 0;
-                    datax = new double[num_events];
-                    datay = new double[num_events];
+                    ArrayList<TTestResult> pValues = new ArrayList<TTestResult>();
+                    for (int i=0; i < FCSInputFile.getNumChannels(); i++) {
+                        String name = FCSInputFile.getChannelShortName(i);
+                        if (name.contentEquals("Time") || name.contentEquals("time")|| name.contentEquals("cluster") || name.contentEquals("density"))
+                            continue;
 
-                    for (int clust = 0; clust < selectedClust.length; clust++) {
-                        for (int i = 0; i < num_events; i++) {
-                            if (events[clustChan][i] == selectedClust[clust]) {
-                                datax[eventcount] = events[xChan][i];
-                                datay[eventcount] = events[yChan][i];
-                                eventcount++;
-                            }
-                        }
+                        pValues.add(new TTestResult(name,tTest(eventsSlctd, eventsInitl, i)));
                     }
+                    Collections.sort(pValues);
 
-                    datax = Arrays.copyOf(datax, eventcount);
-                    datay = Arrays.copyOf(datay, eventcount);
+                    for (int i=0; i < ((pValues.size() < 5) ? pValues.size() : 5); i++)
+                        System.out.println("P-Value for "+pValues.get(i).name+": "+pValues.get(i).pValue);
+                    System.out.println("");
 
-                    countLabel.setText("Displaying " + df.format((int) eventcount) + " of " + df.format(num_events) + " events");
-                    COUNT = eventcount;
-
+               
+                    dataAx = eventsInitl.getDataRef()[xChan];  // Background events
+                    dataAy = eventsInitl.getDataRef()[yChan];
+                    datax  = eventsSlctd.getDataRef()[xChan];  // Foreground events
+                    datay  = eventsSlctd.getDataRef()[yChan];
+                    COUNT  = eventsSlctd.getColumnDimension();
+                    countLabel.setText("Displaying " + df.format(COUNT) + " of " + df.format(num_events) + " events");
                 }
 
                 xChanMax = FCSInputFile.getChannelRange(xChan);

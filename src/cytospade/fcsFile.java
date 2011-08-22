@@ -1456,6 +1456,17 @@ public final class fcsFile {
     }
 
     /**
+     * getChannelIdFromShortName
+     *
+     */
+    public int getChannelIdFromShortName(String name) {
+        for (int i=0; i<channelShortname.length; i++)
+            if (channelShortname[i].equals(name))
+                return i;
+        return -1;
+    }
+
+    /**
      * getChannelName ---
      * <p>
      * Returns the name of the channel with number channelNumber.

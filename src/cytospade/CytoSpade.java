@@ -49,6 +49,7 @@ import java.util.Iterator;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.JTextField;
 
 import javax.swing.SwingWorker;
 import javax.swing.ImageIcon;
@@ -64,6 +65,8 @@ import org.apache.commons.math.stat.inference.TTestImpl;
 import org.apache.commons.math.linear.Array2DRowRealMatrix;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.math.linear.RealMatrix;
+
+import java.lang.StringBuffer;
 
 /**
  * Cytoscape plugin that draws scatter plots for SPADE trees
@@ -221,6 +224,7 @@ public class CytoSpade extends CytoscapePlugin {
      * SPADE analysis control panel.
      */
     class SpadePanel extends JPanel {
+        private JTextField pValTextBox;
 
         public SpadePanel(SPADEContext spadeCxt) {
             this.spadeCxt = spadeCxt;
@@ -323,12 +327,14 @@ public class CytoSpade extends CytoscapePlugin {
             jLabelPlot = new javax.swing.JLabel();
             jLabelPlot.setBounds(0, 0, 358, 358);
 
-            countLabel = new javax.swing.JLabel();
+            countLabel = new javax.swing.JLabel();            
             xAxisClickable = new javax.swing.JLabel();
             xAxisClickable.setBounds(48, 311, 308, 46);
 
             yAxisClickable = new javax.swing.JLabel();
             yAxisClickable.setBounds(0, 0, 46, 308);
+            
+            pValTextBox = new javax.swing.JTextField(); 
 
             plotArea = new javax.swing.JLayeredPane();
 
@@ -417,6 +423,7 @@ public class CytoSpade extends CytoscapePlugin {
                             .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                             .addComponent(colorrangeComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, 165, javax.swing.GroupLayout.PREFERRED_SIZE))
                         .addComponent(countLabel)
+                        .addComponent(pValTextBox)
                         .addGroup(layout.createSequentialGroup()
                             .addComponent(drawPlotsButton)
                             .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
@@ -450,6 +457,7 @@ public class CytoSpade extends CytoscapePlugin {
                     .addComponent(plotArea, 358, 358, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                     .addComponent(countLabel)
+                    .addComponent(pValTextBox)
                     .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                     .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                         .addComponent(drawPlotsButton)
@@ -613,6 +621,7 @@ public class CytoSpade extends CytoscapePlugin {
             } else {
                 //If the user selected the empty first row, clear the display
                 countLabel.setText(null);
+                pValTextBox.setText(null);
                 jLabelPlot.setIcon(null);
             }
 
@@ -877,7 +886,13 @@ public class CytoSpade extends CytoscapePlugin {
                     datax  = eventsSlctd.getDataRef()[xChan];  // Foreground events
                     datay  = eventsSlctd.getDataRef()[yChan];
                     COUNT  = eventsSlctd.getColumnDimension();
-                    countLabel.setText("Displaying " + df.format(COUNT) + " of " + df.format(num_events) + " events");
+                    countLabel.setText("Displaying " + df.format(COUNT) + " of " + df.format(num_events) + " events");                    
+                    StringBuffer sb = new StringBuffer(500);
+                    for (int i=0; i < ((pValues.size() < 5) ? pValues.size() : 5); i++) {                        
+                        sb = sb.append("P-Value for ").append(pValues.get(i).name).
+                                append(": ").append(pValues.get(i).pValue).append("\n");               
+                    }
+                    pValTextBox.setText(sb.toString());
                 }
 
                 xChanMax = FCSInputFile.getChannelRange(xChan);

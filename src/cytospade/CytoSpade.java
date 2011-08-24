@@ -15,11 +15,14 @@ import cytoscape.visual.VisualMappingManager;
 import cytoscape.visual.VisualPropertyDependency;
 import cytoscape.visual.VisualPropertyType;
 import cytoscape.visual.VisualStyle;
+import cytospade.ui.NodeContextMenu;
+import cytospade.ui.NodeContextMenuItems;
 
 
 import facs.CanvasSettings;
 import facs.Plot2D;
 import giny.model.GraphPerspective;
+import giny.model.Node;
 import giny.view.NodeView;
 
 import java.awt.Color;
@@ -44,8 +47,11 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 
 import java.util.Iterator;
+import java.util.List;
+import java.util.Scanner;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -71,6 +77,7 @@ import org.apache.commons.math.linear.RealMatrix;
 public class CytoSpade extends CytoscapePlugin {
 
     private SPADEContext spadeCxt;
+    private NodeContextMenu nodeCxtMenuListener;
 
     /**
      * Creates an action and adds it to the Plugins menu.
@@ -79,12 +86,13 @@ public class CytoSpade extends CytoscapePlugin {
         // Initialized internal state keeping
         spadeCxt = new SPADEContext();
 
-        //create a new action to respond to menu activation
+        // Create menu bar item, along with associated action...
         SPADEdraw action = new SPADEdraw();
-        //set the preferred menu
         action.setPreferredMenu("Plugins");
-        //and add it to the menus
         Cytoscape.getDesktop().getCyMenus().addAction(action);
+
+        // Create contextual menus that can be used with network views
+        nodeCxtMenuListener = new NodeContextMenu();
     }
 
     /**
@@ -100,48 +108,42 @@ public class CytoSpade extends CytoscapePlugin {
      * @param closeNetwork - whether or not to close the network after saving it.
      */
     private void saveLandscaping(Boolean closeNetwork) {
-        CyNetworkView cnv = Cytoscape.getCurrentNetworkView();
-        GraphPerspective network = (GraphPerspective) Cytoscape.getCurrentNetwork();
-        Iterator<CyNode> nodesIt;
-        if (!network.nodesList().isEmpty()) {
-            try {
-                FileWriter fstream = new FileWriter(new File(spadeCxt.getPath(), "layout.table").getAbsolutePath());
-                BufferedWriter out = new BufferedWriter(fstream);
+        CyNetwork currentNetwork = Cytoscape.getCurrentNetwork();
+        CyNetworkView currentNetworkView = Cytoscape.getCurrentNetworkView();
+        try {
+            FileWriter fstream = new FileWriter(new File(spadeCxt.getPath(), "layout.table").getAbsolutePath());
+            BufferedWriter out = new BufferedWriter(fstream);
+            
+            int nodeCount = currentNetwork.getNodeCount();
+            double[][] pos = new double[currentNetwork.getNodeCount()][2];
 
-                nodesIt = network.nodesIterator();
-
-                //This stupid iterator runs backward. So reverse the list first
-                double[] xPositions = new double[network.nodesList().size()];
-                double[] yPositions = new double[network.nodesList().size()];
-                int ii = network.nodesList().size() - 1;
-                while (nodesIt.hasNext()) {
-                    giny.model.Node cytoNode = (giny.model.Node) nodesIt.next();
-                    NodeView nodeView = cnv.getNodeView(cytoNode);
-                    if (nodeView == null) {
-                        JOptionPane.showMessageDialog(null, "Error: null nodeView");
-                    }
-                    xPositions[ii] = nodeView.getXPosition();
-                    //Multiply by -1 to flip map
-                    yPositions[ii] = -1 * nodeView.getYPosition();
-                    ii--;
+            for (CyNode node: (List<CyNode>)currentNetwork.nodesList()) {
+                int id;
+                try {
+                    id = Integer.parseInt(node.getIdentifier());
+                } catch (NumberFormatException ex) {
+                    continue;
                 }
+                if (id > nodeCount)
+                    continue;
 
-                //Now write the list out
-                for (int i = 0; i < network.nodesList().size(); i++) {
-                    out.write(xPositions[i] + " ");
-                    out.write(yPositions[i] + "\n");
-                }
-
-                out.close();
-            } catch (IOException ex) {
-                Logger.getLogger(CytoSpade.class.getName()).log(Level.SEVERE, null, ex);
-                return;
+                NodeView nodeView = currentNetworkView.getNodeView(node);
+                pos[id][0] = nodeView.getXPosition();
+                pos[id][1] = -1.0*nodeView.getYPosition();
             }
+
+            for (int i=0; i<currentNetwork.getNodeCount(); i++)
+                out.write(pos[i][0]+" "+pos[i][1]+"\n");
+            
+            out.close();
+        } catch (IOException ex) {
+            CyLogger.getLogger().error("Error read layout.table", ex);
+            return;
         }
 
         if (closeNetwork) {
             //Close the network that the user just left
-            Cytoscape.destroyNetwork(Cytoscape.getCurrentNetwork());
+            Cytoscape.destroyNetwork(currentNetwork);
             //This is the only way to clear the nodeAttributes. I don't really
             //know what it does though; found it by trial-and-error:
             Cytoscape.createNewSession();
@@ -155,48 +157,41 @@ public class CytoSpade extends CytoscapePlugin {
      * @param layoutFile
      */
     private void readLandscaping(File layoutFile) {
-        CyNetworkView cnv = Cytoscape.getCurrentNetworkView();
-        GraphPerspective network = (GraphPerspective) Cytoscape.getCurrentNetwork();
-        Iterator<CyNode> nodesIt;
+        CyNetwork currentNetwork = Cytoscape.getCurrentNetwork();
+        CyNetworkView currentNetworkView = Cytoscape.getCurrentNetworkView();
+
         try {
-            FileReader fstream = new FileReader(layoutFile.getAbsolutePath());
-            BufferedReader in = new BufferedReader(fstream);
-            String[] line = new String[2];
+            int curNode = 0, nodeCount = currentNetwork.getNodeCount();
+            double[][] pos = new double[currentNetwork.getNodeCount()][2];
 
-            cnv = Cytoscape.getCurrentNetworkView();
-            network = (GraphPerspective) Cytoscape.getCurrentNetwork();
-            nodesIt = network.nodesIterator();
+            Scanner scanner = new Scanner(layoutFile);
+            while (scanner.hasNextLine()) {
+                if (curNode >= nodeCount)
+                    break;
+                pos[curNode][0] = scanner.nextDouble();
+                pos[curNode][1] = -1.0 * scanner.nextDouble();
+                curNode++;
+            }
 
-            //This stupid iterator runs backward. So reverse the list first
-            double[] xPositions = new double[network.nodesList().size()];
-            double[] yPositions = new double[network.nodesList().size()];
-            for (int i = network.nodesList().size() - 1; i > -1; i--) {
+            for (CyNode node: (List<CyNode>)currentNetwork.nodesList()) {
+                int id;
                 try {
-                    line = in.readLine().split(" ");
-                } catch (IOException ex) {
-                    Logger.getLogger(CytoSpade.class.getName()).log(Level.SEVERE, null, ex);
-                    JOptionPane.showMessageDialog(null, "IO error while reading in relandscaped network");
+                    id = Integer.parseInt(node.getIdentifier());
+                } catch (NumberFormatException ex) {
+                    continue;
                 }
-                xPositions[i] = Double.parseDouble(line[0]);
-                yPositions[i] = Double.parseDouble(line[1]);
+                if (id > nodeCount)
+                    continue;
+
+                NodeView nodeView = currentNetworkView.getNodeView(node);
+                nodeView.setXPosition(pos[id][0]);
+                nodeView.setYPosition(pos[id][1]);
             }
 
-            //Now apply it.
-            int ii = 0;
-            while (nodesIt.hasNext()) {
-                giny.model.Node cytoNode = (giny.model.Node) nodesIt.next();
-                NodeView nodeView = cnv.getNodeView(cytoNode);
-                if (nodeView != null) {
-                    nodeView.setXPosition(xPositions[ii]);
-                    //Multiply by -1 to flip the map
-                    nodeView.setYPosition(-1 * yPositions[ii]);
-                    ii++;
-                }
-
-            }
 
         } catch (FileNotFoundException ex) {
-            Logger.getLogger(CytoSpade.class.getName()).log(Level.SEVERE, null, ex);
+            CyLogger.getLogger().error("Error read layout.table", ex);
+            return;
         }
     }
 
@@ -542,6 +537,9 @@ public class CytoSpade extends CytoscapePlugin {
                     return;
                 }
 
+                // Add context menu listener
+                Cytoscape.getCurrentNetworkView().addNodeContextMenuListener(nodeCxtMenuListener);
+
                 // Add listener for updating dot plot based on user node selection
                 Cytoscape.getCurrentNetwork().addSelectEventListener(new HandleSelect());
 
@@ -551,7 +549,7 @@ public class CytoSpade extends CytoscapePlugin {
                 // Update the parameter combo box
                 VisualMapping.populateNumericAttributeComboBox(colorscaleComboBox);
 
-                colorscaleComboBox.setMaximumRowCount(colorscaleComboBox.getItemCount());
+                colorscaleComboBox.setMaximumRowCount(20);
                 colorscaleComboBox.setSelectedIndex(0);
 
 
@@ -718,24 +716,26 @@ public class CytoSpade extends CytoscapePlugin {
             }
 
             /**
-             * Get selected nodes, return null if no nodes are selected
+             * Get selected nodes
              */
             private int[] getSelectedNodes() {
-                int[] selectedClust = null;
-                CyNetwork current_network = Cytoscape.getCurrentNetwork();
-                if (current_network != null) {
-                    Set selectedNodes = current_network.getSelectedNodes();
-                    if (selectedNodes.isEmpty()) {
-                        //selectedClust = null; //Do nothing, selectedClust is initialized.
-                    } else if (selectedNodes.size() > 0) {
-                        Object[] nds = (Object[]) selectedNodes.toArray(new Object[1]);
-                        selectedClust = new int[nds.length];
-                        for (int i = 0; i < nds.length; i++) {
-                            selectedClust[i] = Integer.parseInt(nds[i].toString()) + 1; //Plus 1!
-                        }
-                    }
+                ArrayList<CyNode> selectedNodes = new ArrayList<CyNode>();
+
+                CyNetwork currentNetwork = Cytoscape.getCurrentNetwork();
+                for (CyNode node: (Set<CyNode>)currentNetwork.getSelectedNodes()) {
+                    GraphPerspective nestedNetwork = node.getNestedNetwork();
+                    if (nestedNetwork == null)
+                        selectedNodes.add(node);
+                    else
+                        selectedNodes.addAll(nestedNetwork.nodesList());
                 }
-                return selectedClust;
+                
+                int[] selectedNodes_i = new int[selectedNodes.size()];
+                for (int i=0; i<selectedNodes.size(); i++) {   
+                    selectedNodes_i[i] = Integer.parseInt(selectedNodes.get(i).getIdentifier())+1;
+                }
+
+                return selectedNodes_i;
             }
 
             /**
@@ -809,7 +809,7 @@ public class CytoSpade extends CytoscapePlugin {
              */
             private void populateData() {
 
-                //Get the selected nodes; returns null if no nodes selected
+                //Get the selected nodes
                 int[] selectedClust = getSelectedNodes();
 
                 //Open the FCS file
@@ -842,7 +842,7 @@ public class CytoSpade extends CytoscapePlugin {
 
                 DecimalFormat df = new DecimalFormat();
 
-                if (selectedClust == null) {
+                if (selectedClust.length == 0) {
                     datax = events[xChan];
                     datay = events[yChan];
 

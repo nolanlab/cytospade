@@ -160,7 +160,7 @@ public class VisualMapping {
         String[] names = cyNodeAttrs.getAttributeNames();
         Arrays.sort(names);
         for (String name : names) {
-            if (isNumericAttribute(name)) {
+            if (isNumericAttribute(name) && cyNodeAttrs.getUserVisible(name)) {
                 csBox.addItem(name);
             }
         }

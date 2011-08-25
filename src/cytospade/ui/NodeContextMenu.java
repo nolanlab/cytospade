@@ -5,7 +5,7 @@
 
 package cytospade.ui;
 
-import cytospade.ui.NodeContextMenuItems.CreateNestedNetworkFromNodes;
+import cytospade.ui.NodeContextMenuItems.MakeNestedNetwork;
 import cytospade.ui.NodeContextMenuItems.UndoNestedNetwork;
 import ding.view.NodeContextMenuListener;
 import giny.view.NodeView;
@@ -24,8 +24,8 @@ public class NodeContextMenu implements NodeContextMenuListener {
 
         // Populate menu depending on context...
         if (nv.isSelected() && nv.getNode().getNestedNetwork() == null) {
-            JMenuItem jmi = new JMenuItem(CreateNestedNetworkFromNodes.LABEL);
-            jmi.addActionListener(new CreateNestedNetworkFromNodes());
+            JMenuItem jmi = new JMenuItem(MakeNestedNetwork.LABEL);
+            jmi.addActionListener(new MakeNestedNetwork());
             spadeMenu.add(jmi);
         }
 

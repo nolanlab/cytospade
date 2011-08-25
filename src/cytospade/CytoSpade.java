@@ -5,6 +5,7 @@ import cytoscape.util.CytoscapeAction;
 import cytoscape.view.cytopanels.CytoPanelImp;
 import cytoscape.*;
 import cytoscape.actions.LoadNetworkTask;
+import cytoscape.data.CyAttributes;
 
 import cytoscape.data.SelectEventListener;
 import cytoscape.logger.CyLogger;
@@ -48,6 +49,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 
 import java.util.Iterator;
 import java.util.List;
@@ -100,42 +102,76 @@ public class CytoSpade extends CytoscapePlugin {
      */
     @Override
     public void onCytoscapeExit() {
-        saveLandscaping(true);
+        saveMetadata(true);
     }
 
     /**
      * Saves the user-defined network landscaping to a flat file
      * @param closeNetwork - whether or not to close the network after saving it.
      */
-    private void saveLandscaping(Boolean closeNetwork) {
-        CyNetwork currentNetwork = Cytoscape.getCurrentNetwork();
+    private void saveMetadata(Boolean closeNetwork) {
+        CyNetwork currentNetwork         = Cytoscape.getCurrentNetwork();
         CyNetworkView currentNetworkView = Cytoscape.getCurrentNetworkView();
+        
         try {
-            FileWriter fstream = new FileWriter(new File(spadeCxt.getPath(), "layout.table").getAbsolutePath());
-            BufferedWriter out = new BufferedWriter(fstream);
-            
+           FileWriter nstream = new FileWriter(new File(spadeCxt.getPath(), "nested.txt").getAbsolutePath());
+           BufferedWriter nout = new BufferedWriter(nstream);
+           for (CyNode node: (List<CyNode>)currentNetwork.nodesList()) {
+                // Write out membership in nested networks
+                GraphPerspective nestedNetwork = node.getNestedNetwork();
+                if (nestedNetwork != null) {
+                    for (CyNode nn: (List<CyNode>)nestedNetwork.nodesList()) {
+                        if (!NodeContextMenuItems.MakeNestedNetwork.isNested(nn))
+                            continue;
+                        
+                        int id = Integer.parseInt(nn.getIdentifier());
+                        nout.write((id+1)+" ");
+                    }
+                    nout.write("\n");
+                    
+                    // Restore original node structure
+                    NodeContextMenuItems.UndoNestedNetwork.undoNestedNode(node);
+                }
+           }
+           nout.close();
+        } catch (IOException ex) {
+            CyLogger.getLogger().error("Error read layout.table", ex);
+            return;
+        }
+
+
+        // Save network layout
+        try {
+            FileWriter lstream = new FileWriter(new File(spadeCxt.getPath(), "layout.table").getAbsolutePath());
+            BufferedWriter lout = new BufferedWriter(lstream);
+
+
             int nodeCount = currentNetwork.getNodeCount();
-            double[][] pos = new double[currentNetwork.getNodeCount()][2];
+            double[][] pos = new double[nodeCount][2];
 
             for (CyNode node: (List<CyNode>)currentNetwork.nodesList()) {
+                NodeView nodeView = currentNetworkView.getNodeView(node);
+
                 int id;
                 try {
                     id = Integer.parseInt(node.getIdentifier());
                 } catch (NumberFormatException ex) {
                     continue;
                 }
-                if (id > nodeCount)
+                if (id > nodeCount) {
                     continue;
+                }
 
-                NodeView nodeView = currentNetworkView.getNodeView(node);
-                pos[id][0] = nodeView.getXPosition();
-                pos[id][1] = -1.0*nodeView.getYPosition();
+                if (nodeView != null) {
+                    pos[id][0] = nodeView.getXPosition();
+                    pos[id][1] = -1.0 * nodeView.getYPosition();
+                }
             }
 
-            for (int i=0; i<currentNetwork.getNodeCount(); i++)
-                out.write(pos[i][0]+" "+pos[i][1]+"\n");
+            for (int i=0; i<nodeCount; i++)
+                lout.write(pos[i][0]+" "+pos[i][1]+"\n");
             
-            out.close();
+            lout.close();
         } catch (IOException ex) {
             CyLogger.getLogger().error("Error read layout.table", ex);
             return;
@@ -156,7 +192,7 @@ public class CytoSpade extends CytoscapePlugin {
      * Reads and applies the user-defined network landscaping from a flat file
      * @param layoutFile
      */
-    private void readLandscaping(File layoutFile) {
+    private void loadMetadata(File layoutFile) {
         CyNetwork currentNetwork = Cytoscape.getCurrentNetwork();
         CyNetworkView currentNetworkView = Cytoscape.getCurrentNetworkView();
 
@@ -191,6 +227,28 @@ public class CytoSpade extends CytoscapePlugin {
 
         } catch (FileNotFoundException ex) {
             CyLogger.getLogger().error("Error read layout.table", ex);
+            return;
+        }
+
+        // Apply nesting loaded from nested.txt metadata
+        try {
+            Scanner scanner = new Scanner(new File(spadeCxt.getPath(), "nested.txt"));
+            while (scanner.hasNextLine()) {
+                Set nodes = new HashSet();
+                for (String id: scanner.nextLine().split(" ")) {
+                    try {
+                        // Convert back to 0-indexed nodes
+                        nodes.add(Cytoscape.getCyNode(Integer.toString(Integer.parseInt(id)-1)));
+                    } catch (NumberFormatException ex) {
+                        CyLogger.getLogger().error("Invalid entry in nested.txt", ex);
+                    }
+                }
+                // Apply nesting
+                NodeContextMenuItems.MakeNestedNetwork.makeNestedNode(nodes);
+            }
+
+        } catch (FileNotFoundException ex) {
+            CyLogger.getLogger().debug("Error reading nested.txt", ex);
             return;
         }
     }
@@ -516,7 +574,7 @@ public class CytoSpade extends CytoscapePlugin {
             //This is a hackerish way to tell if no network is loaded. For some reason,
             //Cytoscape.getCurrentNetwork[View]() always returns something.
             if (!network.nodesList().isEmpty()) {
-                saveLandscaping(true);
+                saveMetadata(true);
             }
 
             //Open the new network, applying the X and Y coords if available
@@ -531,7 +589,7 @@ public class CytoSpade extends CytoscapePlugin {
                     }
                 });
                 if (layoutFiles.length == 1) {
-                    readLandscaping(layoutFiles[0]);
+                    loadMetadata(layoutFiles[0]);
                 } else if (layoutFiles.length > 1) {
                     JOptionPane.showMessageDialog(null, "Error: Found more than one layout.table file");
                     return;
@@ -962,7 +1020,7 @@ public class CytoSpade extends CytoscapePlugin {
         private void closeButtonWestClicked(java.awt.event.ActionEvent evt) {
             int returnvalue = JOptionPane.showConfirmDialog(null, "Close SPADE plug-in?", "Confirm close", JOptionPane.OK_CANCEL_OPTION);
             if (returnvalue == JOptionPane.OK_OPTION) {
-                saveLandscaping(true);
+                saveMetadata(true);
                 //FIXME This will fail if the user loads another plug-in after loading SPADE
                 Cytoscape.getDesktop().getCytoPanel(SwingConstants.WEST).remove(Cytoscape.getDesktop().getCytoPanel(SwingConstants.WEST).getCytoPanelComponentCount() - 1);
                 return;
@@ -973,7 +1031,7 @@ public class CytoSpade extends CytoscapePlugin {
 
         private void generatePDFsClicked(ActionEvent evt) {
             // Save current landscaping before generating PDFs
-            saveLandscaping(false);
+            saveMetadata(false);
 
             // Create the workflow wizard to walk user through setting up PDF generation
             WorkflowWizard wf = new WorkflowWizard(Cytoscape.getDesktop());

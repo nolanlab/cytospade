@@ -67,6 +67,7 @@ import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.math.linear.RealMatrix;
 
 import java.lang.StringBuffer;
+import javax.swing.JTextArea;
 
 /**
  * Cytoscape plugin that draws scatter plots for SPADE trees
@@ -224,8 +225,7 @@ public class CytoSpade extends CytoscapePlugin {
      * SPADE analysis control panel.
      */
     class SpadePanel extends JPanel {
-        private JTextField pValTextBox;
-
+     
         public SpadePanel(SPADEContext spadeCxt) {
             this.spadeCxt = spadeCxt;
 
@@ -334,7 +334,7 @@ public class CytoSpade extends CytoscapePlugin {
             yAxisClickable = new javax.swing.JLabel();
             yAxisClickable.setBounds(0, 0, 46, 308);
             
-            pValTextBox = new javax.swing.JTextField(); 
+            pValTextBox = new javax.swing.JTextArea();
 
             plotArea = new javax.swing.JLayeredPane();
 
@@ -457,6 +457,7 @@ public class CytoSpade extends CytoscapePlugin {
                     .addComponent(plotArea, 358, 358, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                     .addComponent(countLabel)
+                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                     .addComponent(pValTextBox)
                     .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                     .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
@@ -856,6 +857,8 @@ public class CytoSpade extends CytoscapePlugin {
                     datay = events[yChan];
 
                     countLabel.setText("Displaying " + df.format(num_events) + " of " + df.format(num_events) + " events");
+                    pValTextBox.setText("Select some nodes to calculate P-values");
+
                     COUNT = num_events;
                 } else {
 
@@ -876,21 +879,17 @@ public class CytoSpade extends CytoscapePlugin {
                     }
                     Collections.sort(pValues);
 
-                    for (int i=0; i < ((pValues.size() < 5) ? pValues.size() : 5); i++)
-                        System.out.println("P-Value for "+pValues.get(i).name+": "+pValues.get(i).pValue);
-                    System.out.println("");
-
-               
                     dataAx = eventsInitl.getDataRef()[xChan];  // Background events
                     dataAy = eventsInitl.getDataRef()[yChan];
                     datax  = eventsSlctd.getDataRef()[xChan];  // Foreground events
                     datay  = eventsSlctd.getDataRef()[yChan];
+
                     COUNT  = eventsSlctd.getColumnDimension();
                     countLabel.setText("Displaying " + df.format(COUNT) + " of " + df.format(num_events) + " events");                    
-                    StringBuffer sb = new StringBuffer(500);
+
+                    StringBuilder sb = new StringBuilder(500);
                     for (int i=0; i < ((pValues.size() < 5) ? pValues.size() : 5); i++) {                        
-                        sb = sb.append("P-Value for ").append(pValues.get(i).name).
-                                append(": ").append(pValues.get(i).pValue).append("\n");               
+                        sb.append("P-Value for ").append(pValues.get(i).name).append(": ").append(pValues.get(i).pValue).append("\n");               
                     }
                     pValTextBox.setText(sb.toString());
                 }
@@ -1035,6 +1034,7 @@ public class CytoSpade extends CytoscapePlugin {
         private javax.swing.JPopupMenu xAxisPopup;
         private javax.swing.JPopupMenu yAxisPopup;
         private javax.swing.JMenuItem menuItem;
+        private JTextArea pValTextBox;
     }
 
     /**

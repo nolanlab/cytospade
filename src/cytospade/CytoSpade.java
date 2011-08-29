@@ -75,6 +75,8 @@ import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.math.linear.RealMatrix;
 
 import java.lang.StringBuffer;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import javax.swing.JTextArea;
 
 /**
@@ -388,6 +390,7 @@ public class CytoSpade extends CytoscapePlugin {
             yAxisClickable.setBounds(0, 0, 46, 308);
             
             pValTextBox = new javax.swing.JTextArea();
+            pValTextBoxLock = new ReentrantLock();
 
             plotArea = new javax.swing.JLayeredPane();
 
@@ -915,7 +918,12 @@ public class CytoSpade extends CytoscapePlugin {
                     datay = events[yChan];
 
                     countLabel.setText("Displaying " + df.format(num_events) + " of " + df.format(num_events) + " events");
-                    pValTextBox.setText("Select some nodes to calculate P-values");
+                    pValTextBoxLock.lock();
+                    try {
+                        pValTextBox.setText("Select some nodes to calculate P-values");
+                    } finally {
+                        pValTextBoxLock.unlock();
+                    }
 
                     COUNT = num_events;
                 } else {
@@ -949,7 +957,13 @@ public class CytoSpade extends CytoscapePlugin {
                     for (int i=0; i < ((pValues.size() < 5) ? pValues.size() : 5); i++) {                        
                         sb.append("P-Value for ").append(pValues.get(i).name).append(": ").append(pValues.get(i).pValue).append("\n");               
                     }
-                    pValTextBox.setText(sb.toString());
+                    
+                    pValTextBoxLock.lock();
+                    try {
+                        pValTextBox.setText(sb.toString());
+                    } finally {
+                        pValTextBoxLock.unlock();
+                    }
                 }
 
                 xChanMax = FCSInputFile.getChannelRange(xChan);
@@ -1093,6 +1107,8 @@ public class CytoSpade extends CytoscapePlugin {
         private javax.swing.JPopupMenu yAxisPopup;
         private javax.swing.JMenuItem menuItem;
         private JTextArea pValTextBox;
+
+        private Lock pValTextBoxLock;
     }
 
     /**

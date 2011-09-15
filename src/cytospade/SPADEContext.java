@@ -590,7 +590,7 @@ public class SPADEContext {
     }
 
     static public String getShortNameFromFormattedName(String name) {
-        int divider = name.indexOf(':');
+        int divider = name.indexOf("::");
         return (divider == -1) ? name : name.substring(0, divider);
     }
 

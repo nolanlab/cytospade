@@ -837,19 +837,19 @@ public class CytoSpade extends CytoscapePlugin {
 
             public class TTestResult implements Comparable {
 
-                public TTestResult(String name, double pValue) {
+                public TTestResult(String name, double result) {
                     this.name = name;
-                    this.pValue = pValue;
+                    this.result = result;
                 }
 
                 public int compareTo(Object t) {
                     TTestResult rhs = (TTestResult)t;
-                    if (this.pValue < rhs.pValue) return -1;
-                    else if(this.pValue > rhs.pValue) return 1;
+                    if (Math.abs(this.result) < Math.abs(rhs.result)) return -1;
+                    else if(Math.abs(this.result) > Math.abs(rhs.result)) return 1;
                     else return 0;
                 }
 
-                public double pValue;
+                public double result;
                 public String name;
 
             }
@@ -865,13 +865,11 @@ public class CytoSpade extends CytoscapePlugin {
                 
                 TTestImpl tTest = new TTestImpl();
                 try {
-                    return tTest.tTest(selectedEvents.getDataRef()[attribute], allEvents.getDataRef()[attribute]);
+                    return tTest.t(selectedEvents.getDataRef()[attribute], allEvents.getDataRef()[attribute]);
                 } catch (IllegalArgumentException ex) {
                     CyLogger.getLogger(SPADEController.class.getName()).error(null, ex);
-                } catch (MathException ex) {
-                    CyLogger.getLogger(SPADEController.class.getName()).error(null, ex);
                 }
-                return 1.0;
+                return 0.0;
             }
 
             /**
@@ -920,7 +918,7 @@ public class CytoSpade extends CytoscapePlugin {
                     countLabel.setText("Displaying " + df.format(num_events) + " of " + df.format(num_events) + " events");
                     pValTextBoxLock.lock();
                     try {
-                        pValTextBox.setText("Select some nodes to calculate P-values");
+                        pValTextBox.setText("Select some nodes to calculate T-statistics");
                     } finally {
                         pValTextBoxLock.unlock();
                     }
@@ -943,7 +941,9 @@ public class CytoSpade extends CytoscapePlugin {
 
                         pValues.add(new TTestResult(name,tTest(eventsSlctd, eventsInitl, i)));
                     }
+
                     Collections.sort(pValues);
+                    Collections.reverse(pValues);
 
                     dataAx = eventsInitl.getDataRef()[xChan];  // Background events
                     dataAy = eventsInitl.getDataRef()[yChan];
@@ -955,7 +955,7 @@ public class CytoSpade extends CytoscapePlugin {
 
                     StringBuilder sb = new StringBuilder(500);
                     for (int i=0; i < ((pValues.size() < 5) ? pValues.size() : 5); i++) {                        
-                        sb.append("P-Value for ").append(pValues.get(i).name).append(": ").append(pValues.get(i).pValue).append("\n");               
+                        sb.append("T-statistic for ").append(pValues.get(i).name).append(": ").append(pValues.get(i).result).append("\n");
                     }
                     
                     pValTextBoxLock.lock();

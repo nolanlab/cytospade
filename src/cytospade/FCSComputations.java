@@ -4,95 +4,43 @@ package cytospade;
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-import cytoscape.plugin.CytoscapePlugin;
-import cytoscape.util.CytoscapeAction;
-import cytoscape.view.cytopanels.CytoPanelImp;
 import cytoscape.*;
-import cytoscape.actions.LoadNetworkTask;
-import cytoscape.data.CyAttributes;
 
-import cytoscape.data.SelectEventListener;
 import cytoscape.logger.CyLogger;
-import cytoscape.view.CyNetworkView;
-import cytoscape.visual.GlobalAppearanceCalculator;
-import cytoscape.visual.NodeAppearanceCalculator;
-import cytoscape.visual.VisualMappingManager;
-import cytoscape.visual.VisualPropertyDependency;
-import cytoscape.visual.VisualPropertyType;
-import cytoscape.visual.VisualStyle;
-import cytospade.SPADEController;
-import cytospade.fcsFile;
-import cytospade.ui.NodeContextMenu;
-import cytospade.ui.NodeContextMenuItems;
-import ding.view.NodeContextMenuListener;
 
-import facs.CanvasSettings;
-import facs.Plot2D;
 import giny.model.GraphPerspective;
-import giny.model.Node;
-import giny.view.NodeView;
 
-import java.awt.Color;
-import java.awt.Component;
-import java.awt.Dimension;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.awt.image.BufferedImage;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.FilenameFilter;
 import java.io.IOException;
 
-import java.text.DecimalFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashSet;
 
-import java.util.Iterator;
-import java.util.List;
-import java.util.Scanner;
 import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.swing.JTextField;
 
-import javax.swing.SwingWorker;
-import javax.swing.ImageIcon;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JLabel;
-import javax.swing.JList;
-import javax.swing.JMenuItem;
-import javax.swing.SwingConstants;
 import org.apache.commons.math.MathException;
 
 import org.apache.commons.math.stat.inference.TTestImpl;
 import org.apache.commons.math.linear.Array2DRowRealMatrix;
 import org.apache.commons.lang.ArrayUtils;
-import org.apache.commons.math.linear.RealMatrix;
 
-import java.lang.StringBuffer;
-import javax.swing.JTextArea;
 
 public class FCSComputations {
 
     private fcsFile fcsInputFile = null;
 
+    public FCSComputations(File inputFile) throws FileNotFoundException, IOException {        
+        this(new fcsFile(inputFile, true));
+    }
+    
+    public FCSComputations(fcsFile inputFile) {
+        fcsInputFile = inputFile;
+    }
+    
     public fcsFile FcsFile() {
         return fcsInputFile;
-    }
-
-    public FCSComputations(File inputFile) throws FileNotFoundException, IOException {
-        fcsInputFile = new fcsFile((File) inputFile, true);
     }
 
     /**

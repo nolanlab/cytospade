@@ -4,12 +4,8 @@
  */
 package cytospade;
 
-import cytoscape.plugin.CytoscapePlugin;
-import cytoscape.util.CytoscapeAction;
-import cytoscape.view.cytopanels.CytoPanelImp;
 import cytoscape.*;
 import cytoscape.actions.LoadNetworkTask;
-import cytoscape.data.CyAttributes;
 
 import cytoscape.data.SelectEventListener;
 import cytoscape.logger.CyLogger;
@@ -20,98 +16,54 @@ import cytoscape.visual.VisualMappingManager;
 import cytoscape.visual.VisualPropertyDependency;
 import cytoscape.visual.VisualPropertyType;
 import cytoscape.visual.VisualStyle;
-import cytospade.FCSComputations.Result;
 import cytospade.ui.NodeContextMenu;
 import cytospade.ui.NodeContextMenuItems;
 import ding.view.NodeContextMenuListener;
 
-import facs.CanvasSettings;
-import facs.Plot2D;
 import giny.model.GraphPerspective;
-import giny.model.Node;
 import giny.view.NodeView;
 
 import java.awt.Color;
 import java.awt.Component;
-import java.awt.Dimension;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.awt.image.BufferedImage;
 
-import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.FilenameFilter;
 import java.io.IOException;
 
-import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashSet;
 
-import java.util.Iterator;
 import java.util.List;
 import java.util.Scanner;
 import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.swing.JTextField;
 
-import javax.swing.SwingWorker;
-import javax.swing.ImageIcon;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JLabel;
 import javax.swing.JList;
-import javax.swing.JMenuItem;
 import javax.swing.SwingConstants;
-import org.apache.commons.math.MathException;
-
-import org.apache.commons.math.stat.inference.TTestImpl;
-import org.apache.commons.math.linear.Array2DRowRealMatrix;
-import org.apache.commons.lang.ArrayUtils;
-import org.apache.commons.math.linear.RealMatrix;
-
-import java.lang.StringBuffer;
-import javax.swing.JTextArea;
 
 /**
  * SPADE analysis control panel.
  */
 class SpadePanel extends JPanel {
 
-    private SPADEContext spadeCxt;
+    private SpadeContext spadeCxt;
     private VisualMapping visualMapping;
-    private String xChanScale;
-    private String yChanScale;
-    private String xChanParam;
-    private String yChanParam;
+
     //File selection
-    private javax.swing.JComboBox filenameComboBox;
-    //Scatter plot controls
-    private javax.swing.JComboBox plotStyleComboBox;
-    private javax.swing.JLabel jLabelPlot; // contains the rendered plot
-    private javax.swing.JLabel countLabel;
-    private javax.swing.JLabel xAxisClickable; // Captures the axis click events
-    private javax.swing.JLabel yAxisClickable;
-    private javax.swing.JLayeredPane plotArea;
-    private javax.swing.JPopupMenu xAxisPopup;
-    private javax.swing.JPopupMenu yAxisPopup;
-    private javax.swing.JMenuItem menuItem;
-    private JTextArea pValTextBox;
+    private javax.swing.JComboBox filenameComboBox;    
+    
     //Node Graph controls
     private NodeContextMenuListener nodeCxtMenuListener;
     private javax.swing.JComboBox colorscaleComboBox;
     private javax.swing.JComboBox colorrangeComboBox;
+    private Scatter scatterPlot;
 
-    public SpadePanel(SPADEContext spadeCxt) {
+    public SpadePanel(SpadeContext spadeCxt) {
         this.spadeCxt = spadeCxt;
 
         // Find the global_boundaries.table file it exists, and create appropiate visual mapping
@@ -352,7 +304,6 @@ class SpadePanel extends JPanel {
             }
         });
 
-
         javax.swing.JLabel colorscaleLabel = new javax.swing.JLabel("Coloring attribute");
         colorscaleComboBox = new javax.swing.JComboBox();
         colorscaleComboBox.addActionListener(new java.awt.event.ActionListener() {
@@ -378,32 +329,8 @@ class SpadePanel extends JPanel {
         colorrangeComboBox.setToolTipText("Global sets colorscale using min/max across all files, local uses min/max of selected file");
 
         javax.swing.JLabel howtoadjust = new javax.swing.JLabel("Click axis label to change parameter and scale");
-
-        javax.swing.JLabel StyleLbl = new javax.swing.JLabel("Style");
-        plotStyleComboBox = new javax.swing.JComboBox();
-        plotStyleComboBox.setModel(new javax.swing.DefaultComboBoxModel(new String[]{"Shaded Contour", "Dot", "Density Dot", "Shadow", "Contour", "Density"}));
-
-
-        jLabelPlot = new javax.swing.JLabel();
-        jLabelPlot.setBounds(0, 0, 358, 358);
-
-        countLabel = new javax.swing.JLabel();
-        xAxisClickable = new javax.swing.JLabel();
-        xAxisClickable.setBounds(48, 311, 308, 46);
-
-        yAxisClickable = new javax.swing.JLabel();
-        yAxisClickable.setBounds(0, 0, 46, 308);
-
-        pValTextBox = new javax.swing.JTextArea();
-
-        plotArea = new javax.swing.JLayeredPane();
-
-        plotStyleComboBox.addActionListener(new java.awt.event.ActionListener() {
-
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                plotStyleComboActionPerformed(evt);
-            }
-        });
+        
+        scatterPlot = new Scatter();
 
         closeButtonWest.addActionListener(new java.awt.event.ActionListener() {
 
@@ -426,210 +353,77 @@ class SpadePanel extends JPanel {
             }
         });
 
-        xAxisPopup = new javax.swing.JPopupMenu();
-        yAxisPopup = new javax.swing.JPopupMenu();
-
-        xAxisClickable.addMouseListener(new MouseAdapter() {
-
-            @Override
-            public void mouseReleased(MouseEvent me) {
-                xAxisPopup.show(xAxisClickable, 154, 23);
-            }
-        });
-
-        yAxisClickable.addMouseListener(new MouseAdapter() {
-
-            @Override
-            public void mouseReleased(MouseEvent me) {
-                yAxisPopup.show(yAxisClickable, 23, 154);
-            }
-        });
-
-        plotArea.add(xAxisClickable);
-        plotArea.add(yAxisClickable);
-        plotArea.add(jLabelPlot);
-
         //Platform-dependent width of small comboboxes
         int combowidth = 125;
         if (getOS().equals("windows")) {
             combowidth = 75;
         }
 
+        // Do not change ordering of the horizontal layout and the vertical layout
+        // Horizontal layout specifies horizontal spacing, but incorrect layout ordering of components
+        // Vertical layout specifies vertical spacing and also the correct ordering layout of components
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
-                layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING).addGroup(layout.createSequentialGroup().addContainerGap().addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING).addComponent(howtoadjust).addComponent(plotArea, 358, 358, Short.MAX_VALUE).addGroup(layout.createSequentialGroup().addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING).addGroup(layout.createSequentialGroup().addComponent(StyleLbl).addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED).addComponent(plotStyleComboBox, 0, 165, Short.MAX_VALUE)).addGroup(layout.createSequentialGroup().addComponent(FilenameLbl).addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED).addComponent(filenameComboBox, 0, 165, Short.MAX_VALUE)))).addGroup(layout.createSequentialGroup().addComponent(colorscaleLabel).addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED).addComponent(colorscaleComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, 165, javax.swing.GroupLayout.PREFERRED_SIZE)).addGroup(layout.createSequentialGroup().addComponent(colorrangeLabel).addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED).addComponent(colorrangeComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, 165, javax.swing.GroupLayout.PREFERRED_SIZE)).addComponent(countLabel).addComponent(pValTextBox).addGroup(layout.createSequentialGroup().addComponent(drawPlotsButton).addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED).addComponent(makePivotTableButton)).addComponent(closeButtonWest)).addContainerGap()));
+                // Auto-align in Netbeans formats the layout creation code in one line
+                layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(layout.createSequentialGroup()
+                                .addContainerGap()
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                        .addComponent(howtoadjust)                                    
+                                        //This sequential group may be unnecessary. Just use the parallel group which is currently the only child
+                                        .addGroup(layout.createSequentialGroup()
+                                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)                                      
+                                                        .addComponent(scatterPlot)
+                                                        .addGroup(layout.createSequentialGroup()
+                                                                .addComponent(FilenameLbl)
+                                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                                                .addComponent(filenameComboBox, 0, 165, Short.MAX_VALUE)))) 
+                                        .addGroup(layout.createSequentialGroup()
+                                                .addComponent(colorscaleLabel)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                                .addComponent(colorscaleComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, 165, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                        .addGroup(layout.createSequentialGroup()
+                                                .addComponent(colorrangeLabel)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)  
+                                                .addComponent(colorrangeComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, 165, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                        .addGroup(layout.createSequentialGroup()
+                                                .addComponent(drawPlotsButton)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                                .addComponent(makePivotTableButton))
+                                        .addComponent(closeButtonWest))                                  
+                                  .addContainerGap()));
+
         layout.setVerticalGroup(
-                layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING).addGroup(layout.createSequentialGroup().addContainerGap().addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE).addComponent(FilenameLbl).addComponent(filenameComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)).addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED).addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE).addComponent(colorscaleLabel).addComponent(colorscaleComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)).addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED).addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE).addComponent(colorrangeLabel).addComponent(colorrangeComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)).addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED).addComponent(howtoadjust).addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED).addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE).addComponent(StyleLbl).addComponent(plotStyleComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)).addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED).addComponent(plotArea, 358, 358, javax.swing.GroupLayout.PREFERRED_SIZE).addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED).addComponent(countLabel).addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED).addComponent(pValTextBox).addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED).addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE).addComponent(drawPlotsButton).addComponent(makePivotTableButton)).addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED).addComponent(closeButtonWest).addContainerGap(19, Short.MAX_VALUE)));
+                layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(layout.createSequentialGroup()
+                            .addContainerGap()
+                            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                    .addComponent(FilenameLbl)
+                                    .addComponent(filenameComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                    .addComponent(colorscaleLabel)
+                                    .addComponent(colorscaleComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                    .addComponent(colorrangeLabel)
+                                    .addComponent(colorrangeComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                            .addComponent(howtoadjust)
+                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)               
+                            .addComponent(scatterPlot)
+                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                    .addComponent(drawPlotsButton)
+                                    .addComponent(makePivotTableButton))
+                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                            .addComponent(closeButtonWest)
+                            .addContainerGap(19, Short.MAX_VALUE)));
     }
     // </editor-fold>
-
-    //<editor-fold desc="Scatter Plot Controls" defaultstate="collapsed">
-    public class XactionPerformed implements ActionListener {
-
-        public void actionPerformed(ActionEvent e) {
-            if (e.getActionCommand().matches("Linear")
-                    || e.getActionCommand().matches("Log")
-                    || e.getActionCommand().matches("Arcsinh: CyTOF")
-                    || e.getActionCommand().matches("Arcsinh: Fluor")) {
-                xChanScale = e.getActionCommand();
-            } else {
-                xChanParam = SPADEContext.getShortNameFromFormattedName(e.getActionCommand());
-            }
-            (new drawScatterThread()).execute();
-        }
-    }
-
-    public class YactionPerformed implements ActionListener {
-
-        public void actionPerformed(ActionEvent e) {
-            if (e.getActionCommand().matches("Linear")
-                    || e.getActionCommand().matches("Log")
-                    || e.getActionCommand().matches("Arcsinh: CyTOF")
-                    || e.getActionCommand().matches("Arcsinh: Fluor")) {
-                yChanScale = e.getActionCommand();
-            } else {
-                yChanParam = SPADEContext.getShortNameFromFormattedName(e.getActionCommand());
-            }
-            (new drawScatterThread()).execute();
-        }
-    }
-
-    public class drawScatterThread extends SwingWorker<Integer, Void> {
-
-        private int eventCount;
-        private double[] datax;
-        private double[] datay;
-        private double[] dataAx;
-        private double[] dataAy;
-        private double xChanMax;
-        private double yChanMax;
-
-        @Override
-        protected Integer doInBackground() {
-            try {
-                //These need to be null if there are no events selected, otherwise all
-                //events will be in the background and foreground.
-                //Fear not, compute() makes them not-null if nodes are selected.
-                dataAx = null;
-                dataAy = null;
-
-                //Open the FCS file         
-                FCSComputations fcsDataCompute = null;
-                try {
-                    fcsDataCompute = new FCSComputations((File) filenameComboBox.getSelectedItem());
-                } catch (FileNotFoundException ex) {
-                    JOptionPane.showMessageDialog(null, "File not found.");
-                } catch (IOException ex) {
-                    JOptionPane.showMessageDialog(null, "Error reading file.");
-                }
-                //TODO: Handle case where FCS is not found (this may not happen as 
-                //an existing file is selected from the combo box)
-
-                Result result = fcsDataCompute.compute(xChanParam, yChanParam);
-                if (result.numNodesSelected == 0) {
-                    DecimalFormat df = new DecimalFormat();
-                    countLabel.setText("Displaying " + df.format(result.numNodesSelected) + " of " + df.format(result.eventCount) + " events");
-                    pValTextBox.setText("Select some nodes to calculate P-values");
-                } else {
-                    DecimalFormat df = new DecimalFormat();
-                    countLabel.setText("Displaying " + df.format(result.numNodesSelected) + " of " + df.format(result.eventCount) + " events");
-                    StringBuilder sb = new StringBuilder(500);
-                    for (int i = 0; i < ((result.pValues.size() < 5) ? result.pValues.size() : 5); i++) {
-                        sb.append("P-Value for ").append(result.pValues.get(i).name).append(": ").append(result.pValues.get(i).value).append("\n");
-                    }
-                    pValTextBox.setText(sb.toString());
-                }
-
-                //Unpack result into local variables
-                eventCount = result.eventCount;
-                dataAx = result.dataAx;
-                dataAy = result.dataAy;
-                datax = result.datax;
-                datay = result.datay;
-                xChanMax = result.xChanMax;
-                yChanMax = result.yChanMax;
-
-                int xDisplay, yDisplay;
-
-                if (xChanScale.matches("Linear")) {
-                    xDisplay = Plot2D.LINEAR_DISPLAY;
-                } else if (xChanScale.matches("Log")) {
-                    xDisplay = Plot2D.LOG_DISPLAY;
-                } else if (xChanScale.matches("Arcsinh: CyTOF")) {
-                    xDisplay = Plot2D.ARCSINH_DISPLAY_CYTOF;
-                } else {
-                    xDisplay = Plot2D.ARCSINH_DISPLAY_FLUOR;
-                }
-
-                if (yChanScale.matches("Linear")) {
-                    yDisplay = Plot2D.LINEAR_DISPLAY;
-                } else if (yChanScale.matches("Log")) {
-                    yDisplay = Plot2D.LOG_DISPLAY;
-                } else if (yChanScale.matches("Arcsinh: CyTOF")) {
-                    yDisplay = Plot2D.ARCSINH_DISPLAY_CYTOF;
-                } else {
-                    yDisplay = Plot2D.ARCSINH_DISPLAY_FLUOR;
-                }
-
-                //{ "Shaded Contour", "Dot", "Density Dot", "Shadow", "Contour", "Density" }
-                int plottype = 0;
-                if (plotStyleComboBox.getSelectedIndex() == 0) {
-                    plottype = facs.Illustration.SHADED_CONTOUR_PLOT;
-                } else if (plotStyleComboBox.getSelectedIndex() == 1) {
-                    plottype = facs.Illustration.DOT_PLOT;
-                } else if (plotStyleComboBox.getSelectedIndex() == 2) {
-                    plottype = facs.Illustration.DENSITY_DOT_PLOT;
-                } else if (plotStyleComboBox.getSelectedIndex() == 3) {
-                    plottype = facs.Illustration.SHADOW_PLOT;
-                } else if (plotStyleComboBox.getSelectedIndex() == 4) {
-                    plottype = facs.Illustration.CONTOUR_PLOT;
-                } else if (plotStyleComboBox.getSelectedIndex() == 5) {
-                    plottype = facs.Illustration.DENSITY_PLOT;
-                }
-
-                // Note that the size is set by axisBins
-
-                int dotSize;
-                if (eventCount > 5000) {
-                    dotSize = 1;
-                } else if (eventCount > 1000) {
-                    dotSize = 2;
-                } else if (eventCount > 10) {
-                    dotSize = 3;
-                } else {
-                    // Very small numbers of events make contours meaningless
-                    // so we automatically switch to dot plots in this scenario
-                    plottype = facs.Illustration.DOT_PLOT;
-                    dotSize = 3;
-                }
-                // TODO: Document these options!
-                CanvasSettings cs = CanvasSettings.getCanvasSettings(
-                        10, 10, 0, 1, 2,
-                        plottype, facs.Illustration.DEFAULT_COLOR_SET,
-                        false, true, true, true, true, false, 300, 1.0d, 1.0d,
-                        10.0d, // Note this choices interact with small event check above
-                        10.0d,
-                        facs.Illustration.DEFAULT_POPULATION_TYPE, eventCount, dotSize);
-                BufferedImage image = facs.Plot2D.drawPlot(
-                        cs,
-                        datax, datay, dataAx, dataAy,
-                        (String) xChanParam, (String) yChanParam,
-                        xChanMax, yChanMax,
-                        xDisplay, yDisplay);
-                jLabelPlot.setIcon(new ImageIcon(image));
-                return 0;
-            } catch (IOException ex) {
-                Logger.getLogger(CytoSpade.class.getName()).log(Level.SEVERE, null, ex);
-                return 1;
-            }
-        }
-    }
-
-    private void plotStyleComboActionPerformed(java.awt.event.ActionEvent evt) {
-        (new drawScatterThread()).execute();
-    }
-    //</editor-fold>
 
     //<editor-fold desc="Node Graph Controls" defaultstate="collapsed">
     /**
@@ -641,7 +435,7 @@ class SpadePanel extends JPanel {
         }
 
         public void onSelectEvent(cytoscape.data.SelectEvent e) {
-            (new drawScatterThread()).execute();
+            scatterPlot.nodeSelectionChanged();
         }
     }
 
@@ -764,22 +558,6 @@ class SpadePanel extends JPanel {
             colorscaleComboBox.setMaximumRowCount(20);
             colorscaleComboBox.setSelectedIndex(0);
 
-
-            // Update plot combo boxes with channels in new FCS files
-            xAxisPopup = new javax.swing.JPopupMenu();
-            yAxisPopup = new javax.swing.JPopupMenu();
-            for (String scales : new String[]{"Linear", "Log", "Arcsinh: CyTOF", "Arcsinh: Fluor"}) {
-                menuItem = new JMenuItem(scales);
-                menuItem.addActionListener(new SpadePanel.XactionPerformed());
-                xAxisPopup.add(menuItem);
-                menuItem = new JMenuItem(scales);
-                menuItem.addActionListener(new SpadePanel.YactionPerformed());
-                yAxisPopup.add(menuItem);
-            }
-
-            xAxisPopup.addSeparator();
-            yAxisPopup.addSeparator();
-
             fcsFile FCSInputFile = null;
             try {
                 FCSInputFile = new fcsFile((File) filenameComboBox.getSelectedItem(), true);
@@ -789,44 +567,12 @@ class SpadePanel extends JPanel {
             } catch (IOException ex) {
                 JOptionPane.showMessageDialog(null, "Error reading file.");
                 return;
-            }
-
-            {  // Build alphabetized channel selector
-                String[] names = new String[FCSInputFile.getChannelCount()];
-                for (int i = 0; i < FCSInputFile.getChannelCount(); i++) {
-                    names[i] = SPADEContext.getFCSChannelFormattedName(FCSInputFile, i);
-                }
-                Arrays.sort(names);
-                for (int i = 0; i < FCSInputFile.getChannelCount(); i++) {
-                    menuItem = new JMenuItem(names[i]);
-                    menuItem.addActionListener(new SpadePanel.XactionPerformed());
-                    xAxisPopup.add(menuItem);
-                    menuItem = new JMenuItem(names[i]);
-                    menuItem.addActionListener(new SpadePanel.YactionPerformed());
-                    yAxisPopup.add(menuItem);
-                }
-            }
-
-            // Initialize plot axes parameters
-            xChanScale = "Log";
-            yChanScale = "Log";
-            if (FCSInputFile.getChannelCount() > 0) {
-                xChanParam = FCSInputFile.getChannelShortName(0);
-                yChanParam = FCSInputFile.getChannelShortName(0);
-            }
-
-            //Draw a plot
-            (new drawScatterThread()).execute();
+            }         
+            
+            scatterPlot.fcsFileChanged(FCSInputFile);
 
             mapSizeAndColors();
-
-        } else {
-            //If the user selected the empty first row, clear the display
-            countLabel.setText(null);
-            pValTextBox.setText(null);
-            jLabelPlot.setIcon(null);
-        }
-
+        }        
     }
 
     /**

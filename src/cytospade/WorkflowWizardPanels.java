@@ -807,7 +807,7 @@ public class WorkflowWizardPanels {
         private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {
             try {
                 cxt.authorRunSpade("runSPADE.R");
-                ctl = new SPADEController(cxt.getPath(), "runSPADE.R");
+                ctl = new SpadeController(cxt.getPath(), "runSPADE.R");
                 ctl.exec();
             } catch (IOException ex) {
                 CyLogger.getLogger(CytoSpade.class.getName()).error(null, ex);
@@ -824,7 +824,7 @@ public class WorkflowWizardPanels {
         }
 
         private SpadeContext    cxt;
-        private SPADEController ctl = null;
+        private SpadeController ctl = null;
 
         private javax.swing.JPanel contentPanel;
          // Variables declaration - do not modify
@@ -938,7 +938,7 @@ public class WorkflowWizardPanels {
                 cxt.setNodeSizeScaleFactor(Double.parseDouble(jTextField1.getText()));
 
                 cxt.authorPlotSpade("plotSPADE.R");
-                ctl = new SPADEController(cxt.getPath(), "plotSPADE.R");
+                ctl = new SpadeController(cxt.getPath(), "plotSPADE.R");
                 ctl.exec();
             } catch (IOException ex) {
                 CyLogger.getLogger(CytoSpade.class.getName()).error(null, ex);
@@ -946,7 +946,7 @@ public class WorkflowWizardPanels {
         }
 
         private SpadeContext    cxt;
-        private SPADEController ctl = null;
+        private SpadeController ctl = null;
 
         private javax.swing.JPanel contentPanel;
         // Variables declaration - do not modify

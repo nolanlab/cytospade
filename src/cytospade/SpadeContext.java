@@ -20,7 +20,7 @@ import java.util.Map;
  *
  * @author mlinderm
  */
-public class SPADEContext {
+public class SpadeContext {
 
     public enum WorkflowKind { PROCESSING, ANALYSIS }
     public enum DownsampleKind { EVENTS, PERCENTILE }
@@ -184,7 +184,7 @@ public class SPADEContext {
      * @return the potentialClusteringMarkers
      */
     public String[] getPotentialClusteringMarkers() {
-        return SPADEContext.getCommonMarkers(fcsFiles);
+        return SpadeContext.getCommonMarkers(fcsFiles);
     }
 
     /**
@@ -302,7 +302,7 @@ public class SPADEContext {
         }
         str
             .append("  Target Number of Clusters:  ").append(this.getTargetClusters()).append("\n")
-            .append("  Clustering Markers:  ").append(SPADEContext.join(Arrays.asList(this.getSelectedClusteringMarkers()), ", ")).append("\n")
+            .append("  Clustering Markers:  ").append(SpadeContext.join(Arrays.asList(this.getSelectedClusteringMarkers()), ", ")).append("\n")
             .append("Panels:\n")
             ;
         if (analysisPanels.isEmpty()) {
@@ -320,10 +320,10 @@ public class SPADEContext {
                 AnalysisPanel p = (AnalysisPanel)(me.getValue());
                 str
                     .append("  ").append(me.getKey()).append(":\n")
-                    .append("    Panel Files:  ").append(SPADEContext.join(Arrays.asList(p.panel_files),", ")).append("\n")
+                    .append("    Panel Files:  ").append(SpadeContext.join(Arrays.asList(p.panel_files),", ")).append("\n")
                     .append("    Median Markers:  All\n")
-                    .append("    Reference Files:  ").append(SPADEContext.join(Arrays.asList(p.reference_files),", ")).append("\n")
-                    .append("    Fold-change Markers:  ").append(SPADEContext.join(Arrays.asList(p.fold_markers),", ")).append("\n")
+                    .append("    Reference Files:  ").append(SpadeContext.join(Arrays.asList(p.reference_files),", ")).append("\n")
+                    .append("    Fold-change Markers:  ").append(SpadeContext.join(Arrays.asList(p.fold_markers),", ")).append("\n")
                     ;
             }
         }

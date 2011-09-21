@@ -19,7 +19,7 @@ import javax.swing.SwingWorker;
  *
  * @author mlinderm
  */
-public class SPADEController extends SwingWorker<Integer, Void> {
+public class SpadeController extends SwingWorker<Integer, Void> {
 
     File   workingDir;
     String script;
@@ -31,7 +31,7 @@ public class SPADEController extends SwingWorker<Integer, Void> {
     javax.swing.JSeparator  separator;
     javax.swing.JButton     doneButton;
 
-    public SPADEController(File cwd, String script) {
+    public SpadeController(File cwd, String script) {
         this.workingDir = cwd;
         this.script = script;
     }
@@ -104,9 +104,9 @@ public class SPADEController extends SwingWorker<Integer, Void> {
             reader.close();
             return p.waitFor();
         } catch (IOException ex) {
-            CyLogger.getLogger(SPADEController.class.getName()).error(null, ex);
+            CyLogger.getLogger(SpadeController.class.getName()).error(null, ex);
         } catch (InterruptedException ex) {
-            CyLogger.getLogger(SPADEController.class.getName()).error(null, ex);
+            CyLogger.getLogger(SpadeController.class.getName()).error(null, ex);
         }
         return 1;
     }
@@ -117,9 +117,9 @@ public class SPADEController extends SwingWorker<Integer, Void> {
         try {
             exit_status = this.get();
         } catch (InterruptedException ex) {
-            CyLogger.getLogger(SPADEController.class.getName()).error(null, ex);
+            CyLogger.getLogger(SpadeController.class.getName()).error(null, ex);
         } catch (ExecutionException ex) {
-            CyLogger.getLogger(SPADEController.class.getName()).error(null, ex);
+            CyLogger.getLogger(SpadeController.class.getName()).error(null, ex);
         }
         if (exit_status == 0) {
             javax.swing.JOptionPane.showMessageDialog(null, "Successfully executed script.");
@@ -155,7 +155,7 @@ public class SPADEController extends SwingWorker<Integer, Void> {
                 else
                     return '"'+result.substring(token +  REGSTR_TOKEN.length()).trim()+"\\bin\\Rscript\"";
             } catch (Exception ex) {
-                CyLogger.getLogger(SPADEController.class.getName()).error(null, ex);
+                CyLogger.getLogger(SpadeController.class.getName()).error(null, ex);
                 return null;
             }
         } else

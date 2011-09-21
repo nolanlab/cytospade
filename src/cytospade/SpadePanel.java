@@ -614,7 +614,7 @@ class SpadePanel extends JPanel {
     private void makePivotTableClicked(ActionEvent ae) {
         try {
             spadeCxt.authorMakePivot("pivotSPADE.R");
-            SPADEController ctl = new SPADEController(spadeCxt.getPath(), "pivotSPADE.R");
+            SpadeController ctl = new SpadeController(spadeCxt.getPath(), "pivotSPADE.R");
             ctl.exec();
         } catch (IOException ex) {
             CyLogger.getLogger(CytoSpade.class.getName()).error(null, ex);

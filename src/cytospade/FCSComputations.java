@@ -145,9 +145,9 @@ public class FCSComputations {
         try {
             return tTest.tTest(selectedEvents.getDataRef()[attribute], allEvents.getDataRef()[attribute]);
         } catch (IllegalArgumentException ex) {
-            CyLogger.getLogger(SPADEController.class.getName()).error(null, ex);
+            CyLogger.getLogger(SpadeController.class.getName()).error(null, ex);
         } catch (MathException ex) {
-            CyLogger.getLogger(SPADEController.class.getName()).error(null, ex);
+            CyLogger.getLogger(SpadeController.class.getName()).error(null, ex);
         }
         return 1.0;
     }

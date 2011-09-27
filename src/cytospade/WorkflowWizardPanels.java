@@ -22,7 +22,7 @@ public class WorkflowWizardPanels {
 
         public static final String IDENTIFIER = "INTRODUCTION_PANEL";
 
-        public Intro(SPADEContext cxt) {
+        public Intro(SpadeContext cxt) {
             super(IDENTIFIER);
             
             this.cxt = cxt;
@@ -160,11 +160,11 @@ public class WorkflowWizardPanels {
 
         private void updateNextPanel() {
             // Set "next" in workflow
-            SPADEContext.WorkflowKind wk = cxt.getWorkflowKind();
-            if (wk == SPADEContext.WorkflowKind.ANALYSIS) {
+            SpadeContext.WorkflowKind wk = cxt.getWorkflowKind();
+            if (wk == SpadeContext.WorkflowKind.ANALYSIS) {
                 nextID = Intro.FINISH;
                 getWizard().setNextButtonEnabled(true);
-            } else if (wk == SPADEContext.WorkflowKind.PROCESSING) {
+            } else if (wk == SpadeContext.WorkflowKind.PROCESSING) {
                 nextID = ClusterMarkerSelect.IDENTIFIER;
                 getWizard().setNextButtonEnabled(true);
             } else {
@@ -173,7 +173,7 @@ public class WorkflowWizardPanels {
             }
         }
 
-        private SPADEContext cxt;
+        private SpadeContext cxt;
         private Object nextID;
 
         private javax.swing.JPanel contentPanel;
@@ -192,7 +192,7 @@ public class WorkflowWizardPanels {
 
         public static final String IDENTIFIER = "CLUSTER_MARKER_SELECT_PANEL";
 
-        public ClusterMarkerSelect(SPADEContext cxt) {
+        public ClusterMarkerSelect(SpadeContext cxt) {
             super(IDENTIFIER);
 
             this.cxt = cxt;
@@ -238,11 +238,11 @@ public class WorkflowWizardPanels {
             cxt.setArcsinh((Integer)jSpinner1.getValue());
             cxt.setTargetClusters((Integer)jSpinner2.getValue());
             if (jRadioButton1.isSelected())
-                cxt.setDownsampleKind(SPADEContext.DownsampleKind.EVENTS);
+                cxt.setDownsampleKind(SpadeContext.DownsampleKind.EVENTS);
             else if (jRadioButton2.isSelected())
-                cxt.setDownsampleKind(SPADEContext.DownsampleKind.PERCENTILE);
+                cxt.setDownsampleKind(SpadeContext.DownsampleKind.PERCENTILE);
             else  // Set events as the default
-                cxt.setDownsampleKind(SPADEContext.DownsampleKind.EVENTS);
+                cxt.setDownsampleKind(SpadeContext.DownsampleKind.EVENTS);
 
             cxt.setTargetDownsampleEvents((Integer)jSpinner3.getValue());
             cxt.setTargetDownsamplePctile((Integer)jSpinner4.getValue());
@@ -369,7 +369,7 @@ public class WorkflowWizardPanels {
             getWizard().setNextButtonEnabled((jList1.getSelectedIndex() != -1));
         }
 
-        private SPADEContext cxt;
+        private SpadeContext cxt;
         
         private javax.swing.JPanel contentPanel;
          // Variables declaration - do not modify
@@ -393,7 +393,7 @@ public class WorkflowWizardPanels {
 
         public static final String IDENTIFIER = "PANEL_CREATOR_PANEL";
 
-        public PanelCreator(SPADEContext cxt) {
+        public PanelCreator(SpadeContext cxt) {
             super(IDENTIFIER);
 
             this.cxt = cxt;
@@ -444,7 +444,7 @@ public class WorkflowWizardPanels {
         @Override
         public void nextButtonPressed() {
            // Create "catch-all" panel with any files not currently in a panel
-           cxt.addAnalysisPanel("catchall", new SPADEContext.AnalysisPanel(cxt.getFCSFilesNotInPanel()));
+           cxt.addAnalysisPanel("catchall", new SpadeContext.AnalysisPanel(cxt.getFCSFilesNotInPanel()));
         }
 
         private JPanel createPanel() {
@@ -601,7 +601,7 @@ public class WorkflowWizardPanels {
             // Record analysis panel
             cxt.addAnalysisPanel(
                 jTextField1.getText(),
-                new SPADEContext.AnalysisPanel(jList3.getSelectedValues(), null, jList2.getSelectedValues(), jList4.getSelectedValues())
+                new SpadeContext.AnalysisPanel(jList3.getSelectedValues(), null, jList2.getSelectedValues(), jList4.getSelectedValues())
             );
             jList6.setListData(cxt.getAnalysisPanelsNames());
 
@@ -644,7 +644,7 @@ public class WorkflowWizardPanels {
 
                 // Set possible reference markers as intersection of those in panel files
                 jList4.setModel(new javax.swing.AbstractListModel() {
-                    String[] strings = SPADEContext.getCommonMarkers(selected);
+                    String[] strings = SpadeContext.getCommonMarkers(selected);
                     public int getSize() { return strings.length; }
                     public Object getElementAt(int i) { return strings[i]; }
                 });
@@ -661,7 +661,7 @@ public class WorkflowWizardPanels {
             jList4.setEnabled(!jList2.isSelectionEmpty());
         }
 
-        private SPADEContext cxt;
+        private SpadeContext cxt;
 
         private javax.swing.JPanel contentPanel;
 
@@ -693,7 +693,7 @@ public class WorkflowWizardPanels {
 
         public static final String IDENTIFIER = "SUMMARY_AND_RUN_PANEL";
 
-        public SummaryAndRun(SPADEContext cxt) {
+        public SummaryAndRun(SpadeContext cxt) {
             super(IDENTIFIER);
 
             this.cxt = cxt;
@@ -807,7 +807,7 @@ public class WorkflowWizardPanels {
         private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {
             try {
                 cxt.authorRunSpade("runSPADE.R");
-                ctl = new SPADEController(cxt.getPath(), "runSPADE.R");
+                ctl = new SpadeController(cxt.getPath(), "runSPADE.R");
                 ctl.exec();
             } catch (IOException ex) {
                 CyLogger.getLogger(CytoSpade.class.getName()).error(null, ex);
@@ -823,8 +823,8 @@ public class WorkflowWizardPanels {
             }
         }
 
-        private SPADEContext    cxt;
-        private SPADEController ctl = null;
+        private SpadeContext    cxt;
+        private SpadeController ctl = null;
 
         private javax.swing.JPanel contentPanel;
          // Variables declaration - do not modify
@@ -839,7 +839,7 @@ public class WorkflowWizardPanels {
 
         public static final String IDENTIFIER = "GENERATE_PDFS_PANEL";
 
-        public GeneratePDFs(SPADEContext cxt) {
+        public GeneratePDFs(SpadeContext cxt) {
             super(IDENTIFIER);
 
             this.cxt = cxt;
@@ -938,15 +938,15 @@ public class WorkflowWizardPanels {
                 cxt.setNodeSizeScaleFactor(Double.parseDouble(jTextField1.getText()));
 
                 cxt.authorPlotSpade("plotSPADE.R");
-                ctl = new SPADEController(cxt.getPath(), "plotSPADE.R");
+                ctl = new SpadeController(cxt.getPath(), "plotSPADE.R");
                 ctl.exec();
             } catch (IOException ex) {
                 CyLogger.getLogger(CytoSpade.class.getName()).error(null, ex);
             }
         }
 
-        private SPADEContext    cxt;
-        private SPADEController ctl = null;
+        private SpadeContext    cxt;
+        private SpadeController ctl = null;
 
         private javax.swing.JPanel contentPanel;
         // Variables declaration - do not modify

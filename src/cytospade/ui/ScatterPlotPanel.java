@@ -26,6 +26,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.ImageIcon;
 import javax.swing.JMenuItem;
+import javax.swing.SwingWorker;
 
 /**
  *
@@ -109,58 +110,68 @@ public class ScatterPlotPanel extends javax.swing.JPanel {
     }
 
     public void updatePlot() {
-        int plot_type = getPlotType((String)this.StyleSelect.getSelectedItem());
-        
-        int event_count = fcsOps.getSelectedNodesCount() == 0 ? fcsOps.getEventCount() : fcsOps.getSelectedEventCount();
-        int dot_size = 1;
-        if (event_count > 5000) {
-            dot_size = 1;
-        } else if (event_count > 1000) {
-            dot_size = 2;
-        } else if (event_count > 10) {
-            dot_size = 3;
-        } else {
-            // Very small numbers of events make contours meaningless
-            // so we automatically switch to dot plots in this scenario
-            plot_type = facs.Illustration.DOT_PLOT;
-            dot_size = 3;
-        }
+         (new SwingWorker<Integer,Void>() {
 
-        CanvasSettings cs = CanvasSettings.getCanvasSettings(
-                1, // Horizontal spacing between plots
-                1, // Vertical spacing between plots
-                0, 1, 2,
-                plot_type, facs.Illustration.DEFAULT_COLOR_SET,
-                false, // Black background
-                true,  // Draw annotations
-                true,  // Draw scale labels
-                true,  // Draw scale ticks
-                true,  // Draw axis labels
-                false, // Use long labels
-                300, 1.0d, 1.0d,
-                10.0d, // Note this choices interact with small event check above
-                10.0d,
-                facs.Illustration.DEFAULT_POPULATION_TYPE, event_count, dot_size);
-        BufferedImage image;
-        try {
-            image = facs.Plot2D.drawPlot(
-                    cs,
-                    fcsOps.getSelectedNodesCount() == 0 ? fcsOps.getEvents(xAxisParam) : fcsOps.getSelectedEvents(xAxisParam),
-                    fcsOps.getSelectedNodesCount() == 0 ? fcsOps.getEvents(yAxisParam) : fcsOps.getSelectedEvents(yAxisParam),
-                    fcsOps.getSelectedNodesCount() == 0 ? null : fcsOps.getEvents(xAxisParam),
-                    fcsOps.getSelectedNodesCount() == 0 ? null : fcsOps.getEvents(yAxisParam),
-                    xAxisParam,
-                    yAxisParam,
-                    fcsOps.getEventMax(xAxisParam),
-                    fcsOps.getEventMax(yAxisParam),
-                    xAxisType,
-                    yAxisType
-                    );
-            Plot.setIcon(new ImageIcon(image));
-        } catch (IOException ex) {
-            Plot.setIcon(null);
-            CyLogger.getLogger(SpadeAnalysisPanel.class.getName()).error(null, ex);
-        }
+            @Override
+            protected Integer doInBackground() throws Exception {
+                int plot_type = getPlotType((String)StyleSelect.getSelectedItem());
+    
+                int event_count = fcsOps.getSelectedNodesCount() == 0 ? fcsOps.getEventCount() : fcsOps.getSelectedEventCount();
+                int dot_size = 1;
+                if (event_count > 5000) {
+                    dot_size = 1;
+                } else if (event_count > 1000) {
+                    dot_size = 2;
+                } else if (event_count > 10) {
+                    dot_size = 3;
+                } else {
+                    // Very small numbers of events make contours meaningless
+                    // so we automatically switch to dot plots in this scenario
+                    plot_type = facs.Illustration.DOT_PLOT;
+                    dot_size = 3;
+                }
+
+                CanvasSettings cs = CanvasSettings.getCanvasSettings(
+                        1, // Horizontal spacing between plots
+                        1, // Vertical spacing between plots
+                        0, 1, 2,
+                        plot_type, facs.Illustration.DEFAULT_COLOR_SET,
+                        false, // Black background
+                        true,  // Draw annotations
+                        true,  // Draw scale labels
+                        true,  // Draw scale ticks
+                        true,  // Draw axis labels
+                        false, // Use long labels
+                        300, 1.0d, 1.0d,
+                        10.0d, // Note this choices interact with small event check above
+                        10.0d,
+                        facs.Illustration.DEFAULT_POPULATION_TYPE, event_count, dot_size);
+                BufferedImage image;
+                try {
+                    image = facs.Plot2D.drawPlot(
+                            cs,
+                            fcsOps.getSelectedNodesCount() == 0 ? fcsOps.getEvents(xAxisParam) : fcsOps.getSelectedEvents(xAxisParam),
+                            fcsOps.getSelectedNodesCount() == 0 ? fcsOps.getEvents(yAxisParam) : fcsOps.getSelectedEvents(yAxisParam),
+                            fcsOps.getSelectedNodesCount() == 0 ? null : fcsOps.getEvents(xAxisParam),
+                            fcsOps.getSelectedNodesCount() == 0 ? null : fcsOps.getEvents(yAxisParam),
+                            xAxisParam,
+                            yAxisParam,
+                            fcsOps.getEventMax(xAxisParam),
+                            fcsOps.getEventMax(yAxisParam),
+                            xAxisType,
+                            yAxisType
+                            );
+                    Plot.setIcon(new ImageIcon(image));
+                } catch (IOException ex) {
+                    Plot.setIcon(null);
+                    CyLogger.getLogger(SpadeAnalysisPanel.class.getName()).error(null, ex);
+                }
+                return 0;
+            }
+             
+         }).execute();
+
+
         
 
     }

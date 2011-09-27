@@ -45,10 +45,12 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Scanner;
 import java.util.Set;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JOptionPane;
 import javax.swing.SwingConstants;
+import javax.swing.SwingWorker;
 
 /**
  *
@@ -60,6 +62,7 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel {
     private VisualMapping    visualMapping;
     private FCSOperations    fcsOperations;
     private ScatterPlotPanel scatterPlot;
+    private ReentrantLock    panelLock;
 
     /** Creates new form SpadeAnalysisPanel */
     public SpadeAnalysisPanel(SpadeContext spadeCxt) {
@@ -80,6 +83,8 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel {
             JOptionPane.showMessageDialog(null, "Error: Found more than one global_boundaries.table file.");
             return;
         }
+
+        panelLock = new ReentrantLock();
 
         initComponents();
     }
@@ -410,32 +415,51 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel {
     }
 
     private void updateFCSConsumers() {     
-        fcsOperations.updateSelectedNodes();
+        (new SwingWorker<Integer,Void>() {
+            @Override
+            protected Integer doInBackground() throws Exception {
 
-        this.scatterPlot.updatePlot();
-        if (fcsOperations.getSelectedNodesCount() == 0) {
-            NumberEventsLabel.setText("Displaying all " + fcsOperations.getEventCount() + " events...");
-            StatisticTextArea.setText("Select nodes to compute T-statistics...");
-        } else {
-            NumberEventsLabel.setText(
-                "Displaying " +
-                fcsOperations.getSelectedEventCount() +
-                " of " +
-                fcsOperations.getEventCount() +
-                " events..."
-                );
+                fcsOperations.updateSelectedNodes();
 
-            List<FCSOperations.AttributeValuePair> stats = fcsOperations.computeTStat();
-            StringBuilder sb = new StringBuilder(500);
-            for (int i = 0; i < Math.min(stats.size(), 5); i++) {
-                sb.append("T-statistic for ")
-                  .append(stats.get(i).attribute)
-                  .append(": ")
-                  .append(stats.get(i).value)
-                  .append("\n");
+                scatterPlot.updatePlot();
+
+                if (fcsOperations.getSelectedNodesCount() == 0) {
+                    panelLock.lock();
+                    try {
+                        NumberEventsLabel.setText("Displaying all " + fcsOperations.getEventCount() + " events...");
+                        StatisticTextArea.setText("Select nodes to compute T-statistics...");
+                    } finally {
+                        panelLock.unlock();
+                    }
+                } else {
+                    List<FCSOperations.AttributeValuePair> stats = fcsOperations.computeTStat();
+                    StringBuilder sb = new StringBuilder(500);
+                    for (int i = 0; i < Math.min(stats.size(), 5); i++) {
+                        sb.append("T-statistic for ")
+                          .append(stats.get(i).attribute)
+                          .append(": ")
+                          .append(stats.get(i).value)
+                          .append("\n");
+                    }
+
+                    panelLock.lock();
+                    try {
+                        NumberEventsLabel.setText(
+                            "Displaying " +
+                            fcsOperations.getSelectedEventCount() +
+                            " of " +
+                            fcsOperations.getEventCount() +
+                            " events..."
+                            );
+                        StatisticTextArea.setText(sb.toString());
+                    } finally {
+                        panelLock.unlock();
+                    }
+                }
+                return 0;
             }
-            StatisticTextArea.setText(sb.toString());
-        }   
+            
+        }).execute();   
     }
     
     /**

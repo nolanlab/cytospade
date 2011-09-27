@@ -4,6 +4,7 @@ import cytoscape.plugin.CytoscapePlugin;
 import cytoscape.util.CytoscapeAction;
 import cytoscape.view.cytopanels.CytoPanelImp;
 import cytoscape.*;
+import cytospade.ui.SpadeAnalysisPanel;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 
@@ -49,7 +50,7 @@ public class CytoSpade extends CytoscapePlugin {
      */
     public class SpadeDraw extends CytoscapeAction {
 
-        SpadePanel spadePanel;
+        SpadeAnalysisPanel analysisPanel;
 
         /**
          * Sets the text that should appear on the menu item.
@@ -92,8 +93,8 @@ public class CytoSpade extends CytoscapePlugin {
             if (spadeCxt.getWorkflowKind() == SpadeContext.WorkflowKind.ANALYSIS) {
                 //Create a tab panel for SPADE controls
                 CytoPanelImp ctrlPanel = (CytoPanelImp) Cytoscape.getDesktop().getCytoPanel(SwingConstants.WEST);                
-                spadePanel = new SpadePanel(spadeCxt);
-                ctrlPanel.add("SPADE", spadePanel);
+                analysisPanel = new SpadeAnalysisPanel(spadeCxt);
+                ctrlPanel.add("SPADE", analysisPanel);
 
                 //Set the focus on the panel
                 Cytoscape.getDesktop().getCytoPanel(SwingConstants.WEST).setSelectedIndex(
@@ -117,8 +118,8 @@ public class CytoSpade extends CytoscapePlugin {
          * This method is called to clean-up on exit
          */
         public void onExit() {
-            if (spadePanel != null) {
-                spadePanel.onExit();
+            if (analysisPanel != null) {
+                analysisPanel.onExit();
             }
         }
     }

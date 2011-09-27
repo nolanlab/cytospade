@@ -17,6 +17,7 @@ import java.io.IOException;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 
 import java.util.Set;
 
@@ -27,20 +28,118 @@ import org.apache.commons.math.linear.Array2DRowRealMatrix;
 import org.apache.commons.lang.ArrayUtils;
 
 
-public class FCSComputations {
+public class FCSOperations {
 
     private fcsFile fcsInputFile = null;
 
-    public FCSComputations(File inputFile) throws FileNotFoundException, IOException {        
+    private Array2DRowRealMatrix eventsInitl = null;
+
+    private int numNodesSelected = 0;
+    private Array2DRowRealMatrix eventsSlctd = null;
+
+
+    public FCSOperations(File inputFile) throws FileNotFoundException, IOException {
         this(new fcsFile(inputFile, true));
     }
     
-    public FCSComputations(fcsFile inputFile) {
+    public FCSOperations(fcsFile inputFile) {
         fcsInputFile = inputFile;
+        eventsInitl = new Array2DRowRealMatrix(fcsInputFile.getCompensatedEventList());
+    }
+
+     public fcsFile getFCSFile() {
+        return fcsInputFile;
+    }
+
+    public String getChannelShortName(int i) {
+        return fcsInputFile.getChannelShortName(i);
+    }
+
+    public int getChannelCount() {
+        return fcsInputFile.getChannelCount();
     }
     
-    public fcsFile FcsFile() {
-        return fcsInputFile;
+    public int getEventCount () {
+        return fcsInputFile.getEventCount();
+    }
+
+    public double[] getEvents(String channel) {
+        return eventsInitl.getDataRef()[fcsInputFile.getChannelIdFromShortName(channel)];
+    }
+
+    public double getEventMax(String channel) {
+        return fcsInputFile.getChannelRange(fcsInputFile.getChannelIdFromShortName(channel));
+    }
+    
+    public void updateSelectedNodes() {
+        //Get the selected nodes
+        int[] selectedClust = getSelectedNodes();
+
+        numNodesSelected = selectedClust.length;
+        if (numNodesSelected == 0) {
+            eventsSlctd = null;
+        } else {
+            eventsSlctd = populateSelectedEvents(selectedClust);
+        }
+    }
+    
+    public int getSelectedNodesCount() {
+        return this.numNodesSelected;
+    }
+
+    public int getSelectedEventCount() {
+        return eventsSlctd == null ? 0 : eventsSlctd.getColumnDimension();
+    }
+
+    public double[] getSelectedEvents(String channel) {
+        return getSelectedNodesCount() > 0 ?
+            eventsSlctd.getDataRef()[fcsInputFile.getChannelIdFromShortName(channel)] :
+            new double[0];
+    }
+
+
+
+    /**
+     * Statistical Tests
+     */
+
+    public class AttributeValuePair implements Comparable {
+
+        public double value;
+        public String attribute;
+
+        public AttributeValuePair(String name, double value) {
+            this.attribute = name;
+            this.value = value;
+        }
+
+        public int compareTo(Object t) {
+            AttributeValuePair rhs = (AttributeValuePair) t;
+            if (Math.abs(this.value) < Math.abs(rhs.value)) {
+                return -1;
+            } else if (Math.abs(this.value) > Math.abs(rhs.value)) {
+                return 1;
+            } else {
+                return 0;
+            }
+        }
+    }
+
+    public List<AttributeValuePair> computeTStat() {
+        ArrayList<AttributeValuePair> stats = new ArrayList<AttributeValuePair>();
+        for (int i = 0; i < fcsInputFile.getNumChannels(); i++) {
+            String name = fcsInputFile.getChannelShortName(i);
+            if (name.contentEquals("Time") ||
+                name.contentEquals("time") ||
+                name.contentEquals("cluster") ||
+                name.contentEquals("density")) {
+                continue;
+            }
+            stats.add(new AttributeValuePair(name, tTest(eventsSlctd, eventsInitl, i)));
+        }
+        Collections.sort(stats);
+        Collections.reverse(stats);
+        return stats;
     }
 
     /**
@@ -70,15 +169,13 @@ public class FCSComputations {
     /**
      * Populates selectedEvents
      */
-    private Array2DRowRealMatrix populateSelectedEvents(
-            Array2DRowRealMatrix events,
-            int[] selectedClust,
-            int clusterColumn) {
+    private Array2DRowRealMatrix populateSelectedEvents(int[] selectedClust) {
+        int clusterColumn = fcsInputFile.getChannelIdFromShortName("cluster");
         ArrayList<Integer> columns = new ArrayList<Integer>();
 
         //Populate selectedEventsInitial                        
-        for (int i = 0; i < events.getColumnDimension(); i++) {
-            int cluster = (int) events.getEntry(clusterColumn, i);
+        for (int i = 0; i < eventsInitl.getColumnDimension(); i++) {
+            int cluster = (int) eventsInitl.getEntry(clusterColumn, i);
             for (int j = 0; j < selectedClust.length; j++) {
                 if (cluster == selectedClust[j]) {
                     columns.add(i);
@@ -86,13 +183,18 @@ public class FCSComputations {
             }
         }
 
-        int[] rows = new int[events.getRowDimension()];
+        int[] rows = new int[eventsInitl.getRowDimension()];
         for (int i = 0; i < rows.length; i++) {
             rows[i] = i;
         }
 
-        return (Array2DRowRealMatrix) events.getSubMatrix(rows, ArrayUtils.toPrimitive(columns.toArray(new Integer[0])));
+        return (Array2DRowRealMatrix) eventsInitl.getSubMatrix(
+                    rows,
+                    ArrayUtils.toPrimitive(columns.toArray(new Integer[0]))
+                );
     }
+
+
 
     public class nameValuePair implements Comparable {
 
@@ -143,13 +245,11 @@ public class FCSComputations {
 
         TTestImpl tTest = new TTestImpl();
         try {
-            return tTest.tTest(selectedEvents.getDataRef()[attribute], allEvents.getDataRef()[attribute]);
+            return tTest.t(selectedEvents.getDataRef()[attribute], allEvents.getDataRef()[attribute]);
         } catch (IllegalArgumentException ex) {
-            CyLogger.getLogger(SpadeController.class.getName()).error(null, ex);
-        } catch (MathException ex) {
-            CyLogger.getLogger(SpadeController.class.getName()).error(null, ex);
+            CyLogger.getLogger(FCSOperations.class.getName()).error(null, ex);
         }
-        return 1.0;
+        return 0.0;
     }
 
     /**
@@ -157,7 +257,8 @@ public class FCSComputations {
      * selected node(s). (Uses only global variables.)
      */
     public Result compute(String xChanParamIn, String yChanParamIn) {
-
+        return null;
+        /*
         //Get the selected nodes
         int[] selectedClust = getSelectedNodes();
 
@@ -203,12 +304,12 @@ public class FCSComputations {
 
             ArrayList<nameValuePair> pValues = new ArrayList<nameValuePair>();
             for (int i = 0; i < fcsInputFile.getNumChannels(); i++) {
-                String name = fcsInputFile.getChannelShortName(i);
-                if (name.contentEquals("Time") || name.contentEquals("time") || name.contentEquals("cluster") || name.contentEquals("density")) {
+                String attribute = fcsInputFile.getChannelShortName(i);
+                if (attribute.contentEquals("Time") || attribute.contentEquals("time") || attribute.contentEquals("cluster") || attribute.contentEquals("density")) {
                     continue;
                 }
 
-                pValues.add(new nameValuePair(name, tTest(eventsSlctd, eventsInitl, i)));
+                pValues.add(new nameValuePair(attribute, tTest(eventsSlctd, eventsInitl, i)));
             }
             Collections.sort(pValues);
 
@@ -221,5 +322,7 @@ public class FCSComputations {
         }
 
         return result;
+ *
+ */
     }
 }

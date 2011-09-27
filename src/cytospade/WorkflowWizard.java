@@ -41,7 +41,7 @@ public class WorkflowWizard {
 
     private int returnCode;
 
-    WorkflowWizard(Frame desktop) {
+    public WorkflowWizard(Frame desktop) {
         wizardModel = new Model();
         wizardDialog = new JDialog(desktop);
         initWizardComponents();

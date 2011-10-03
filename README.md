@@ -10,6 +10,8 @@ The CytoSPADE Cytoscape plugin provides a GUI for setting-up and interactively v
 ## Setup and Build Process
 The CytoSPADE repository is itself a Netbeans project and can be opened directly with *Open a Project*. Note that you will likely get complaints about unresolved library paths. You can resolve these paths by setting the path to your Cytoscape installation via an "IDE Variable", specificallly via *Tools -> Variables* add a variable `CYTOSCAPE_PATH` that points to your top level Cytoscape installation directory. The project library dependencies are set relative to this variable and should be resolved at this point.
 
+For direct integration of NetBeans and the github repository, download and install the [nbgit plugin](http://code.google.com/p/nbgit/downloads/list). Then, from the menu bar, click Team>Git>Clone other... and copy-and-paste the full HTTP URL for the github repository (above, https://username@github.com/nolanlab/cytospade.git).
+
 After you build the project (the hammer in the toolbar), there will be two jars created in the `dist/` directory, `CytoSPADE.jar` and `CytoSPADE.dist.jsr`. The latter has all the non-Cytoscape dependencies compiled in, and is the file you should copy to the CytoScape plugins folder as `CytoSPADE.jar`.
 
 ## Tips and Resources

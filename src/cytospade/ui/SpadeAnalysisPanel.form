@@ -34,7 +34,7 @@
                       <Component id="TableButton" min="-2" max="-2" attributes="0"/>
                   </Group>
                   <Component id="CloseButton" alignment="0" min="-2" max="-2" attributes="0"/>
-                  <Component id="NumberEventsLabel" alignment="0" pref="400" max="32767" attributes="0"/>
+                  <Component id="NumberEventsLabel" alignment="0" pref="420" max="32767" attributes="0"/>
                   <Group type="103" alignment="0" groupAlignment="1" max="-2" attributes="0">
                       <Component id="jSeparator1" alignment="0" max="32767" attributes="1"/>
                       <Component id="jScrollPane1" alignment="0" max="32767" attributes="1"/>
@@ -57,7 +57,7 @@
                           </Group>
                           <Component id="FilenameSelect" alignment="1" min="-2" pref="331" max="-2" attributes="1"/>
                       </Group>
-                      <EmptySpace pref="28" max="32767" attributes="0"/>
+                      <EmptySpace pref="48" max="32767" attributes="0"/>
                   </Group>
               </Group>
               <EmptySpace max="-2" attributes="0"/>
@@ -87,7 +87,7 @@
               <EmptySpace min="-2" pref="2" max="-2" attributes="0"/>
               <Component id="NumberEventsLabel" min="-2" max="-2" attributes="0"/>
               <EmptySpace max="-2" attributes="0"/>
-              <Component id="PlotContainer" pref="351" max="32767" attributes="0"/>
+              <Component id="PlotContainer" pref="336" max="32767" attributes="0"/>
               <EmptySpace type="unrelated" max="-2" attributes="0"/>
               <Component id="jScrollPane1" min="-2" max="-2" attributes="0"/>
               <EmptySpace max="-2" attributes="0"/>

@@ -7,6 +7,7 @@ import cytoscape.visual.VisualPropertyType;
 import cytoscape.visual.calculators.BasicCalculator;
 import cytoscape.visual.calculators.Calculator;
 import cytoscape.visual.mappings.*;
+import cytospade.SpadeContext.NormalizationKind;
 import java.awt.Color;
 import java.io.BufferedReader;
 import java.io.File;
@@ -29,8 +30,6 @@ import java.util.Iterator;
  */
 public class VisualMapping {
 
-    public enum RangeKind { LOCAL, GLOBAL }
-
     public VisualMapping() {
         globalRanges = null;
     }
@@ -51,7 +50,7 @@ public class VisualMapping {
      * @param colorMarker Marker to use for color calculator
      * @throws IllegalArgumentException If markers are non-numeric
      */
-    public void setCurrentMarkersAndRangeKind(String sizeMarker, String colorMarker, RangeKind rangeKind) throws IllegalArgumentException {
+    public void setCurrentMarkersAndRangeKind(String sizeMarker, String colorMarker, NormalizationKind rangeKind) throws IllegalArgumentException {
         if (!isNumericAttribute(sizeMarker)) {
           throw new IllegalArgumentException("sizeMarker is non-numeric");
         }
@@ -166,7 +165,7 @@ public class VisualMapping {
         }
     }
 
-    private RangeKind rangeKind;
+    private NormalizationKind rangeKind;
     private HashMap globalRanges;
 
     /**
@@ -186,7 +185,7 @@ public class VisualMapping {
 
     private Range getAttributeRange(String attrID) {
         Range range;
-        if ((rangeKind == RangeKind.GLOBAL) && ((range = (Range)globalRanges.get(attrID)) != null)) {
+        if ((rangeKind == NormalizationKind.GLOBAL) && ((range = (Range)globalRanges.get(attrID)) != null)) {
             return range;
         }
         // Either local, or could not find attribute in global list

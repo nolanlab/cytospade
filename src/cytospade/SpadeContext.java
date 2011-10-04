@@ -8,6 +8,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Locale;
 import java.util.Map;
 
 /*
@@ -24,6 +25,7 @@ public class SpadeContext {
 
     public enum WorkflowKind { PROCESSING, ANALYSIS }
     public enum DownsampleKind { EVENTS, PERCENTILE }
+    public enum NormalizationKind { LOCAL, GLOBAL }
 
     static public class AnalysisPanel {
         public File[]   panel_files;
@@ -80,6 +82,7 @@ public class SpadeContext {
     private int targetDownsamplePctile = 5;
 
     private double nodeSizeScaleFactor = 1.2;
+    private NormalizationKind normalizationKind = NormalizationKind.GLOBAL;
 
     /**
      * @return the path
@@ -222,7 +225,15 @@ public class SpadeContext {
     public void setNodeSizeScaleFactor(double nodeSizeScaleFactor) {
         this.nodeSizeScaleFactor = nodeSizeScaleFactor;
     }
-    
+
+    public NormalizationKind getNormalizationKind() {
+        return normalizationKind;
+    }
+
+    public void setNormalizationKind(NormalizationKind normalizationKind) {
+        this.normalizationKind = normalizationKind;
+    }
+
     /**
      * @return the targetClusters
      */
@@ -373,10 +384,11 @@ public class SpadeContext {
         out.write("LIBRARY_PATH=NULL\n"
         + "library(\"spade\",lib.loc=LIBRARY_PATH)\n");
         out.write(String.format("NODE_SIZE_SCALE_FACTOR=%f\n",this.getNodeSizeScaleFactor()));
+        out.write("NORMALIZE=\"" + this.getNormalizationKind().toString().toLowerCase() +"\"\n");
         out.write("OUTPUT_DIR=\"./\"\n"
         + "LAYOUT_TABLE <- read.table(paste(OUTPUT_DIR,\"layout.table\",sep=\"\"))\n"
         + "MST_GRAPH <- read.graph(paste(OUTPUT_DIR,\"mst.gml\",sep=\"\"),format=\"gml\")\n"
-        + "SPADE.plot.trees(MST_GRAPH,OUTPUT_DIR,file_pattern=\"*fcs*Rsave\",layout=as.matrix(LAYOUT_TABLE),out_dir=paste(OUTPUT_DIR,\"pdf\",sep=\"\"),size_scale_factor=NODE_SIZE_SCALE_FACTOR)\n"
+        + "SPADE.plot.trees(MST_GRAPH,OUTPUT_DIR,file_pattern=\"*fcs*Rsave\",layout=as.matrix(LAYOUT_TABLE),out_dir=paste(OUTPUT_DIR,\"pdf\",sep=\"\"),size_scale_factor=NODE_SIZE_SCALE_FACTOR,normalize=NORMALIZE)\n"
         );
         out.close();
     }

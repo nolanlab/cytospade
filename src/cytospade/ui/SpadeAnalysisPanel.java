@@ -27,6 +27,7 @@ import cytoscape.visual.VisualStyle;
 import cytospade.CytoSpade;
 import cytospade.FCSOperations;
 import cytospade.SpadeContext;
+import cytospade.SpadeContext.NormalizationKind;
 import cytospade.SpadeController;
 import cytospade.VisualMapping;
 import cytospade.WorkflowWizard;
@@ -289,7 +290,10 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel {
             
             VisualMapping.populateNumericAttributeComboBox(ColoringSelect);  // Update the parameter combo box
             ColoringSelect.setSelectedIndex(0);
-             
+
+            RangeSelect.setSelectedIndex(0);
+            spadeCxt.setNormalizationKind((NormalizationKind) RangeSelect.getSelectedItem());
+
             updateNodeSizeAndColors();
 
             // FCS file interactions
@@ -323,6 +327,7 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel {
     }//GEN-LAST:event_ColoringSelectActionPerformed
 
     private void RangeSelectActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_RangeSelectActionPerformed
+        spadeCxt.setNormalizationKind((SpadeContext.NormalizationKind) RangeSelect.getSelectedItem());
         updateNodeSizeAndColors();
         Cytoscape.getCurrentNetworkView().redrawGraph(true, true);
     }//GEN-LAST:event_RangeSelectActionPerformed
@@ -396,8 +401,8 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel {
     private javax.swing.DefaultComboBoxModel RangeSelectModel() {
         return new javax.swing.DefaultComboBoxModel(
             visualMapping.globalRangeAvailable()
-                ? new VisualMapping.RangeKind[]{VisualMapping.RangeKind.GLOBAL, VisualMapping.RangeKind.LOCAL}
-                : new VisualMapping.RangeKind[]{VisualMapping.RangeKind.LOCAL});
+                ? new SpadeContext.NormalizationKind[]{SpadeContext.NormalizationKind.GLOBAL, SpadeContext.NormalizationKind.LOCAL}
+                : new SpadeContext.NormalizationKind[]{SpadeContext.NormalizationKind.LOCAL});
     }
 
     public void onExit() {
@@ -475,7 +480,7 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel {
             visualMapping.setCurrentMarkersAndRangeKind(
                     "percenttotal",
                     ColoringSelect.getSelectedItem().toString(),
-                    (VisualMapping.RangeKind) RangeSelect.getSelectedItem());
+                    spadeCxt.getNormalizationKind());
         } catch (IllegalArgumentException e) {
             JOptionPane.showMessageDialog(null, "Invalid choice of mapping parameters: " + e);
             return;

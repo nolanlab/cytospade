@@ -84,6 +84,10 @@ public class SpadeContext {
     private double nodeSizeScaleFactor = 1.2;
     private NormalizationKind normalizationKind = NormalizationKind.GLOBAL;
 
+    public SpadeContext() {
+        selectedClusteringMarkers = new String[0];
+    }
+
     /**
      * @return the path
      */
@@ -103,7 +107,7 @@ public class SpadeContext {
 
         // Flush any previously existing path data
         this.analysisPanels.clear();
-        this.selectedClusteringMarkers = null;
+        this.selectedClusteringMarkers = new String[0];
 
         // Determine analysis kind
         gmlFiles = path.listFiles(new FilenameFilter() {

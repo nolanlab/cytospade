@@ -3,6 +3,9 @@ import cytoscape.logger.CyLogger;
 import java.awt.Component;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 import javax.swing.*;
 
@@ -218,6 +221,16 @@ public class WorkflowWizardPanels {
                 public int getSize() { return strings.length; }
                 public Object getElementAt(int i) { return strings[i]; }
             });
+
+            {
+                String[] markers = cxt.getSelectedClusteringMarkers();
+                List<String> possible_markers = Arrays.asList(cxt.getPotentialClusteringMarkers());
+                int[] idxs = new int[markers.length];
+                for (int i=0; i<markers.length; i++) {
+                    idxs[i] = possible_markers.indexOf(markers[i]);
+                }
+                jList1.setSelectedIndices(idxs);
+            }
         }
 
         @Override

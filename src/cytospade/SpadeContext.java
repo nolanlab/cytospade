@@ -359,15 +359,15 @@ public class SpadeContext {
         BufferedWriter out = new BufferedWriter(fstream);
 
         out.write("OUTPUT_DIR='./'\n"
-        + "params <- as.character(read.table(paste(OUTPUT_DIR,'global_boundaries.table',sep=''))[,1])\n"
         + "files <- dir(OUTPUT_DIR,pattern=glob2rx(\"*.anno.Rsave\"))\n"
+        + "params <- unique(as.vector(sapply(files, function(f) { load(f); colnames(anno); })))\n"
         + "dir.create(paste(OUTPUT_DIR,'pivot',sep=''),recursive=TRUE,showWarnings=FALSE)\n"
         + "for (p in params) {\n"
         + " cat('Generating table for',p,\"\\n\")\n"
         + " pivot <- c(); names <- c();\n"
         + " for (f in files) { load(f); if (p %in% colnames(anno)) { pivot <- cbind(pivot, anno[,p]); names <- c(names, f); }}\n"
-        + " colnames(pivot) <- names\n"
-        + " if (ncol(pivot) > 0) { write.csv(pivot, file=paste(OUTPUT_DIR,'pivot/',p,'_pivot','.csv',sep='')) }\n"
+        + " pivot <- cbind(0:(nrow(pivot)-1),pivot); colnames(pivot) <- c(\"cytoscape_id\", names);\n"
+        + " if (!is.null(pivot) && ncol(pivot) > 0) { write.csv(pivot, file=paste(OUTPUT_DIR,'pivot/',p,'_pivot','.csv',sep=''), row.names=TRUE) }\n"
         + "}\n"
         );
         out.close();

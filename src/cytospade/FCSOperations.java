@@ -218,23 +218,6 @@ public class FCSOperations {
         }
     }
 
-    public class Result {
-
-        // Return values
-        public double[] dataAx;
-        public double[] dataAy;
-        public double[] datax;
-        public double[] datay;
-        public double xChanMax;
-        public double yChanMax;
-        public int eventCount;
-        public int numNodesSelected;
-        public ArrayList<nameValuePair> pValues;
-
-        public Result() {
-        }
-    }
-
     /**
      * T-distribution between selected nodes and all nodes
      */
@@ -252,77 +235,4 @@ public class FCSOperations {
         return 0.0;
     }
 
-    /**
-     * Populates the data[A]{X,Y} arrays based on the selected file and the
-     * selected node(s). (Uses only global variables.)
-     */
-    public Result compute(String xChanParamIn, String yChanParamIn) {
-        return null;
-        /*
-        //Get the selected nodes
-        int[] selectedClust = getSelectedNodes();
-
-        //Pull the events list
-        double[][] events = fcsInputFile.getCompensatedEventList();
-        int eventCount = fcsInputFile.getEventCount();
-        int numNodesSelected = selectedClust.length;
-
-        Result result = new Result();
-        result.numNodesSelected = numNodesSelected;
-        result.eventCount = eventCount;
-
-        //Find the columns with the appropriate parameters
-        int xChan = fcsInputFile.getChannelIdFromShortName(xChanParamIn);
-        if (xChan < 0) {
-            xChan = 0;
-        }
-
-        int yChan = fcsInputFile.getChannelIdFromShortName(yChanParamIn);
-        if (yChan < 0) {
-            yChan = 0;
-        }
-
-        result.xChanMax = fcsInputFile.getChannelRange(xChan);
-        result.yChanMax = fcsInputFile.getChannelRange(yChan);
-        
-        //The cluster channel is always the last
-        int clustChan = fcsInputFile.getChannelCount() - 1;
-
-
-        if (numNodesSelected == 0) {
-            result.datax = events[xChan];
-            result.datay = events[yChan];
-            //TODO: Do we need to assign dataAx and dataAy?
-
-            result.numNodesSelected = 0;
-        } else {
-            Array2DRowRealMatrix eventsInitl = new Array2DRowRealMatrix(events);
-            Array2DRowRealMatrix eventsSlctd = populateSelectedEvents(
-                    eventsInitl,
-                    selectedClust,
-                    fcsInputFile.getChannelIdFromShortName("cluster"));
-
-            ArrayList<nameValuePair> pValues = new ArrayList<nameValuePair>();
-            for (int i = 0; i < fcsInputFile.getNumChannels(); i++) {
-                String attribute = fcsInputFile.getChannelShortName(i);
-                if (attribute.contentEquals("Time") || attribute.contentEquals("time") || attribute.contentEquals("cluster") || attribute.contentEquals("density")) {
-                    continue;
-                }
-
-                pValues.add(new nameValuePair(attribute, tTest(eventsSlctd, eventsInitl, i)));
-            }
-            Collections.sort(pValues);
-
-            result.dataAx = eventsInitl.getDataRef()[xChan];  // Background events
-            result.dataAy = eventsInitl.getDataRef()[yChan];
-            result.datax = eventsSlctd.getDataRef()[xChan];  // Foreground events
-            result.datay = eventsSlctd.getDataRef()[yChan];
-            result.eventCount = eventsSlctd.getColumnDimension();
-            result.pValues = pValues;
-        }
-
-        return result;
- *
- */
-    }
 }

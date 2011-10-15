@@ -437,14 +437,18 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel {
                         panelLock.unlock();
                     }
                 } else {
-                    List<FCSOperations.AttributeValuePair> stats = fcsOperations.computeTStat();
                     StringBuilder sb = new StringBuilder(500);
-                    for (int i = 0; i < Math.min(stats.size(), 5); i++) {
-                        sb.append("T-statistic for ")
-                          .append(stats.get(i).attribute)
-                          .append(": ")
-                          .append(stats.get(i).value)
-                          .append("\n");
+                    if (fcsOperations.getSelectedEventCount() >= 2) {
+                        List<FCSOperations.AttributeValuePair> stats = fcsOperations.computeTStat();
+                        for (int i = 0; i < Math.min(stats.size(), 5); i++) {
+                            sb.append("T-statistic for ")
+                              .append(stats.get(i).attribute)
+                              .append(": ")
+                              .append(stats.get(i).value)
+                              .append("\n");
+                        }
+                    } else {
+                        sb.append("Insufficient number of events to compute T-statistic");
                     }
 
                     panelLock.lock();

@@ -14,9 +14,12 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
+import org.apache.commons.math.stat.descriptive.rank.Percentile;
 
 
 /*
@@ -188,11 +191,10 @@ public class VisualMapping {
         if ((rangeKind == NormalizationKind.GLOBAL) && ((range = (Range)globalRanges.get(attrID)) != null)) {
             return range;
         }
-        // Either local, or could not find attribute in global list
 
-        // Initialize min and max prior to scanning the nodes
-        double min = Double.MAX_VALUE;
-        double max = Double.MIN_VALUE;
+        // Either local, or could not find attribute in global list
+        double[] values = new double[Cytoscape.getCurrentNetwork().getNodeCount()];
+        int value_idx = 0;
 
         CyAttributes cyNodeAttrs = Cytoscape.getNodeAttributes();
         byte attrType = cyNodeAttrs.getType(attrID);
@@ -211,11 +213,18 @@ public class VisualMapping {
                 } else {
                     continue;
                 }
-                min = Math.min(value, min);
-                max = Math.max(value, max);
+                values[value_idx] = value;
+                value_idx++;
             }
         }
-        return new Range(min,max);
+
+        values = Arrays.copyOf(values, value_idx);
+        Percentile pctile = new Percentile();
+        
+        return new Range(
+            pctile.evaluate(values, 2.0),  // TODO: Make these values controllable
+            pctile.evaluate(values, 98.0)
+            );
     }
 
      private void readBoundaries(File boundaryFile) {

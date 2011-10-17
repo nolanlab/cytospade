@@ -47,11 +47,10 @@ import java.util.List;
 import java.util.Scanner;
 import java.util.Set;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.swing.JOptionPane;
 import javax.swing.SwingConstants;
 import javax.swing.SwingWorker;
+import javax.swing.table.DefaultTableModel;
 
 /**
  *
@@ -64,6 +63,10 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel {
     private FCSOperations    fcsOperations;
     private ScatterPlotPanel scatterPlot;
     private ReentrantLock    panelLock;
+
+    DefaultTableModel TValTableModel = new javax.swing.table.DefaultTableModel(
+            new Object[][] {{null, null}},
+            new String[] {"Parameter", "T value" });
 
     /** Creates new form SpadeAnalysisPanel */
     public SpadeAnalysisPanel(SpadeContext spadeCxt) {
@@ -111,11 +114,11 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel {
         jSeparator1 = new javax.swing.JSeparator();
         jSeparator2 = new javax.swing.JSeparator();
         NumberEventsLabel = new javax.swing.JLabel();
-        jScrollPane1 = new javax.swing.JScrollPane();
-        StatisticTextArea = new javax.swing.JTextArea();
         PlotContainer = new javax.swing.JScrollPane();
+        PValTableContainer = new javax.swing.JScrollPane();
+        PValTable = new javax.swing.JTable();
 
-        setMinimumSize(new java.awt.Dimension(420, 720));
+        setMinimumSize(new java.awt.Dimension(390, 680));
         setOpaque(false);
         setPreferredSize(new java.awt.Dimension(440, 720));
 
@@ -131,6 +134,7 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel {
         FilenameLabel.setLabelFor(FilenameSelect);
         FilenameLabel.setText("File");
 
+        ColoringSelect.setMaximumRowCount(20);
         ColoringSelect.setToolTipText("Select attribute for coloring nodes");
         ColoringSelect.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -181,43 +185,51 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel {
 
         NumberEventsLabel.setText("Select a file to display network and bi-axial plot");
 
-        StatisticTextArea.setColumns(20);
-        StatisticTextArea.setEditable(false);
-        StatisticTextArea.setRows(5);
-        StatisticTextArea.setText("Select nodes to compute T-statistics...");
-        jScrollPane1.setViewportView(StatisticTextArea);
+        PlotContainer.setMaximumSize(new java.awt.Dimension(32767, 400));
+        PlotContainer.setMinimumSize(new java.awt.Dimension(365, 430));
+
+        PValTable.setModel(TValTableModel);
+        PValTable.setCellSelectionEnabled(true);
+        PValTableContainer.setViewportView(PValTable);
 
         org.jdesktop.layout.GroupLayout layout = new org.jdesktop.layout.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
             .add(org.jdesktop.layout.GroupLayout.TRAILING, layout.createSequentialGroup()
-                .addContainerGap()
                 .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING)
                     .add(org.jdesktop.layout.GroupLayout.LEADING, layout.createSequentialGroup()
-                        .add(PDFButton)
-                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.UNRELATED)
-                        .add(TableButton))
-                    .add(org.jdesktop.layout.GroupLayout.LEADING, CloseButton)
-                    .add(org.jdesktop.layout.GroupLayout.LEADING, NumberEventsLabel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 400, Short.MAX_VALUE)
-                    .add(org.jdesktop.layout.GroupLayout.LEADING, layout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING, false)
-                        .add(org.jdesktop.layout.GroupLayout.LEADING, jSeparator1)
-                        .add(org.jdesktop.layout.GroupLayout.LEADING, jScrollPane1)
-                        .add(org.jdesktop.layout.GroupLayout.LEADING, PlotContainer, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 374, Short.MAX_VALUE))
-                    .add(org.jdesktop.layout.GroupLayout.LEADING, FilenameLabel)
+                        .addContainerGap()
+                        .add(PValTableContainer, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 370, Short.MAX_VALUE))
                     .add(org.jdesktop.layout.GroupLayout.LEADING, layout.createSequentialGroup()
-                        .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING, false)
-                            .add(org.jdesktop.layout.GroupLayout.LEADING, jSeparator2)
-                            .add(org.jdesktop.layout.GroupLayout.LEADING, layout.createSequentialGroup()
+                        .addContainerGap()
+                        .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                            .add(jSeparator2, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 370, Short.MAX_VALUE)
+                            .add(layout.createSequentialGroup()
+                                .add(jSeparator1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                .add(PDFButton)
+                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                .add(TableButton)
+                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED, 61, Short.MAX_VALUE)
+                                .add(CloseButton))
+                            .add(FilenameLabel)
+                            .add(layout.createSequentialGroup()
                                 .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                                     .add(jLabel1)
                                     .add(jLabel2))
                                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING, false)
-                                    .add(RangeSelect, 0, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                    .add(ColoringSelect, 0, 253, Short.MAX_VALUE)))
-                            .add(FilenameSelect, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 331, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED, 28, Short.MAX_VALUE)))
+                                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                                    .add(org.jdesktop.layout.GroupLayout.TRAILING, FilenameSelect, 0, 281, Short.MAX_VALUE)
+                                    .add(RangeSelect, 0, 281, Short.MAX_VALUE)
+                                    .add(ColoringSelect, 0, 281, Short.MAX_VALUE))
+                                .add(0, 0, 0))))
+                    .add(layout.createSequentialGroup()
+                        .addContainerGap()
+                        .add(NumberEventsLabel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 370, Short.MAX_VALUE))
+                    .add(layout.createSequentialGroup()
+                        .addContainerGap()
+                        .add(PlotContainer, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 370, Short.MAX_VALUE)))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -235,22 +247,21 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel {
                 .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                     .add(RangeSelect, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                     .add(jLabel2))
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(8, 8, 8)
                 .add(jSeparator2, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                .add(2, 2, 2)
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(NumberEventsLabel)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(PlotContainer, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 351, Short.MAX_VALUE)
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.UNRELATED)
-                .add(jScrollPane1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .add(PlotContainer, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 430, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(jSeparator1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .add(PValTableContainer, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 131, Short.MAX_VALUE)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.UNRELATED)
-                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
-                    .add(PDFButton)
-                    .add(TableButton))
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(CloseButton)
+                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING)
+                    .add(jSeparator1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                        .add(PDFButton)
+                        .add(TableButton)
+                        .add(CloseButton)))
                 .addContainerGap())
         );
     }// </editor-fold>//GEN-END:initComponents
@@ -299,7 +310,8 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel {
             // FCS file interactions
             //
             NumberEventsLabel.setText("Select a file to display network and bi-axial plot");
-            StatisticTextArea.setText("Select nodes to compute T-statistics...");
+            TValTableModel.setRowCount(0);
+            TValTableModel.addRow(new Object[]{"Select nodes...",""});
 
             this.PlotContainer.setViewportView(null);
             this.scatterPlot   = null;
@@ -387,8 +399,10 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel {
                 }
                 javax.swing.JLabel label = new javax.swing.JLabel(name);
 
-                label.setBackground(isSelected ? jlist.getSelectionBackground() : jlist.getBackground());
-                label.setForeground(isSelected ? jlist.getSelectionForeground() : jlist.getForeground());
+                //TODO
+                //FIXME
+                //label.setBackground(isSelected ? jlist.getSelectionBackground() : jlist.getBackground());
+                //label.setForeground(isSelected ? jlist.getSelectionForeground() : jlist.getForeground());
                 label.setEnabled(jlist.isEnabled());
                 label.setFont(jlist.getFont());
                 label.setOpaque(true);
@@ -432,23 +446,20 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel {
                     panelLock.lock();
                     try {
                         NumberEventsLabel.setText("Displaying all " + fcsOperations.getEventCount() + " events...");
-                        StatisticTextArea.setText("Select nodes to compute T-statistics...");
+                        TValTableModel.setRowCount(0);
+                        TValTableModel.addRow(new Object[]{"Select nodes...",""});
                     } finally {
                         panelLock.unlock();
                     }
                 } else {
-                    StringBuilder sb = new StringBuilder(500);
                     if (fcsOperations.getSelectedEventCount() >= 2) {
                         List<FCSOperations.AttributeValuePair> stats = fcsOperations.computeTStat();
-                        for (int i = 0; i < Math.min(stats.size(), 5); i++) {
-                            sb.append("T-statistic for ")
-                              .append(stats.get(i).attribute)
-                              .append(": ")
-                              .append(stats.get(i).value)
-                              .append("\n");
+                        TValTableModel.setRowCount(0);
+                        for (int i = 0; i < stats.size(); i++) {
+                            TValTableModel.addRow(new Object[]{stats.get(i).attribute, (double)(Math.round(stats.get(i).value*10))/10});
                         }
                     } else {
-                        sb.append("Insufficient number of events to compute T-statistic");
+                        TValTableModel.addRow(new Object[]{"Too few events",""});
                     }
 
                     panelLock.lock();
@@ -460,7 +471,6 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel {
                             fcsOperations.getEventCount() +
                             " events..."
                             );
-                        StatisticTextArea.setText(sb.toString());
                     } finally {
                         panelLock.unlock();
                     }
@@ -703,13 +713,13 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel {
     private javax.swing.JComboBox FilenameSelect;
     private javax.swing.JLabel NumberEventsLabel;
     private javax.swing.JButton PDFButton;
+    private javax.swing.JTable PValTable;
+    private javax.swing.JScrollPane PValTableContainer;
     private javax.swing.JScrollPane PlotContainer;
     private javax.swing.JComboBox RangeSelect;
-    private javax.swing.JTextArea StatisticTextArea;
     private javax.swing.JButton TableButton;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
-    private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JSeparator jSeparator1;
     private javax.swing.JSeparator jSeparator2;
     // End of variables declaration//GEN-END:variables

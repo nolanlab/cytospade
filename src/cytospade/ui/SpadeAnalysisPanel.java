@@ -1,9 +1,4 @@
 /*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-
-/*
  * SpadeAnalysisPanel.java
  *
  * Created on Sep 22, 2011, 7:27:18 AM
@@ -35,7 +30,6 @@ import cytospade.WorkflowWizardPanels;
 import giny.model.GraphPerspective;
 import giny.view.NodeView;
 import java.awt.Color;
-import java.awt.Component;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -91,6 +85,34 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel {
         panelLock = new ReentrantLock();
 
         initComponents();
+        
+    }
+
+    /**
+     * @author bjornson
+     * class to override File's toString method
+     */
+    public class FileItem {
+        private File f;
+
+        public FileItem(File file) {
+            f = file;
+        }
+
+        @Override
+        public String toString() {
+            //Return only the file base name
+            return f.getName().substring(0, f.getName().indexOf((".fcs")));
+        }
+
+        public String getFCSpath() {
+            return f.getName();
+        }
+
+        public File getFCSFile() {
+            return f;
+        }
+
     }
 
     /** This method is called from within the constructor to
@@ -102,7 +124,14 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        FilenameSelect = new javax.swing.JComboBox(spadeCxt.getFCSFiles());
+        ColorSymmetryRadioGroup = new javax.swing.ButtonGroup();
+        FileItem[] files = new FileItem[spadeCxt.getFCSFiles().length];
+        int i = 0;
+        for (File fi : spadeCxt.getFCSFiles()) {
+            files[i] = new FileItem(fi);
+            i++;
+        }
+        FilenameSelect = new javax.swing.JComboBox(files);
         FilenameLabel = new javax.swing.JLabel();
         ColoringSelect = new javax.swing.JComboBox();
         jLabel1 = new javax.swing.JLabel();
@@ -117,14 +146,16 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel {
         PlotContainer = new javax.swing.JScrollPane();
         PValTableContainer = new javax.swing.JScrollPane();
         PValTable = new javax.swing.JTable();
+        radioSymmetric = new javax.swing.JRadioButton();
+        radioAsymmetric = new javax.swing.JRadioButton();
 
         setMinimumSize(new java.awt.Dimension(390, 680));
         setOpaque(false);
         setPreferredSize(new java.awt.Dimension(440, 720));
 
+        FilenameSelect.setBackground(null);
         FilenameSelect.setMaximumRowCount(20);
         FilenameSelect.setSelectedIndex(-1);
-        FilenameSelect.setRenderer(this.FilenameSelectRenderer());
         FilenameSelect.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 FilenameSelectActionPerformed(evt);
@@ -188,48 +219,66 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel {
         PlotContainer.setMaximumSize(new java.awt.Dimension(32767, 400));
         PlotContainer.setMinimumSize(new java.awt.Dimension(365, 430));
 
+        PValTableContainer.setPreferredSize(new java.awt.Dimension(365, 402));
+
+        PValTable.setAutoCreateRowSorter(true);
         PValTable.setModel(TValTableModel);
         PValTable.setCellSelectionEnabled(true);
         PValTableContainer.setViewportView(PValTable);
+
+        ColorSymmetryRadioGroup.add(radioSymmetric);
+        radioSymmetric.setSelected(true);
+        radioSymmetric.setText("Symmetric");
+        radioSymmetric.setToolTipText("Center coloring range about 0");
+        radioSymmetric.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                radioSymmetricActionPerformed(evt);
+            }
+        });
+
+        ColorSymmetryRadioGroup.add(radioAsymmetric);
+        radioAsymmetric.setText("Asymmetric");
+        radioAsymmetric.setToolTipText("Center coloring range about mean of attribute range");
+        radioAsymmetric.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                radioAsymmetricActionPerformed(evt);
+            }
+        });
 
         org.jdesktop.layout.GroupLayout layout = new org.jdesktop.layout.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(org.jdesktop.layout.GroupLayout.TRAILING, layout.createSequentialGroup()
-                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING)
-                    .add(org.jdesktop.layout.GroupLayout.LEADING, layout.createSequentialGroup()
-                        .addContainerGap()
-                        .add(PValTableContainer, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 370, Short.MAX_VALUE))
-                    .add(org.jdesktop.layout.GroupLayout.LEADING, layout.createSequentialGroup()
-                        .addContainerGap()
+            .add(layout.createSequentialGroup()
+                .addContainerGap()
+                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                    .add(PValTableContainer, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 370, Short.MAX_VALUE)
+                    .add(jSeparator2, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 370, Short.MAX_VALUE)
+                    .add(layout.createSequentialGroup()
+                        .add(jSeparator1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                        .add(PDFButton)
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                        .add(TableButton)
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED, 61, Short.MAX_VALUE)
+                        .add(CloseButton))
+                    .add(FilenameLabel)
+                    .add(layout.createSequentialGroup()
                         .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                            .add(jSeparator2, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 370, Short.MAX_VALUE)
-                            .add(layout.createSequentialGroup()
-                                .add(jSeparator1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                            .add(jLabel1)
+                            .add(jLabel2))
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                        .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                            .add(org.jdesktop.layout.GroupLayout.TRAILING, layout.createSequentialGroup()
+                                .add(RangeSelect, 0, 119, Short.MAX_VALUE)
+                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.UNRELATED)
+                                .add(radioSymmetric)
                                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                                .add(PDFButton)
-                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                                .add(TableButton)
-                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED, 61, Short.MAX_VALUE)
-                                .add(CloseButton))
-                            .add(FilenameLabel)
-                            .add(layout.createSequentialGroup()
-                                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                                    .add(jLabel1)
-                                    .add(jLabel2))
-                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                                    .add(org.jdesktop.layout.GroupLayout.TRAILING, FilenameSelect, 0, 281, Short.MAX_VALUE)
-                                    .add(RangeSelect, 0, 281, Short.MAX_VALUE)
-                                    .add(ColoringSelect, 0, 281, Short.MAX_VALUE))
-                                .add(0, 0, 0))))
-                    .add(layout.createSequentialGroup()
-                        .addContainerGap()
-                        .add(NumberEventsLabel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 370, Short.MAX_VALUE))
-                    .add(layout.createSequentialGroup()
-                        .addContainerGap()
-                        .add(PlotContainer, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 370, Short.MAX_VALUE)))
+                                .add(radioAsymmetric))
+                            .add(ColoringSelect, 0, 281, Short.MAX_VALUE)
+                            .add(FilenameSelect, 0, 281, Short.MAX_VALUE)))
+                    .add(org.jdesktop.layout.GroupLayout.TRAILING, NumberEventsLabel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 370, Short.MAX_VALUE)
+                    .add(PlotContainer, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 370, Short.MAX_VALUE))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -246,7 +295,9 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel {
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.UNRELATED)
                 .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                     .add(RangeSelect, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                    .add(jLabel2))
+                    .add(jLabel2)
+                    .add(radioAsymmetric)
+                    .add(radioSymmetric))
                 .add(8, 8, 8)
                 .add(jSeparator2, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
@@ -254,7 +305,7 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel {
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(PlotContainer, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 430, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(PValTableContainer, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 131, Short.MAX_VALUE)
+                .add(PValTableContainer, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 129, Short.MAX_VALUE)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.UNRELATED)
                 .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING)
                     .add(jSeparator1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
@@ -267,7 +318,7 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel {
     }// </editor-fold>//GEN-END:initComponents
 
     private void FilenameSelectActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_FilenameSelectActionPerformed
-        CyNetworkView cnv = Cytoscape.getCurrentNetworkView();
+
         GraphPerspective network = (GraphPerspective) Cytoscape.getCurrentNetwork();
 
         // Close the current network, saving the X and Y coords for reuse
@@ -295,7 +346,6 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel {
             }
 
             // Network Interactions
-            //
             Cytoscape.getCurrentNetworkView().addNodeContextMenuListener(new NodeContextMenu());
             Cytoscape.getCurrentNetworkView().fitContent();
             
@@ -308,7 +358,6 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel {
             updateNodeSizeAndColors();
 
             // FCS file interactions
-            //
             NumberEventsLabel.setText("Select a file to display network and bi-axial plot");
             TValTableModel.setRowCount(0);
             TValTableModel.addRow(new Object[]{"Select nodes...",""});
@@ -316,15 +365,15 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel {
             this.PlotContainer.setViewportView(null);
             this.scatterPlot   = null;
             this.fcsOperations = null;
-            
+
             try {
-                this.fcsOperations = new FCSOperations((File) FilenameSelect.getSelectedItem());
+                this.fcsOperations = new FCSOperations(((FileItem)FilenameSelect.getSelectedItem()).getFCSFile());
                 this.scatterPlot   = new ScatterPlotPanel(this.fcsOperations);
                 this.PlotContainer.setViewportView(this.scatterPlot);
                 Cytoscape.getCurrentNetwork().addSelectEventListener(new HandleSelect());
                 updateFCSConsumers();
             } catch (FileNotFoundException ex) {
-                JOptionPane.showMessageDialog(null, "FCS file not found: "+FilenameSelect.getSelectedItem());
+                JOptionPane.showMessageDialog(null, "FCS file not found: "+((FileItem)FilenameSelect.getSelectedItem()).getFCSpath());
                 return;
             } catch (IOException ex) {
                 JOptionPane.showMessageDialog(null, "Error reading FCS file: "+FilenameSelect.getSelectedItem());
@@ -388,29 +437,17 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel {
         }
     }//GEN-LAST:event_CloseButtonActionPerformed
 
-    private javax.swing.ListCellRenderer FilenameSelectRenderer() {
-        return (new javax.swing.ListCellRenderer() {
-            // Render FCS files as just File name (no path information, or long extensions)
-            public Component getListCellRendererComponent(javax.swing.JList jlist, Object o, int idx, boolean isSelected, boolean bln1) {
-                String name = "";
-                if (o != null) {
-                    name = ((File) o).getName();
-                    name = name.substring(0, name.lastIndexOf(".density.fcs.cluster.fcs"));
-                }
-                javax.swing.JLabel label = new javax.swing.JLabel(name);
+    private void radioSymmetricActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_radioSymmetricActionPerformed
+        spadeCxt.setSymmetry(SpadeContext.SymmetryType.SYMMETRIC);
+        updateNodeSizeAndColors();
+        Cytoscape.getCurrentNetworkView().redrawGraph(true, true);
+    }//GEN-LAST:event_radioSymmetricActionPerformed
 
-                //TODO
-                //FIXME
-                //label.setBackground(isSelected ? jlist.getSelectionBackground() : jlist.getBackground());
-                //label.setForeground(isSelected ? jlist.getSelectionForeground() : jlist.getForeground());
-                label.setEnabled(jlist.isEnabled());
-                label.setFont(jlist.getFont());
-                label.setOpaque(true);
-
-                return label;
-            }
-        });   
-    }
+    private void radioAsymmetricActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_radioAsymmetricActionPerformed
+        spadeCxt.setSymmetry(SpadeContext.SymmetryType.ASYMMETRIC);
+        updateNodeSizeAndColors();
+        Cytoscape.getCurrentNetworkView().redrawGraph(true, true);
+    }//GEN-LAST:event_radioAsymmetricActionPerformed
 
     private javax.swing.DefaultComboBoxModel RangeSelectModel() {
         return new javax.swing.DefaultComboBoxModel(
@@ -445,7 +482,7 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel {
                 if (fcsOperations.getSelectedNodesCount() == 0) {
                     panelLock.lock();
                     try {
-                        NumberEventsLabel.setText("Displaying all " + fcsOperations.getEventCount() + " events...");
+                        NumberEventsLabel.setText("Displaying all " + fcsOperations.getEventCount() + " events.");
                         TValTableModel.setRowCount(0);
                         TValTableModel.addRow(new Object[]{"Select nodes...",""});
                     } finally {
@@ -459,7 +496,7 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel {
                             TValTableModel.addRow(new Object[]{stats.get(i).attribute, (double)(Math.round(stats.get(i).value*10))/10});
                         }
                     } else {
-                        TValTableModel.addRow(new Object[]{"Too few events",""});
+                        TValTableModel.addRow(new Object[]{"Too few events.",""});
                     }
 
                     panelLock.lock();
@@ -469,7 +506,7 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel {
                             fcsOperations.getSelectedEventCount() +
                             " of " +
                             fcsOperations.getEventCount() +
-                            " events..."
+                            " events."
                             );
                     } finally {
                         panelLock.unlock();
@@ -485,7 +522,7 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel {
      * Applies sizes and colors to the network view
      */
     private void updateNodeSizeAndColors() {
-        // Skip mapping if no file is specified
+        // Skip mapping if no file or coloring attribute is specified
         if ((FilenameSelect.getSelectedIndex() < 0) || (ColoringSelect.getSelectedIndex() < 0)) {
             return;
         }
@@ -494,7 +531,8 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel {
             visualMapping.setCurrentMarkersAndRangeKind(
                     "percenttotal",
                     ColoringSelect.getSelectedItem().toString(),
-                    spadeCxt.getNormalizationKind());
+                    spadeCxt.getNormalizationKind(),
+                    spadeCxt.getSymmetry());
         } catch (IllegalArgumentException e) {
             JOptionPane.showMessageDialog(null, "Invalid choice of mapping parameters: " + e);
             return;
@@ -517,7 +555,7 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel {
             globalAppCalc.setDefaultEdgeSelectionColor(Color.MAGENTA);
             spadeVS.setGlobalAppearanceCalculator(globalAppCalc);
 
-            NodeAppearanceCalculator nodeAppCalc = new NodeAppearanceCalculator();
+            NodeAppearanceCalculator nodeAppCalc = new NodeAppearanceCalculator(spadeVS.getDependency());
             nodeAppCalc.setCalculator(visualMapping.createColorCalculator());
             nodeAppCalc.setCalculator(visualMapping.createSizeCalculator());
             spadeVS.setNodeAppearanceCalculator(nodeAppCalc);
@@ -708,6 +746,7 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton CloseButton;
+    private javax.swing.ButtonGroup ColorSymmetryRadioGroup;
     private javax.swing.JComboBox ColoringSelect;
     private javax.swing.JLabel FilenameLabel;
     private javax.swing.JComboBox FilenameSelect;
@@ -722,6 +761,8 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel {
     private javax.swing.JLabel jLabel2;
     private javax.swing.JSeparator jSeparator1;
     private javax.swing.JSeparator jSeparator2;
+    private javax.swing.JRadioButton radioAsymmetric;
+    private javax.swing.JRadioButton radioSymmetric;
     // End of variables declaration//GEN-END:variables
 
 }

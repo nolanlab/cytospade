@@ -21,7 +21,6 @@ import java.util.List;
 
 import java.util.Set;
 
-import org.apache.commons.math.MathException;
 
 import org.apache.commons.math.stat.inference.TTestImpl;
 import org.apache.commons.math.linear.Array2DRowRealMatrix;

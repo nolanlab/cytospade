@@ -3,7 +3,6 @@ import cytoscape.logger.CyLogger;
 import java.awt.Component;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -142,7 +141,14 @@ public class WorkflowWizardPanels {
                 
                 // Fill in Directory Text Field
                 jTextField1.setText(cxt.getPath().getPath());
-                
+
+                //If the selected directory is a processed output directory,
+                //open the analysis pane immediately
+                SpadeContext.WorkflowKind wk = cxt.getWorkflowKind();
+                if (wk == SpadeContext.WorkflowKind.ANALYSIS) {
+                    getWizard().close(WorkflowWizard.FINISH_RETURN_CODE);
+                }
+
                 this.updateNextPanel();
             } else if (returnValue == JFileChooser.CANCEL_OPTION) {
                 return;
@@ -158,6 +164,7 @@ public class WorkflowWizardPanels {
             } catch (IllegalArgumentException ex) {
                 JOptionPane.showMessageDialog(null, "Invalid directory: " + ex.getMessage());
             }
+
             this.updateNextPanel();
         }
 

@@ -8,24 +8,17 @@ import cytoscape.visual.calculators.BasicCalculator;
 import cytoscape.visual.calculators.Calculator;
 import cytoscape.visual.mappings.*;
 import cytospade.SpadeContext.NormalizationKind;
+import cytospade.SpadeContext.SymmetryType;
 import java.awt.Color;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import org.apache.commons.math.stat.descriptive.rank.Percentile;
-
-
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 
 /**
  *
@@ -33,27 +26,70 @@ import org.apache.commons.math.stat.descriptive.rank.Percentile;
  */
 public class VisualMapping {
 
+    private NormalizationKind rangeKind;
+    private SymmetryType symmetryType;
+    private HashMap globalRanges;
+    //Markers used for size and color "mapping"
+    private String sizeMarker;
+    private String colorMarker;
+
     public VisualMapping() {
         globalRanges = null;
     }
+
     public VisualMapping(File globalBoundaryFile) {
         globalRanges = new HashMap();
         readBoundaries(globalBoundaryFile);
     }
 
+    private static class Range {
+        private double min;
+        private double max;
+
+        public Range(double min_a, double max_a) {
+            min = min_a;
+            max = max_a;
+        }
+
+        public void setMax(double Max) {
+            max = Max;
+        }
+
+        public void setMin(double Min) {
+            min = Min;
+        }
+
+        public double getMax() {
+            if (max < min) {
+                return 100.0; //sane default if no valid nodes
+            } else {
+                return max;
+            }
+        }
+
+        public double getMin() {
+            if (max < min) {
+                return 0.0; //sane default if no valid nodes
+            } else {
+                return max;
+            }
+        }
+
+    }
     
     public boolean globalRangeAvailable() { 
         return (globalRanges != null) && (globalRanges.size() > 0);
     }
 
-
     /**
      * Set markers used in VisualMapping
      * @param sizeMarker Marker to use for size calculator
      * @param colorMarker Marker to use for color calculator
+     * @param rangeKind global or local
+     * @param symmetryType Asymmetric or symmetric
      * @throws IllegalArgumentException If markers are non-numeric
      */
-    public void setCurrentMarkersAndRangeKind(String sizeMarker, String colorMarker, NormalizationKind rangeKind) throws IllegalArgumentException {
+    public void setCurrentMarkersAndRangeKind(String sizeMarker, String colorMarker, NormalizationKind rangeKind, SymmetryType symmetryType) throws IllegalArgumentException {
         if (!isNumericAttribute(sizeMarker)) {
           throw new IllegalArgumentException("sizeMarker is non-numeric");
         }
@@ -65,11 +101,12 @@ public class VisualMapping {
         this.colorMarker = colorMarker;
 
         this.rangeKind = rangeKind;
+
+        this.symmetryType = symmetryType;
     }
     
     public String getCurrentSizeMarker() { return sizeMarker; }
     public String getCurrentColorMarker() { return colorMarker; }
-
 
     /**
      * Create a size calculator based on current sizeMarker
@@ -77,24 +114,21 @@ public class VisualMapping {
      */
     public Calculator createSizeCalculator() {
         Range rng = getAttributeRange(sizeMarker);
-        if (rng.max <= rng.min) {  // Sane defaults if no valid nodes
-            rng.min = 0.0;
-            rng.max = 100.0;
-        }
+        double rmin = rng.getMin();
+        double rmax = rng.getMax();
 
         VisualPropertyType type = VisualPropertyType.NODE_SIZE;
         final Object defaultObj = type.getDefault(Cytoscape.getVisualMappingManager().getVisualStyle());
 
-        ContinuousMapping cm = new ContinuousMapping(defaultObj, ObjectMapping.NODE_MAPPING);
-        cm.setControllingAttributeName(sizeMarker, Cytoscape.getCurrentNetwork(), false);
+        ContinuousMapping cm = new ContinuousMapping(defaultObj.getClass(), sizeMarker);
         Interpolator numToSize = new LinearNumberToNumberInterpolator();
         cm.setInterpolator(numToSize);
 
         BoundaryRangeValues bv0 = new BoundaryRangeValues(20, 20, 20);
         BoundaryRangeValues bv1 = new BoundaryRangeValues(65, 65, 65);
 
-        cm.addPoint(rng.min, bv0);
-        cm.addPoint(rng.max, bv1);
+        cm.addPoint(rmin, bv0);
+        cm.addPoint(rmax, bv1);
 
         return new BasicCalculator("SPADE Size Calculator", cm, VisualPropertyType.NODE_SIZE);
     }
@@ -105,20 +139,22 @@ public class VisualMapping {
      */
     public Calculator createColorCalculator() {
         Range rng = getAttributeRange(colorMarker);
-        if (rng.max <= rng.min) {  // Sane defaults if no valid nodes
-            rng.min = 0.0;
-            rng.max = 100.0;
+        double rmin = rng.getMin();
+        double rmax = rng.getMax();
+
+        //Handle symmetric ranges
+        if (this.symmetryType == SymmetryType.SYMMETRIC) {
+            rmax = Math.max(Math.abs(rng.max), Math.abs(rng.min));
+            rmin = -1 * rmax;
         }
         
         VisualPropertyType type = VisualPropertyType.NODE_FILL_COLOR;
         final Object defaultObj = type.getDefault(Cytoscape.getVisualMappingManager().getVisualStyle());
 
-        ContinuousMapping cm = new ContinuousMapping(defaultObj, ObjectMapping.NODE_MAPPING);
-        cm.setControllingAttributeName(colorMarker, Cytoscape.getCurrentNetwork(), false);
+        ContinuousMapping cm = new ContinuousMapping(defaultObj.getClass(), colorMarker);
         Interpolator numToColor = new LinearNumberToColorInterpolator();
         cm.setInterpolator(numToColor);
 
-        //Color underColor = new Color(0,0,0);
         Color[] colors = new Color[7];
         colors[0] = new Color(0,0,153);
         colors[1] = new Color(0,0,255);
@@ -127,12 +163,13 @@ public class VisualMapping {
         colors[4] = new Color(255,255,0);
         colors[5] = new Color(255,0,51);
         colors[6] = new Color(153,0,0);
-        //Color overColor = new Color(255,255,255);
 
-        double step = (rng.max - rng.min) / (colors.length-1);
+        double step = (rmax - rmin) / (colors.length - 1);
         for (int i=0; i<colors.length; i++) {
-            cm.addPoint(rng.min + step*i, new BoundaryRangeValues(colors[i],colors[i],colors[i]));
+            cm.addPoint(rmin + step*i, new BoundaryRangeValues(colors[i],colors[i],colors[i]));
         }
+
+        //TODO try to trigger the VizMapper panel event listener so the graphic there updates.
 
         return new BasicCalculator("SPADE Color Calculator", cm, VisualPropertyType.NODE_FILL_COLOR);
     }
@@ -165,24 +202,6 @@ public class VisualMapping {
             if (isNumericAttribute(name) && cyNodeAttrs.getUserVisible(name)) {
                 csBox.addItem(name);
             }
-        }
-    }
-
-    private NormalizationKind rangeKind;
-    private HashMap globalRanges;
-
-    /**
-     * Markers used for size and color "mapping"
-     */
-    private String sizeMarker;
-    private String colorMarker;
-
-    private static class Range {
-        double min;
-        double max;
-        public Range(double min_a, double max_a) {
-            min = min_a;
-            max = max_a;
         }
     }
 

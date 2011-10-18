@@ -39,7 +39,6 @@ public class CytoSpade extends CytoscapePlugin {
     @Override
     public void onCytoscapeExit() {
 
-        //saveMetadata(true);
         if (spadeDraw != null) {
             spadeDraw.onExit();
         }
@@ -101,6 +100,7 @@ public class CytoSpade extends CytoscapePlugin {
                 Cytoscape.getDesktop().getCytoPanel(SwingConstants.WEST).setSelectedIndex(
                         Cytoscape.getDesktop().getCytoPanel(SwingConstants.WEST).getCytoPanelComponentCount() - 1);
 
+                //FIXME this used to make the WEST panel the correct width, now it doesn't
                 //This setPrefferedSize(getSize + 1), setPrefferedSize(getSize - 1)
                 //is seemingly required to prevent violent behavior of the pack
                 //method and to force pack to actually relayout the components

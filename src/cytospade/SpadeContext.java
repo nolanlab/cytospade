@@ -8,8 +8,8 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.Locale;
 import java.util.Map;
+import javax.swing.JOptionPane;
 
 /*
  * To change this template, choose Tools | Templates
@@ -26,6 +26,7 @@ public class SpadeContext {
     public enum WorkflowKind { PROCESSING, ANALYSIS }
     public enum DownsampleKind { EVENTS, PERCENTILE }
     public enum NormalizationKind { LOCAL, GLOBAL }
+    public enum SymmetryType { SYMMETRIC, ASYMMETRIC }
 
     static public class AnalysisPanel {
         public File[]   panel_files;
@@ -83,6 +84,7 @@ public class SpadeContext {
 
     private double nodeSizeScaleFactor = 1.2;
     private NormalizationKind normalizationKind = NormalizationKind.GLOBAL;
+    private SymmetryType symmetryType = SymmetryType.SYMMETRIC;
 
     public SpadeContext() {
         selectedClusteringMarkers = new String[0];
@@ -236,6 +238,14 @@ public class SpadeContext {
 
     public void setNormalizationKind(NormalizationKind normalizationKind) {
         this.normalizationKind = normalizationKind;
+    }
+
+    public void setSymmetry(SymmetryType symmetryType) {
+        this.symmetryType = symmetryType;
+    }
+
+    public SymmetryType getSymmetry() {
+        return symmetryType;
     }
 
     /**
@@ -581,7 +591,7 @@ public class SpadeContext {
             try {
                 fcs = new fcsFile(((File)f).getAbsolutePath(), false);
             } catch (IOException e) {
-                // TODO log errors
+                JOptionPane.showMessageDialog(null, "Error: " + e);
                 continue;
             }
 

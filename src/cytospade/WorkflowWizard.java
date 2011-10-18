@@ -5,13 +5,6 @@ import java.util.HashMap;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 
-
-
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-
 /**
  * Basic infrastructure for implementing modal wizard.
  * Adapted from: http://java.sun.com/developer/technicalArticles/GUI/swing/wizard/
@@ -153,7 +146,7 @@ public class WorkflowWizard {
     }
 
 
-    private void close(int code) {
+    public void close(int code) {
         returnCode = code;
         wizardDialog.dispose();
     }

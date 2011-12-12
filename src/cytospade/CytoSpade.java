@@ -1006,6 +1006,7 @@ public class CytoSpade extends CytoscapePlugin {
                 GlobalAppearanceCalculator globalAppCalc = new GlobalAppearanceCalculator();
                 globalAppCalc.setDefaultNodeSelectionColor(Color.MAGENTA);
                 globalAppCalc.setDefaultEdgeSelectionColor(Color.MAGENTA);
+                globalAppCalc.setDefaultBackgroundColor(Color.BLACK);
                 spadeVS.setGlobalAppearanceCalculator(globalAppCalc);
 
                 NodeAppearanceCalculator nodeAppCalc = new NodeAppearanceCalculator();
@@ -1016,6 +1017,12 @@ public class CytoSpade extends CytoscapePlugin {
                 // Set a few defaults now that we have overwritten the calculators
                 VisualPropertyType.NODE_SHAPE.setDefault(spadeVS, cytoscape.visual.NodeShape.ELLIPSE);
                 VisualPropertyType.NODE_FILL_COLOR.setDefault(spadeVS, Color.LIGHT_GRAY);
+                VisualPropertyType.NODE_BORDER_COLOR.setDefault(spadeVS, Color.WHITE);
+                VisualPropertyType.NODE_LINE_WIDTH.setDefault(spadeVS, 2);
+                
+                VisualPropertyType.EDGE_COLOR.setDefault(spadeVS, Color.WHITE);
+                VisualPropertyType.EDGE_LINE_WIDTH.setDefault(spadeVS, 2);
+                
                 spadeVS.getDependency().set(VisualPropertyDependency.Definition.NODE_SIZE_LOCKED, true);
 
                 cyVMM.getCalculatorCatalog().addVisualStyle(spadeVS);

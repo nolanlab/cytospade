@@ -532,7 +532,6 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel {
         PValTable.setAutoCreateRowSorter(true);
         PValTable.setModel(TValTableModel);
         PValTable.setCellSelectionEnabled(true);
-        PValTable.setPreferredSize(new java.awt.Dimension(370, 130));
         PValTableContainer.setViewportView(PValTable);
 
         buttonGroup1.add(radioSymmetric1);

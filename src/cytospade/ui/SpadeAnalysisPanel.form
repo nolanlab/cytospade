@@ -303,9 +303,6 @@
                       <Connection code="TValTableModel" type="code"/>
                     </Property>
                     <Property name="cellSelectionEnabled" type="boolean" value="true"/>
-                    <Property name="preferredSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
-                      <Dimension value="[370, 130]"/>
-                    </Property>
                   </Properties>
                 </Component>
               </SubComponents>

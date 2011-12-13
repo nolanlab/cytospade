@@ -1,4 +1,3 @@
-// Test
 package cytospade;
 
 import cytoscape.plugin.CytoscapePlugin;

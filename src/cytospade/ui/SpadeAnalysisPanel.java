@@ -194,7 +194,7 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel {
         if ((FilenameSelect1.getSelectedIndex() < 0) || (ColoringSelect1.getSelectedIndex() < 0)) {
             return;
         }
-
+        
         try {
             visualMapping.setCurrentMarkersAndRangeKind(
                     "percenttotal",
@@ -221,6 +221,7 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel {
             GlobalAppearanceCalculator globalAppCalc = new GlobalAppearanceCalculator();
             globalAppCalc.setDefaultNodeSelectionColor(Color.MAGENTA);
             globalAppCalc.setDefaultEdgeSelectionColor(Color.MAGENTA);
+            globalAppCalc.setDefaultBackgroundColor(Color.BLACK);
             spadeVS.setGlobalAppearanceCalculator(globalAppCalc);
 
             NodeAppearanceCalculator nodeAppCalc = new NodeAppearanceCalculator(spadeVS.getDependency());
@@ -232,6 +233,10 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel {
             VisualPropertyType.NODE_SHAPE.setDefault(spadeVS, cytoscape.visual.NodeShape.ELLIPSE);
             VisualPropertyType.NODE_FILL_COLOR.setDefault(spadeVS, Color.LIGHT_GRAY);
             spadeVS.getDependency().set(VisualPropertyDependency.Definition.NODE_SIZE_LOCKED, true);
+            VisualPropertyType.NODE_BORDER_COLOR.setDefault(spadeVS, Color.WHITE);
+            VisualPropertyType.NODE_LINE_WIDTH.setDefault(spadeVS, 4);
+            VisualPropertyType.EDGE_COLOR.setDefault(spadeVS, Color.WHITE);
+            VisualPropertyType.EDGE_LINE_WIDTH.setDefault(spadeVS, 2);
 
             cyVMM.getCalculatorCatalog().addVisualStyle(spadeVS);
             cyVMM.setVisualStyle(spadeVS);
@@ -420,6 +425,7 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
+        buttonGroup1 = new javax.swing.ButtonGroup();
         jScrollPane1 = new javax.swing.JScrollPane();
         jPanel1 = new javax.swing.JPanel();
         FileItem[] files = new FileItem[spadeCxt.getFCSFiles().length];
@@ -447,19 +453,17 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel {
         radioAsymmetric1 = new javax.swing.JRadioButton();
         mergeOrderSlider = new javax.swing.JSlider();
         jLabel5 = new javax.swing.JLabel();
-        jLabel6 = new javax.swing.JLabel();
         mergeOrderDetails = new javax.swing.JButton();
-        jRadioShowNestedIcon = new javax.swing.JRadioButton();
+        jCheckShowNestedIcon = new javax.swing.JCheckBox();
 
-        setMinimumSize(new java.awt.Dimension(390, 680));
-        setPreferredSize(new java.awt.Dimension(440, 720));
+        jScrollPane1.setHorizontalScrollBarPolicy(javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+        jScrollPane1.setPreferredSize(new java.awt.Dimension(429, 754));
 
-        jPanel1.setMinimumSize(new java.awt.Dimension(390, 680));
-        jPanel1.setOpaque(false);
-        jPanel1.setPreferredSize(new java.awt.Dimension(440, 720));
+        jPanel1.setPreferredSize(new java.awt.Dimension(396, 780));
 
         FilenameSelect1.setMaximumRowCount(20);
         FilenameSelect1.setSelectedIndex(-1);
+        FilenameSelect1.setMinimumSize(null);
         FilenameSelect1.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 FilenameSelect1ActionPerformed(evt);
@@ -470,6 +474,7 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel {
 
         ColoringSelect1.setMaximumRowCount(20);
         ColoringSelect1.setToolTipText("Select attribute for coloring nodes");
+        ColoringSelect1.setMinimumSize(null);
         ColoringSelect1.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 ColoringSelect1ActionPerformed(evt);
@@ -481,6 +486,7 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel {
         RangeSelect1.setMaximumRowCount(20);
         RangeSelect1.setModel(RangeSelectModel());
         RangeSelect1.setToolTipText("Global sets colorscale using min/max across all files, local uses min/max of selected file");
+        RangeSelect1.setMinimumSize(null);
         RangeSelect1.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 RangeSelect1ActionPerformed(evt);
@@ -519,15 +525,17 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel {
         NumberEventsLabel.setText("Select a file to display network and bi-axial plot");
 
         PlotContainer.setMaximumSize(new java.awt.Dimension(32767, 400));
-        PlotContainer.setMinimumSize(new java.awt.Dimension(365, 430));
+        PlotContainer.setMinimumSize(new java.awt.Dimension(370, 430));
 
         PValTableContainer.setPreferredSize(new java.awt.Dimension(365, 402));
 
         PValTable.setAutoCreateRowSorter(true);
         PValTable.setModel(TValTableModel);
         PValTable.setCellSelectionEnabled(true);
+        PValTable.setPreferredSize(new java.awt.Dimension(370, 130));
         PValTableContainer.setViewportView(PValTable);
 
+        buttonGroup1.add(radioSymmetric1);
         radioSymmetric1.setText("Symmetric");
         radioSymmetric1.setToolTipText("Center coloring range about 0");
         radioSymmetric1.addActionListener(new java.awt.event.ActionListener() {
@@ -536,6 +544,8 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel {
             }
         });
 
+        buttonGroup1.add(radioAsymmetric1);
+        radioAsymmetric1.setSelected(true);
         radioAsymmetric1.setText("Asymmetric");
         radioAsymmetric1.setToolTipText("Center coloring range about mean of attribute range");
         radioAsymmetric1.addActionListener(new java.awt.event.ActionListener() {
@@ -556,11 +566,6 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel {
         jLabel5.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
         jLabel5.setName("mergeOrderLabel"); // NOI18N
 
-        jLabel6.setFont(new java.awt.Font("Tahoma", 0, 12)); // NOI18N
-        jLabel6.setText("0");
-        jLabel6.setAutoscrolls(true);
-        jLabel6.setName("mergeOrderValLabel"); // NOI18N
-
         mergeOrderDetails.setLabel("See Merge Details");
         mergeOrderDetails.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -568,7 +573,7 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel {
             }
         });
 
-        jRadioShowNestedIcon.setText("Show Merging Details Dynamically [Slow]");
+        jCheckShowNestedIcon.setText("Show Merging Details Dynamically [slow]");
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
@@ -578,57 +583,48 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel {
                 .addContainerGap()
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addGap(16, 16, 16)
-                        .addComponent(jSeparator2, javax.swing.GroupLayout.DEFAULT_SIZE, 513, Short.MAX_VALUE)
-                        .addContainerGap())
+                        .addComponent(NumberEventsLabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addGap(24, 24, 24))
                     .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addComponent(jLabel4)
-                        .addGap(16, 16, 16)
-                        .addComponent(RangeSelect1, 0, 282, Short.MAX_VALUE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(radioSymmetric1)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(radioAsymmetric1)
-                        .addContainerGap())
-                    .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(FilenameLabel1)
+                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                             .addGroup(jPanel1Layout.createSequentialGroup()
-                                .addGap(89, 89, 89)
-                                .addComponent(FilenameSelect1, 0, 410, Short.MAX_VALUE))
-                            .addComponent(jSeparator1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(10, 10, 10)
+                                .addComponent(jSeparator2, javax.swing.GroupLayout.PREFERRED_SIZE, 344, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addComponent(PValTableContainer, javax.swing.GroupLayout.DEFAULT_SIZE, 370, Short.MAX_VALUE)
                             .addGroup(jPanel1Layout.createSequentialGroup()
                                 .addComponent(jLabel3)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(ColoringSelect1, 0, 410, Short.MAX_VALUE)))
-                        .addGap(40, 40, 40))
+                                .addComponent(ColoringSelect1, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                            .addGroup(jPanel1Layout.createSequentialGroup()
+                                .addComponent(FilenameLabel1)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(FilenameSelect1, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                            .addGroup(jPanel1Layout.createSequentialGroup()
+                                .addComponent(jLabel4)
+                                .addGap(16, 16, 16)
+                                .addComponent(RangeSelect1, javax.swing.GroupLayout.PREFERRED_SIZE, 115, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                .addComponent(radioSymmetric1)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(radioAsymmetric1))
+                            .addComponent(PlotContainer, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(jLabel5)
+                            .addComponent(jSeparator1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addContainerGap(25, Short.MAX_VALUE))
                     .addGroup(jPanel1Layout.createSequentialGroup()
                         .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(PlotContainer, javax.swing.GroupLayout.PREFERRED_SIZE, 457, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(NumberEventsLabel, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 515, Short.MAX_VALUE))
-                        .addGap(24, 24, 24))
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
-                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addComponent(mergeOrderSlider, javax.swing.GroupLayout.PREFERRED_SIZE, 270, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addGroup(jPanel1Layout.createSequentialGroup()
-                                .addGap(16, 16, 16)
-                                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                                    .addComponent(TableButton, javax.swing.GroupLayout.DEFAULT_SIZE, 160, Short.MAX_VALUE)
-                                    .addComponent(PDFButton, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 160, Short.MAX_VALUE)
-                                    .addComponent(mergeOrderDetails, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 160, Short.MAX_VALUE))
-                                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addGroup(jPanel1Layout.createSequentialGroup()
-                                        .addGap(18, 18, 18)
-                                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                            .addGroup(jPanel1Layout.createSequentialGroup()
-                                                .addComponent(jLabel5)
-                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                .addComponent(jLabel6, javax.swing.GroupLayout.PREFERRED_SIZE, 96, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                                                .addComponent(CloseButton, javax.swing.GroupLayout.PREFERRED_SIZE, 148, javax.swing.GroupLayout.PREFERRED_SIZE))
-                                            .addComponent(jRadioShowNestedIcon)))
-                                    .addComponent(mergeOrderSlider, javax.swing.GroupLayout.PREFERRED_SIZE, 270, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                            .addComponent(PValTableContainer, javax.swing.GroupLayout.DEFAULT_SIZE, 515, Short.MAX_VALUE))
-                        .addGap(24, 24, 24))))
+                                .addComponent(jCheckShowNestedIcon)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(mergeOrderDetails, javax.swing.GroupLayout.PREFERRED_SIZE, 149, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addGroup(jPanel1Layout.createSequentialGroup()
+                                .addComponent(TableButton)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(PDFButton, javax.swing.GroupLayout.PREFERRED_SIZE, 105, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(CloseButton, javax.swing.GroupLayout.PREFERRED_SIZE, 105, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addGap(0, 0, Short.MAX_VALUE))))
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -649,29 +645,31 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel {
                     .addComponent(radioSymmetric1))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(jSeparator2, javax.swing.GroupLayout.PREFERRED_SIZE, 2, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGap(8, 8, 8)
                 .addComponent(NumberEventsLabel)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(PlotContainer, javax.swing.GroupLayout.PREFERRED_SIZE, 394, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(PlotContainer, javax.swing.GroupLayout.PREFERRED_SIZE, 418, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(PValTableContainer, javax.swing.GroupLayout.PREFERRED_SIZE, 103, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(TableButton)
-                    .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                        .addComponent(jLabel5, javax.swing.GroupLayout.PREFERRED_SIZE, 19, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addComponent(jLabel6, javax.swing.GroupLayout.DEFAULT_SIZE, 23, Short.MAX_VALUE)
-                        .addComponent(CloseButton)))
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(mergeOrderDetails)
-                    .addComponent(mergeOrderSlider, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addComponent(jLabel5, javax.swing.GroupLayout.PREFERRED_SIZE, 19, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jRadioShowNestedIcon)
-                    .addComponent(PDFButton))
-                .addGap(29, 29, 29)
-                .addComponent(jSeparator1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(61, 61, 61))
+                .addComponent(mergeOrderSlider, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addComponent(jCheckShowNestedIcon)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(TableButton)
+                            .addComponent(PDFButton)
+                            .addComponent(CloseButton))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(jSeparator1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(122, 122, 122))
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addComponent(mergeOrderDetails)
+                        .addContainerGap())))
         );
 
         mergeOrderDetails.getAccessibleContext().setAccessibleName("mergeOrderDetails");
@@ -682,11 +680,11 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel {
         this.setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 551, Short.MAX_VALUE)
+            .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 407, Short.MAX_VALUE)
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 760, Short.MAX_VALUE)
+            .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 790, Short.MAX_VALUE)
         );
     }// </editor-fold>//GEN-END:initComponents
 
@@ -727,6 +725,7 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel {
 
             RangeSelect1.setSelectedIndex(0);
             spadeCxt.setNormalizationKind((NormalizationKind) RangeSelect1.getSelectedItem());
+            spadeCxt.setSymmetry(radioSymmetric1.isSelected() ? SpadeContext.SymmetryType.SYMMETRIC : SpadeContext.SymmetryType.ASYMMETRIC);
 
             updateNodeSizeAndColors();
 
@@ -751,10 +750,12 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel {
                     this.mergeOrderOps = new MergeOrderOperations(mergeOrderFile[0]);
                     mergeOrderSlider.setMaximum(mergeOrderOps.getMaxMergeOrder());
                 } else if (mergeOrderFile.length == 0) {
-                    JOptionPane.showMessageDialog(null, "Error: merge_order.txt not found");
+                    jLabel5.setText("merge_order.txt not found");
+                    mergeOrderSlider.setEnabled(false);
+                    jCheckShowNestedIcon.setEnabled(false);
+                    mergeOrderDetails.setEnabled(false);
                 } else {
                     JOptionPane.showMessageDialog(null, "Error: Found more than one merge_order.txt file.");
-                    return;
                 }
             } catch (Exception ex) {
                 JOptionPane.showMessageDialog(null, "Error reading Merge Order file: " + ex.getMessage());
@@ -768,10 +769,8 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel {
                 updateFCSConsumers();
             } catch (FileNotFoundException ex) {
                 JOptionPane.showMessageDialog(null, "FCS file not found: " + ((FileItem) FilenameSelect1.getSelectedItem()).getFCSpath());
-                return;
             } catch (IOException ex) {
                 JOptionPane.showMessageDialog(null, "Error reading FCS file: " + FilenameSelect1.getSelectedItem());
-                return;
             }
         }
     }//GEN-LAST:event_FilenameSelect1ActionPerformed
@@ -834,14 +833,12 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel {
         Object[] options = new String[]{"Save and Close", "Close", "Cancel"};
         int returnvalue = JOptionPane.showOptionDialog(null, "Save network layout before closing?", "Close SPADE", JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
         if (returnvalue == 2) {
-            //Cancel
-            return;
+            //Cancel;
         } else {
             //If Save
             if (returnvalue == 0) {
                 saveMetadata(true);
             }
-
             //Close
             //FIXME This will fail if the user loads another plug-in after loading SPADE
             Cytoscape.getDesktop().getCytoPanel(SwingConstants.WEST).remove(Cytoscape.getDesktop().getCytoPanel(SwingConstants.WEST).getCytoPanelComponentCount() - 1);
@@ -852,8 +849,8 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel {
         int mergeOrder = mergeOrderSlider.getValue();
         if (mergeOrderOps != null) {
             try {
-                mergeOrder = mergeOrderOps.createNestedGraphIncremental(mergeOrder, jRadioShowNestedIcon.isSelected());
-                jLabel6.setText(String.valueOf(mergeOrder) + " of " + mergeOrderOps.getMaxMergeOrder());
+                mergeOrder = mergeOrderOps.createNestedGraphIncremental(mergeOrder, jCheckShowNestedIcon.isSelected());
+                jLabel5.setText("Merge order: " + String.valueOf(mergeOrder) + " of " + mergeOrderOps.getMaxMergeOrder());
             } catch (Exception ex) {
                 CyLogger.getLogger().debug("Exception processing merge order: " + mergeOrder, ex);
             }
@@ -894,12 +891,12 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel {
     private javax.swing.JScrollPane PlotContainer;
     private javax.swing.JComboBox RangeSelect1;
     private javax.swing.JButton TableButton;
+    private javax.swing.ButtonGroup buttonGroup1;
+    private javax.swing.JCheckBox jCheckShowNestedIcon;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel5;
-    private javax.swing.JLabel jLabel6;
     private javax.swing.JPanel jPanel1;
-    private javax.swing.JRadioButton jRadioShowNestedIcon;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JSeparator jSeparator1;
     private javax.swing.JSeparator jSeparator2;

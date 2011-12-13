@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package cytospade;
 
 import cytoscape.CyNetwork;
@@ -20,7 +16,6 @@ import java.util.Scanner;
 import java.util.Set;
 
 /**
- *
  * @author ksheode
  */
 public class MergeOrderOperations {

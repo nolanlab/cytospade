@@ -71,7 +71,7 @@ public class VisualMapping {
             if (max < min) {
                 return 0.0; //sane default if no valid nodes
             } else {
-                return max;
+                return min;
             }
         }
 
@@ -124,8 +124,8 @@ public class VisualMapping {
         Interpolator numToSize = new LinearNumberToNumberInterpolator();
         cm.setInterpolator(numToSize);
 
-        BoundaryRangeValues bv0 = new BoundaryRangeValues(20, 20, 20);
-        BoundaryRangeValues bv1 = new BoundaryRangeValues(65, 65, 65);
+        BoundaryRangeValues bv0 = new BoundaryRangeValues(28, 28, 28);
+        BoundaryRangeValues bv1 = new BoundaryRangeValues(72, 72, 72);
 
         cm.addPoint(rmin, bv0);
         cm.addPoint(rmax, bv1);

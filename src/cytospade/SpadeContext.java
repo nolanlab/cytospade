@@ -11,11 +11,6 @@ import java.util.Iterator;
 import java.util.Map;
 import javax.swing.JOptionPane;
 
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-
 /**
  * Container for SPADE state, script generation for backend, etc.
  *
@@ -84,7 +79,7 @@ public class SpadeContext {
 
     private double nodeSizeScaleFactor = 1.2;
     private NormalizationKind normalizationKind = NormalizationKind.GLOBAL;
-    private SymmetryType symmetryType = SymmetryType.SYMMETRIC;
+    private SymmetryType symmetryType = SymmetryType.ASYMMETRIC;
 
     public SpadeContext() {
         selectedClusteringMarkers = new String[0];

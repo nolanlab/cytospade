@@ -5,14 +5,15 @@ The CytoSPADE Cytoscape plugin provides a GUI for setting-up and interactively v
 ## Prerequisites
 1. [Netbeans and the Java 1.6 SDK](http://www.oracle.com/technetwork/java/javase/downloads/index.html)
 1. [git](http://git-scm.com)
-1. Latest version of [Cytoscape](http://www.cytoscape.org/download.html)
+1. Latest version of [Cytoscape](http://www.cytoscape.org/download.html) (tested with 2.8.1, 2.8.2)
 
 ## Setup and Build Process
 The CytoSPADE repository is itself a Netbeans project and can be opened directly with *Open a Project*. Note that you will likely get complaints about unresolved library paths. You can resolve these paths by setting the path to your Cytoscape installation via an "IDE Variable", specificallly via *Tools -> Variables* add a variable `CYTOSCAPE_PATH` that points to your top level Cytoscape installation directory. The project library dependencies are set relative to this variable and should be resolved at this point.
 
 For direct integration of NetBeans and the github repository, download and install the [nbgit plugin](http://code.google.com/p/nbgit/downloads/list). Then, from the menu bar, click Team>Git>Clone other... and copy-and-paste the full HTTP URL for the github repository (above, https://username@github.com/nolanlab/cytospade.git). Note that this does not work with branches yet, and will pull from the master.
 
-After you build the project (the hammer in the toolbar), there will be two jars created in the `dist/` directory, `CytoSPADE.jar` and `CytoSPADE.dist.jar`. The latter has all the non-Cytoscape dependencies compiled in, and is the file you should copy to the CytoScape plugins folder as `CytoSPADE.jar`. You can set your build script to automatically copy the dist.jar to your plugins folder by modifying `build.xml` with the following:
+After you build the project (the hammer in the toolbar), there will be two jars created in the `dist/` directory, `CytoSPADE.jar` and `CytoSPADE.dist.jar`. The latter has all the non-Cytoscape dependencies compiled in, and is the file you should copy to the CytoScape plugins folder. You can set your build script to automatically copy the dist.jar to your plugins folder by modifying `build.xml` with the following:
+
 To the "-post-jar" target at the end of the file, add the following two lines between `</jar>` and `</target>`:
 
 ```
@@ -24,4 +25,4 @@ On Windows, you will need to change the permissions on the plugins folder to all
 
 ## Tips and Resources
 * [Cytoscape plugin developer's cookbook](http://cytoscape.wodaklab.org/wiki/plugin_developer_tutorial)
-* [Cytoscape 2.8.1 API](http://chianti.ucsd.edu/Cyto-2_8_1/javadoc/overview-summary.html)
+* [Cytoscape 2.8.2 API](http://chianti.ucsd.edu/Cyto-2_8_2/javadoc/overview-summary.html)

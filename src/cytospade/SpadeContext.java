@@ -9,21 +9,19 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
-
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
+import javax.swing.JOptionPane;
 
 /**
  * Container for SPADE state, script generation for backend, etc.
  *
  * @author mlinderm
  */
-public class SPADEContext {
+public class SpadeContext {
 
     public enum WorkflowKind { PROCESSING, ANALYSIS }
     public enum DownsampleKind { EVENTS, PERCENTILE }
+    public enum NormalizationKind { LOCAL, GLOBAL }
+    public enum SymmetryType { SYMMETRIC, ASYMMETRIC }
 
     static public class AnalysisPanel {
         public File[]   panel_files;
@@ -80,6 +78,12 @@ public class SPADEContext {
     private int targetDownsamplePctile = 5;
 
     private double nodeSizeScaleFactor = 1.2;
+    private NormalizationKind normalizationKind = NormalizationKind.GLOBAL;
+    private SymmetryType symmetryType = SymmetryType.ASYMMETRIC;
+
+    public SpadeContext() {
+        selectedClusteringMarkers = new String[0];
+    }
 
     /**
      * @return the path
@@ -100,7 +104,7 @@ public class SPADEContext {
 
         // Flush any previously existing path data
         this.analysisPanels.clear();
-        this.selectedClusteringMarkers = null;
+        this.selectedClusteringMarkers = new String[0];
 
         // Determine analysis kind
         gmlFiles = path.listFiles(new FilenameFilter() {
@@ -184,7 +188,7 @@ public class SPADEContext {
      * @return the potentialClusteringMarkers
      */
     public String[] getPotentialClusteringMarkers() {
-        return SPADEContext.getCommonMarkers(fcsFiles);
+        return SpadeContext.getCommonMarkers(fcsFiles);
     }
 
     /**
@@ -222,7 +226,23 @@ public class SPADEContext {
     public void setNodeSizeScaleFactor(double nodeSizeScaleFactor) {
         this.nodeSizeScaleFactor = nodeSizeScaleFactor;
     }
-    
+
+    public NormalizationKind getNormalizationKind() {
+        return normalizationKind;
+    }
+
+    public void setNormalizationKind(NormalizationKind normalizationKind) {
+        this.normalizationKind = normalizationKind;
+    }
+
+    public void setSymmetry(SymmetryType symmetryType) {
+        this.symmetryType = symmetryType;
+    }
+
+    public SymmetryType getSymmetry() {
+        return symmetryType;
+    }
+
     /**
      * @return the targetClusters
      */
@@ -302,7 +322,7 @@ public class SPADEContext {
         }
         str
             .append("  Target Number of Clusters:  ").append(this.getTargetClusters()).append("\n")
-            .append("  Clustering Markers:  ").append(SPADEContext.join(Arrays.asList(this.getSelectedClusteringMarkers()), ", ")).append("\n")
+            .append("  Clustering Markers:  ").append(SpadeContext.join(Arrays.asList(this.getSelectedClusteringMarkers()), ", ")).append("\n")
             .append("Panels:\n")
             ;
         if (analysisPanels.isEmpty()) {
@@ -320,10 +340,10 @@ public class SPADEContext {
                 AnalysisPanel p = (AnalysisPanel)(me.getValue());
                 str
                     .append("  ").append(me.getKey()).append(":\n")
-                    .append("    Panel Files:  ").append(SPADEContext.join(Arrays.asList(p.panel_files),", ")).append("\n")
+                    .append("    Panel Files:  ").append(SpadeContext.join(Arrays.asList(p.panel_files),", ")).append("\n")
                     .append("    Median Markers:  All\n")
-                    .append("    Reference Files:  ").append(SPADEContext.join(Arrays.asList(p.reference_files),", ")).append("\n")
-                    .append("    Fold-change Markers:  ").append(SPADEContext.join(Arrays.asList(p.fold_markers),", ")).append("\n")
+                    .append("    Reference Files:  ").append(SpadeContext.join(Arrays.asList(p.reference_files),", ")).append("\n")
+                    .append("    Fold-change Markers:  ").append(SpadeContext.join(Arrays.asList(p.fold_markers),", ")).append("\n")
                     ;
             }
         }
@@ -344,15 +364,15 @@ public class SPADEContext {
         BufferedWriter out = new BufferedWriter(fstream);
 
         out.write("OUTPUT_DIR='./'\n"
-        + "params <- as.character(read.table(paste(OUTPUT_DIR,'global_boundaries.table',sep=''))[,1])\n"
         + "files <- dir(OUTPUT_DIR,pattern=glob2rx(\"*.anno.Rsave\"))\n"
+        + "params <- unique(as.vector(sapply(files, function(f) { load(f); colnames(anno); })))\n"
         + "dir.create(paste(OUTPUT_DIR,'pivot',sep=''),recursive=TRUE,showWarnings=FALSE)\n"
         + "for (p in params) {\n"
         + " cat('Generating table for',p,\"\\n\")\n"
         + " pivot <- c(); names <- c();\n"
         + " for (f in files) { load(f); if (p %in% colnames(anno)) { pivot <- cbind(pivot, anno[,p]); names <- c(names, f); }}\n"
-        + " colnames(pivot) <- names\n"
-        + " if (ncol(pivot) > 0) { write.csv(pivot, file=paste(OUTPUT_DIR,'pivot/',p,'_pivot','.csv',sep='')) }\n"
+        + " pivot <- cbind(0:(nrow(pivot)-1),pivot); colnames(pivot) <- c(\"cytoscape_id\", names);\n"
+        + " if (!is.null(pivot) && ncol(pivot) > 0) { write.csv(pivot, file=paste(OUTPUT_DIR,'pivot/',p,'_pivot','.csv',sep=''), row.names=TRUE) }\n"
         + "}\n"
         );
         out.close();
@@ -373,10 +393,11 @@ public class SPADEContext {
         out.write("LIBRARY_PATH=NULL\n"
         + "library(\"spade\",lib.loc=LIBRARY_PATH)\n");
         out.write(String.format("NODE_SIZE_SCALE_FACTOR=%f\n",this.getNodeSizeScaleFactor()));
+        out.write("NORMALIZE=\"" + this.getNormalizationKind().toString().toLowerCase() +"\"\n");
         out.write("OUTPUT_DIR=\"./\"\n"
         + "LAYOUT_TABLE <- read.table(paste(OUTPUT_DIR,\"layout.table\",sep=\"\"))\n"
         + "MST_GRAPH <- read.graph(paste(OUTPUT_DIR,\"mst.gml\",sep=\"\"),format=\"gml\")\n"
-        + "SPADE.plot.trees(MST_GRAPH,OUTPUT_DIR,file_pattern=\"*fcs*Rsave\",layout=as.matrix(LAYOUT_TABLE),out_dir=paste(OUTPUT_DIR,\"pdf\",sep=\"\"),size_scale_factor=NODE_SIZE_SCALE_FACTOR)\n"
+        + "SPADE.plot.trees(MST_GRAPH,OUTPUT_DIR,file_pattern=\"*fcs*Rsave\",layout=as.matrix(LAYOUT_TABLE),out_dir=paste(OUTPUT_DIR,\"pdf\",sep=\"\"),size_scale_factor=NODE_SIZE_SCALE_FACTOR,normalize=NORMALIZE)\n"
         );
         out.close();
     }
@@ -565,7 +586,7 @@ public class SPADEContext {
             try {
                 fcs = new fcsFile(((File)f).getAbsolutePath(), false);
             } catch (IOException e) {
-                // TODO log errors
+                JOptionPane.showMessageDialog(null, "Error: " + e);
                 continue;
             }
 
@@ -590,7 +611,7 @@ public class SPADEContext {
     }
 
     static public String getShortNameFromFormattedName(String name) {
-        int divider = name.indexOf(':');
+        int divider = name.indexOf("::");
         return (divider == -1) ? name : name.substring(0, divider);
     }
 

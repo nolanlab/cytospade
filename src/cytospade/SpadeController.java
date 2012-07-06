@@ -80,7 +80,7 @@ public class SpadeController extends SwingWorker<Integer, Void> {
         String executable = getExecutable();
         //TODO this used to prompt the user to find the install path instead.
         if (executable == null) {
-            outArea.append("Unable to find Rscript executable. Perhaps try generating and running script manually.\n");
+            outArea.append("Unable to find R executable. Perhaps try generating and running script manually.\n");
             return 1;
         }
 
@@ -147,13 +147,13 @@ public class SpadeController extends SwingWorker<Integer, Void> {
                 if (token == -1)
                     return null;
                 else
-                    return '"'+result.substring(token +  REGSTR_TOKEN.length()).trim()+"\\bin\\Rscript\"";
+                    return '"'+result.substring(token +  REGSTR_TOKEN.length()).trim()+"\\bin\\R -f\"";
             } catch (Exception ex) {
                 CyLogger.getLogger(SpadeController.class.getName()).error(null, ex);
                 return null;
             }
         } else
-            return "Rscript";
+            return "R -f";
     }
 
 

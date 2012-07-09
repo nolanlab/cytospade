@@ -84,7 +84,7 @@ public class SpadeController extends SwingWorker<Integer, Void> {
             return 1;
         }
 
-        ProcessBuilder pb = new ProcessBuilder(executable, script);
+        ProcessBuilder pb = new ProcessBuilder(executable, "-f", script);
         pb.directory(workingDir);
         pb.redirectErrorStream(true);
 
@@ -147,13 +147,13 @@ public class SpadeController extends SwingWorker<Integer, Void> {
                 if (token == -1)
                     return null;
                 else
-                    return '"'+result.substring(token +  REGSTR_TOKEN.length()).trim()+"\\bin\\R -f\"";
+                    return '"'+result.substring(token +  REGSTR_TOKEN.length()).trim()+"\\bin\\R\"";
             } catch (Exception ex) {
                 CyLogger.getLogger(SpadeController.class.getName()).error(null, ex);
                 return null;
             }
         } else
-            return "R -f";
+            return "R";
     }
 
 

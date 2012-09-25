@@ -4,11 +4,8 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.FilenameFilter;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Map;
+import java.text.NumberFormat;
+import java.util.*;
 import javax.swing.JOptionPane;
 
 /**
@@ -306,11 +303,13 @@ public class SpadeContext {
      * @return pretty-printed context
      */
     public String getContextAsFormattedString() {
+        NumberFormat nf = NumberFormat.getNumberInstance(Locale.US);
+        nf.setGroupingUsed(false);
         StringBuilder str = new StringBuilder();
         str
             .append("Directory: ").append(this.getPath()).append("\n")
             .append("Clustering Parameters:\n")
-            .append("  Transformation:  flowCore::arcsinh(a=0.0, b=").append( 1.0d /this.getArcsinh() ).append(")\n");
+            .append("  Transformation:  flowCore::arcsinh(a=0.0, b=").append( nf.format(1.0d /this.getArcsinh()) ).append(")\n");
         switch(this.getDownsampleKind()) {
             case PERCENTILE:
                 str.append("  Downsample Percentile:  ").append(this.getTargetDownsamplePctile()).append("\n");

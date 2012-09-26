@@ -387,11 +387,12 @@ public class SpadeContext {
     public void authorPlotSpade(String filename) throws IOException {
         FileWriter fstream;
         fstream = new FileWriter(new File(this.getPath(), filename).getAbsolutePath());
-
+        NumberFormat nf = NumberFormat.getNumberInstance(Locale.US);
+        nf.setGroupingUsed(false);
         BufferedWriter out = new BufferedWriter(fstream);
         out.write("LIBRARY_PATH=NULL\n"
         + "library(\"spade\",lib.loc=LIBRARY_PATH)\n");
-        out.write(String.format("NODE_SIZE_SCALE_FACTOR=%f\n",this.getNodeSizeScaleFactor()));
+        out.write(String.format("NODE_SIZE_SCALE_FACTOR=%f\n",nf.format(this.getNodeSizeScaleFactor())));
         out.write("NORMALIZE=\"" + this.getNormalizationKind().toString().toLowerCase() +"\"\n");
         out.write("OUTPUT_DIR=\"./\"\n"
         + "LAYOUT_TABLE <- read.table(paste(OUTPUT_DIR,\"layout.table\",sep=\"\"))\n"
@@ -411,7 +412,8 @@ public class SpadeContext {
     public void authorRunSpade(String filename) throws IOException {
         FileWriter fstream;
         fstream = new FileWriter(new File(this.getPath(), filename).getAbsolutePath());
-
+        NumberFormat nf = NumberFormat.getNumberInstance(Locale.US);
+        nf.setGroupingUsed(false);
         BufferedWriter out = new BufferedWriter(fstream);
         // <editor-fold defaultstate="collapsed" desc="runSPADE header">
         out.write("#!/usr/bin/env Rscript\n"
@@ -538,13 +540,13 @@ public class SpadeContext {
         //}
         //out.write(")\n");
         
-        out.write(String.format("TRANSFORMS=flowCore::arcsinhTransform(a=0, b=%f)\n", 1.0d / this.getArcsinh()));
+        out.write("TRANSFORMS=flowCore::arcsinhTransform(a=0, b=" + nf.format(1.0d / this.getArcsinh()) + ")\n");
         
         //out.write(String.format("ARCSINH_COFACTOR=%d\n",this.getArcsinh()));
         switch(this.getDownsampleKind()) {
             case PERCENTILE:
                 out.write("DOWNSAMPLED_EVENTS=NULL\n");
-                out.write(String.format("DOWNSAMPLING_TARGET_PCTILE=(%d/100.0)\n",this.getTargetDownsamplePctile()));
+                out.write("DOWNSAMPLING_TARGET_PCTILE=" + nf.format(this.getTargetDownsamplePctile() / 100.0) + "\n");
                 break;
             case EVENTS:
             default:

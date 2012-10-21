@@ -392,7 +392,7 @@ public class SpadeContext {
         BufferedWriter out = new BufferedWriter(fstream);
         out.write("LIBRARY_PATH=NULL\n"
         + "library(\"spade\",lib.loc=LIBRARY_PATH)\n");
-        out.write(String.format("NODE_SIZE_SCALE_FACTOR=%f\n",nf.format(this.getNodeSizeScaleFactor())));
+        out.write(String.format("NODE_SIZE_SCALE_FACTOR=%s\n",nf.format(this.getNodeSizeScaleFactor())));
         out.write("NORMALIZE=\"" + this.getNormalizationKind().toString().toLowerCase() +"\"\n");
         out.write("OUTPUT_DIR=\"./\"\n"
         + "LAYOUT_TABLE <- read.table(paste(OUTPUT_DIR,\"layout.table\",sep=\"\"))\n"

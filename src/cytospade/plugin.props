@@ -1,0 +1,37 @@
+#plugin.props
+
+# This props file should be filled out and included in the plugin jar file.  This props file will be used
+# to put information into the Plugin Manager about the plugin
+
+# -- The following properties are REQUIRED -- #
+
+# The plugin name that will be displayed to users, white space within name is not allowed
+pluginName=CytoSpade
+
+# Description used to give users information about the plugin such as what it does.
+# Html tags are encouraged for formatting purposes.
+pluginDescription=SPADE plugin for Cytoscape. See <a href="http://cytospade.org">this site</a> for more info.
+
+# Plugin version number, this must be two numbers separated by a decimlal.  Ex. 0.2, 14.03
+pluginVersion=1.2
+
+# Compatible Cytoscape version. If there are more than one version, seperate by ",".
+cytoscapeVersion=2.8
+
+# Category, use one of the categories listed on the http://chianti.ucsd.edu/cyto_web/plugins/
+pluginCategory=Clustering
+
+# -- The following properties are OPTIONAL -- #
+
+# URL to a website that gives more information about your plugin, Ex. http://my-lab-site.org
+projectURL=http://cytospade.org
+
+# List of authors.  Note each author and institution pair are separated by a : (colon)
+# each additional author institution pair must be separated from other pairs bye a ; (semicolon)
+pluginAuthorsInstitutions=Zach and Rob:Stanford;Michael:Rockefeller;Erin:UCSF
+
+# Date this plugin/plugin version was released
+releaseDate=October 23, 2013
+
+# If this plugin is never meant to be downloaded except as part of a plugin (not common) add this property.  Default is "no"
+themeOnly=no

@@ -16,7 +16,7 @@ import javax.swing.JOptionPane;
 public class SpadeContext {
 
     public enum WorkflowKind { PROCESSING, ANALYSIS }
-    public enum DownsampleKind { EVENTS, PERCENTILE }
+    public enum DownsampleKind { EVENTS, PERCENTILE, PERCENT }
     public enum NormalizationKind { LOCAL, GLOBAL }
     public enum SymmetryType { SYMMETRIC, ASYMMETRIC }
 
@@ -70,9 +70,10 @@ public class SpadeContext {
 
     private int arcsinh          = 5;
     private int targetClusters   = 200;
-    private DownsampleKind downsampleKind;
+    private DownsampleKind downsampleKind = DownsampleKind.PERCENT;
     private int targetDownsampleEvents = 5000;
-    private int targetDownsamplePctile = 5;
+    private double targetDownsamplePercent = 10;
+    private int targetDownsamplePctile = 10;
 
     private double nodeSizeScaleFactor = 1.2;
     private NormalizationKind normalizationKind = NormalizationKind.GLOBAL;
@@ -262,6 +263,14 @@ public class SpadeContext {
         this.downsampleKind = downsampleKind;
     }
 
+    public double getTargetDownsamplePercent() {
+        return targetDownsamplePercent;
+    }
+    
+    public void setTargetDownsamplePercent(double targetDownsamplePercent) {
+        this.targetDownsamplePercent = targetDownsamplePercent;
+    }
+    
     public int getTargetDownsamplePctile() {
         return targetDownsamplePctile;
     }
@@ -312,11 +321,14 @@ public class SpadeContext {
             .append("  Transformation:  flowCore::arcsinh(a=0.0, b=").append( nf.format(1.0d /this.getArcsinh()) ).append(")\n");
         switch(this.getDownsampleKind()) {
             case PERCENTILE:
-                str.append("  Downsample Percentile:  ").append(this.getTargetDownsamplePctile()).append("\n");
+                str.append("  Downsample Target (percentile):  ").append(this.getTargetDownsamplePctile()).append("\n");
                 break;
             case EVENTS:
+                str.append("  Downsample Target (absolute):  ").append(this.getTargetDownsampleEvents()).append("\n");
+                break;
+            case PERCENT:
             default:
-                str.append("  Target Downsampled Cells:  ").append(this.getTargetDownsampleEvents()).append("\n");
+                str.append("  Downsample Target (percent):  ").append(this.getTargetDownsamplePercent()).append("\n");
                 break;
         }
         str
@@ -347,34 +359,6 @@ public class SpadeContext {
             }
         }
         return str.toString();
-    }
-
-    /**
-     * Generate short R script for creating pivot tables in
-     * this context's path. Only relevant for analysis contexts.
-     *
-     * @param filename the filename to write script to
-     * @throws IOException
-     */
-    public void authorMakePivot(String filename) throws IOException {
-        FileWriter fstream;
-        fstream = new FileWriter(new File(this.getPath(), filename).getAbsolutePath());
-
-        BufferedWriter out = new BufferedWriter(fstream);
-
-        out.write("OUTPUT_DIR='./'\n"
-        + "files <- dir(OUTPUT_DIR,pattern=glob2rx(\"*.anno.Rsave\"))\n"
-        + "params <- unique(as.vector(sapply(files, function(f) { load(f); colnames(anno); })))\n"
-        + "dir.create(paste(OUTPUT_DIR,'pivot',sep=''),recursive=TRUE,showWarnings=FALSE)\n"
-        + "for (p in params) {\n"
-        + " cat('Generating table for',p,\"\\n\")\n"
-        + " pivot <- c(); names <- c();\n"
-        + " for (f in files) { load(f); if (p %in% colnames(anno)) { pivot <- cbind(pivot, anno[,p]); names <- c(names, f); }}\n"
-        + " pivot <- cbind(0:(nrow(pivot)-1),pivot); colnames(pivot) <- c(\"cytoscape_id\", names);\n"
-        + " if (!is.null(pivot) && ncol(pivot) > 0) { write.csv(pivot, file=paste(OUTPUT_DIR,'pivot/',p,'_pivot','.csv',sep=''), row.names=TRUE) }\n"
-        + "}\n"
-        );
-        out.close();
     }
 
     /**
@@ -545,13 +529,20 @@ public class SpadeContext {
         //out.write(String.format("ARCSINH_COFACTOR=%d\n",this.getArcsinh()));
         switch(this.getDownsampleKind()) {
             case PERCENTILE:
-                out.write("DOWNSAMPLED_EVENTS=NULL\n");
+                out.write("DOWNSAMPLING_TARGET_NUMBER=NULL\n");
                 out.write("DOWNSAMPLING_TARGET_PCTILE=" + nf.format(this.getTargetDownsamplePctile() / 100.0) + "\n");
+                out.write("DOWNSAMPLING_TARGET_PERCENT=NULL\n");
                 break;
             case EVENTS:
-            default:
-                out.write(String.format("DOWNSAMPLED_EVENTS=%d\n",this.getTargetDownsampleEvents()));
+                out.write(String.format("DOWNSAMPLING_TARGET_NUMBER=%d\n",this.getTargetDownsampleEvents()));
                 out.write("DOWNSAMPLING_TARGET_PCTILE=NULL\n");
+                out.write("DOWNSAMPLING_TARGET_PERCENT=NULL\n");
+                break;
+            case PERCENT:
+            default:
+                out.write("DOWNSAMPLING_TARGET_NUMBER=NULL\n");
+                out.write("DOWNSAMPLING_TARGET_PCTILE=NULL\n");
+                out.write(String.format("DOWNSAMPLING_TARGET_PERCENT=%d\n",this.getTargetDownsamplePercent()/100.0));
                 break;
         }
         out.write(String.format("TARGET_CLUSTERS=%d\n",this.getTargetClusters()));
@@ -578,7 +569,7 @@ public class SpadeContext {
         + "Sys.setenv(\"OMP_NUM_THREADS\"=NUM_THREADS)\n"
         + "library(\"spade\",lib.loc=LIBRARY_PATH)\n"
         + "LAYOUT_FUNCTION=layout.kamada.kawai\n"
-        + "SPADE.driver(FILE_TO_PROCESS, file_pattern=\"*.fcs\", out_dir=OUTPUT_DIR, cluster_cols=CLUSTERING_MARKERS, panels=PANELS, transforms=TRANSFORMS, layout=LAYOUT_FUNCTION, downsampling_samples=DOWNSAMPLED_EVENTS, downsampling_target_pctile=DOWNSAMPLING_TARGET_PCTILE, downsampling_exclude_pctile=DOWNSAMPLING_EXCLUDE_PCTILE, k=TARGET_CLUSTERS, clustering_samples=CLUSTERING_SAMPLES)\n"
+        + "SPADE.driver(FILE_TO_PROCESS, file_pattern=\"*.fcs\", out_dir=OUTPUT_DIR, cluster_cols=CLUSTERING_MARKERS, panels=PANELS, transforms=TRANSFORMS, layout=LAYOUT_FUNCTION, downsampling_target_percent=DOWNSAMPLING_TARGET_PERCENT, downsampling_target_number=DOWNSAMPLING_TARGET_NUMBER, downsampling_target_pctile=DOWNSAMPLING_TARGET_PCTILE, downsampling_exclude_pctile=DOWNSAMPLING_EXCLUDE_PCTILE, k=TARGET_CLUSTERS, clustering_samples=CLUSTERING_SAMPLES)\n"
         + "LAYOUT_TABLE <- read.table(paste(OUTPUT_DIR,\"layout.table\",sep=\"\"))\n"
         + "MST_GRAPH <- read.graph(paste(OUTPUT_DIR,\"mst.gml\",sep=\"\"),format=\"gml\")\n"
         + "SPADE.plot.trees(MST_GRAPH,OUTPUT_DIR,file_pattern=\"*fcs*Rsave\",layout=as.matrix(LAYOUT_TABLE),out_dir=paste(OUTPUT_DIR,\"pdf\",sep=\"\"),size_scale_factor=NODE_SIZE_SCALE_FACTOR)\n"

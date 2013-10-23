@@ -441,7 +441,6 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel {
         RangeSelect1 = new javax.swing.JComboBox();
         jLabel4 = new javax.swing.JLabel();
         PDFButton = new javax.swing.JButton();
-        TableButton = new javax.swing.JButton();
         CloseButton = new javax.swing.JButton();
         jSeparator1 = new javax.swing.JSeparator();
         jSeparator2 = new javax.swing.JSeparator();
@@ -500,14 +499,6 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel {
         PDFButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 PDFButtonActionPerformed(evt);
-            }
-        });
-
-        TableButton.setText("Produce Tables");
-        TableButton.setToolTipText("Generate CSV tables for each attributes with columns for all files");
-        TableButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                TableButtonActionPerformed(evt);
             }
         });
 
@@ -618,8 +609,7 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel {
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(mergeOrderDetails, javax.swing.GroupLayout.PREFERRED_SIZE, 149, javax.swing.GroupLayout.PREFERRED_SIZE))
                             .addGroup(jPanel1Layout.createSequentialGroup()
-                                .addComponent(TableButton)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addGap(111, 111, 111)
                                 .addComponent(PDFButton, javax.swing.GroupLayout.PREFERRED_SIZE, 105, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(CloseButton, javax.swing.GroupLayout.PREFERRED_SIZE, 105, javax.swing.GroupLayout.PREFERRED_SIZE)))
@@ -660,7 +650,6 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel {
                         .addComponent(jCheckShowNestedIcon)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(TableButton)
                             .addComponent(PDFButton)
                             .addComponent(CloseButton))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
@@ -668,7 +657,7 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel {
                         .addGap(122, 122, 122))
                     .addGroup(jPanel1Layout.createSequentialGroup()
                         .addComponent(mergeOrderDetails)
-                        .addContainerGap())))
+                        .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
         );
 
         mergeOrderDetails.getAccessibleContext().setAccessibleName("mergeOrderDetails");
@@ -686,6 +675,99 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel {
             .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 790, Short.MAX_VALUE)
         );
     }// </editor-fold>//GEN-END:initComponents
+
+    private void mergeOrderDetailsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_mergeOrderDetailsActionPerformed
+        try {
+            if (mergeOrderOps != null) {
+                if ("See Merge Details".equals(mergeOrderDetails.getText())) {
+                    mergeOrderDetails.setText("Clear Merge Details");
+                    mergeOrderSlider.setEnabled(false);
+                    mergeOrderOps.showNestedNetworkDetails();
+
+                } else {
+                    mergeOrderOps.destroyNestedNetworkDetails();
+                    mergeOrderDetails.setText("See Merge Details");
+                    mergeOrderSlider.setEnabled(true);
+                }
+            }
+        } catch (Exception ex) {
+            CyLogger.getLogger().debug("", ex);
+            mergeOrderSlider.setEnabled(true);
+        }
+    }//GEN-LAST:event_mergeOrderDetailsActionPerformed
+
+    private void mergeOrderSliderStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_mergeOrderSliderStateChanged
+        int mergeOrder = mergeOrderSlider.getValue();
+        if (mergeOrderOps != null) {
+            try {
+                mergeOrder = mergeOrderOps.createNestedGraphIncremental(mergeOrder, jCheckShowNestedIcon.isSelected());
+                jLabel5.setText("Merge order: " + String.valueOf(mergeOrder) + " of " + mergeOrderOps.getMaxMergeOrder());
+            } catch (Exception ex) {
+                CyLogger.getLogger().debug("Exception processing merge order: " + mergeOrder, ex);
+            }
+
+            mergeOrderSlider.requestFocusInWindow();
+        }
+    }//GEN-LAST:event_mergeOrderSliderStateChanged
+
+    private void radioAsymmetric1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_radioAsymmetric1ActionPerformed
+        spadeCxt.setSymmetry(SpadeContext.SymmetryType.ASYMMETRIC);
+        updateNodeSizeAndColors();
+        Cytoscape.getCurrentNetworkView().redrawGraph(true, true);
+    }//GEN-LAST:event_radioAsymmetric1ActionPerformed
+
+    private void radioSymmetric1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_radioSymmetric1ActionPerformed
+        spadeCxt.setSymmetry(SpadeContext.SymmetryType.SYMMETRIC);
+        updateNodeSizeAndColors();
+        Cytoscape.getCurrentNetworkView().redrawGraph(true, true);
+    }//GEN-LAST:event_radioSymmetric1ActionPerformed
+
+    private void CloseButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_CloseButtonActionPerformed
+        Object[] options = new String[]{"Save and Close", "Close", "Cancel"};
+        int returnvalue = JOptionPane.showOptionDialog(null, "Save network layout before closing?", "Close SPADE", JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
+        if (returnvalue == 2) {
+            //Cancel;
+        } else {
+            //If Save
+            if (returnvalue == 0) {
+                saveMetadata(true);
+            }
+            //Close
+            //FIXME This will fail if the user loads another plug-in after loading SPADE
+            Cytoscape.getDesktop().getCytoPanel(SwingConstants.WEST).remove(Cytoscape.getDesktop().getCytoPanel(SwingConstants.WEST).getCytoPanelComponentCount() - 1);
+        }
+    }//GEN-LAST:event_CloseButtonActionPerformed
+
+    private void PDFButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_PDFButtonActionPerformed
+        // Save current landscaping before generating PDFs
+        saveMetadata(false);
+
+        // Create the workflow wizard to walk user through setting up PDF generation
+        WorkflowWizard wf = new WorkflowWizard(Cytoscape.getDesktop());
+
+        WorkflowWizard.PanelDescriptor genPDFs = new WorkflowWizardPanels.GeneratePDFs(spadeCxt);
+        wf.registerWizardPanel(WorkflowWizardPanels.GeneratePDFs.IDENTIFIER, genPDFs);
+
+        wf.setCurrentPanel(WorkflowWizardPanels.GeneratePDFs.IDENTIFIER);
+        int showModalDialog = wf.showModalDialog();
+
+        if (showModalDialog == WorkflowWizard.CANCEL_RETURN_CODE) {
+            return;
+        } else if (showModalDialog != WorkflowWizard.FINISH_RETURN_CODE) {
+            JOptionPane.showMessageDialog(null, "Error occured in workflow wizard.");
+        }
+    }//GEN-LAST:event_PDFButtonActionPerformed
+
+    private void RangeSelect1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_RangeSelect1ActionPerformed
+        spadeCxt.setNormalizationKind((SpadeContext.NormalizationKind) RangeSelect1.getSelectedItem());
+        updateNodeSizeAndColors();
+        Cytoscape.getCurrentNetworkView().redrawGraph(true, true);
+    }//GEN-LAST:event_RangeSelect1ActionPerformed
+
+    private void ColoringSelect1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ColoringSelect1ActionPerformed
+        updateNodeSizeAndColors();
+        Cytoscape.getCurrentNetworkView().redrawGraph(true, true);
+    }//GEN-LAST:event_ColoringSelect1ActionPerformed
 
     private void FilenameSelect1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_FilenameSelect1ActionPerformed
         GraphPerspective network = (GraphPerspective) Cytoscape.getCurrentNetwork();
@@ -774,110 +856,6 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel {
         }
     }//GEN-LAST:event_FilenameSelect1ActionPerformed
 
-    private void ColoringSelect1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ColoringSelect1ActionPerformed
-        updateNodeSizeAndColors();
-        Cytoscape.getCurrentNetworkView().redrawGraph(true, true);
-    }//GEN-LAST:event_ColoringSelect1ActionPerformed
-
-    private void RangeSelect1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_RangeSelect1ActionPerformed
-        spadeCxt.setNormalizationKind((SpadeContext.NormalizationKind) RangeSelect1.getSelectedItem());
-        updateNodeSizeAndColors();
-        Cytoscape.getCurrentNetworkView().redrawGraph(true, true);
-    }//GEN-LAST:event_RangeSelect1ActionPerformed
-
-    private void radioSymmetric1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_radioSymmetric1ActionPerformed
-        spadeCxt.setSymmetry(SpadeContext.SymmetryType.SYMMETRIC);
-        updateNodeSizeAndColors();
-        Cytoscape.getCurrentNetworkView().redrawGraph(true, true);
-    }//GEN-LAST:event_radioSymmetric1ActionPerformed
-
-    private void radioAsymmetric1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_radioAsymmetric1ActionPerformed
-        spadeCxt.setSymmetry(SpadeContext.SymmetryType.ASYMMETRIC);
-        updateNodeSizeAndColors();
-        Cytoscape.getCurrentNetworkView().redrawGraph(true, true);
-    }//GEN-LAST:event_radioAsymmetric1ActionPerformed
-
-    private void PDFButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_PDFButtonActionPerformed
-        // Save current landscaping before generating PDFs
-        saveMetadata(false);
-
-        // Create the workflow wizard to walk user through setting up PDF generation
-        WorkflowWizard wf = new WorkflowWizard(Cytoscape.getDesktop());
-
-        WorkflowWizard.PanelDescriptor genPDFs = new WorkflowWizardPanels.GeneratePDFs(spadeCxt);
-        wf.registerWizardPanel(WorkflowWizardPanels.GeneratePDFs.IDENTIFIER, genPDFs);
-
-        wf.setCurrentPanel(WorkflowWizardPanels.GeneratePDFs.IDENTIFIER);
-        int showModalDialog = wf.showModalDialog();
-
-        if (showModalDialog == WorkflowWizard.CANCEL_RETURN_CODE) {
-            return;
-        } else if (showModalDialog != WorkflowWizard.FINISH_RETURN_CODE) {
-            JOptionPane.showMessageDialog(null, "Error occured in workflow wizard.");
-        }
-
-    }//GEN-LAST:event_PDFButtonActionPerformed
-
-    private void TableButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_TableButtonActionPerformed
-        try {
-            spadeCxt.authorMakePivot("pivotSPADE.R");
-            SpadeController ctl = new SpadeController(spadeCxt.getPath(), "pivotSPADE.R");
-            ctl.exec();
-        } catch (IOException ex) {
-            CyLogger.getLogger(CytoSpade.class.getName()).error(null, ex);
-        }
-    }//GEN-LAST:event_TableButtonActionPerformed
-
-    private void CloseButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_CloseButtonActionPerformed
-        Object[] options = new String[]{"Save and Close", "Close", "Cancel"};
-        int returnvalue = JOptionPane.showOptionDialog(null, "Save network layout before closing?", "Close SPADE", JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
-        if (returnvalue == 2) {
-            //Cancel;
-        } else {
-            //If Save
-            if (returnvalue == 0) {
-                saveMetadata(true);
-            }
-            //Close
-            //FIXME This will fail if the user loads another plug-in after loading SPADE
-            Cytoscape.getDesktop().getCytoPanel(SwingConstants.WEST).remove(Cytoscape.getDesktop().getCytoPanel(SwingConstants.WEST).getCytoPanelComponentCount() - 1);
-        }
-    }//GEN-LAST:event_CloseButtonActionPerformed
-
-    private void mergeOrderSliderStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_mergeOrderSliderStateChanged
-        int mergeOrder = mergeOrderSlider.getValue();
-        if (mergeOrderOps != null) {
-            try {
-                mergeOrder = mergeOrderOps.createNestedGraphIncremental(mergeOrder, jCheckShowNestedIcon.isSelected());
-                jLabel5.setText("Merge order: " + String.valueOf(mergeOrder) + " of " + mergeOrderOps.getMaxMergeOrder());
-            } catch (Exception ex) {
-                CyLogger.getLogger().debug("Exception processing merge order: " + mergeOrder, ex);
-            }
-
-            mergeOrderSlider.requestFocusInWindow();
-        }
-    }//GEN-LAST:event_mergeOrderSliderStateChanged
-
-    private void mergeOrderDetailsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_mergeOrderDetailsActionPerformed
-         try {
-            if (mergeOrderOps != null) {
-                if ("See Merge Details".equals(mergeOrderDetails.getText())) {
-                    mergeOrderDetails.setText("Clear Merge Details");
-                    mergeOrderSlider.setEnabled(false);
-                    mergeOrderOps.showNestedNetworkDetails();
-
-                } else {
-                    mergeOrderOps.destroyNestedNetworkDetails();
-                    mergeOrderDetails.setText("See Merge Details");
-                    mergeOrderSlider.setEnabled(true);
-                }
-            }
-        } catch (Exception ex) {
-            CyLogger.getLogger().debug("", ex);
-            mergeOrderSlider.setEnabled(true);
-        }
-    }//GEN-LAST:event_mergeOrderDetailsActionPerformed
-
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton CloseButton;
     private javax.swing.JComboBox ColoringSelect1;
@@ -889,7 +867,6 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel {
     private javax.swing.JScrollPane PValTableContainer;
     private javax.swing.JScrollPane PlotContainer;
     private javax.swing.JComboBox RangeSelect1;
-    private javax.swing.JButton TableButton;
     private javax.swing.ButtonGroup buttonGroup1;
     private javax.swing.JCheckBox jCheckShowNestedIcon;
     private javax.swing.JLabel jLabel3;

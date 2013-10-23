@@ -98,8 +98,7 @@
                                       <Component id="mergeOrderDetails" min="-2" pref="149" max="-2" attributes="1"/>
                                   </Group>
                                   <Group type="102" alignment="0" attributes="0">
-                                      <Component id="TableButton" min="-2" max="-2" attributes="1"/>
-                                      <EmptySpace max="-2" attributes="0"/>
+                                      <EmptySpace min="-2" pref="111" max="-2" attributes="0"/>
                                       <Component id="PDFButton" min="-2" pref="105" max="-2" attributes="1"/>
                                       <EmptySpace max="-2" attributes="0"/>
                                       <Component id="CloseButton" min="-2" pref="105" max="-2" attributes="1"/>
@@ -149,7 +148,6 @@
                               <Component id="jCheckShowNestedIcon" min="-2" max="-2" attributes="0"/>
                               <EmptySpace type="unrelated" max="-2" attributes="0"/>
                               <Group type="103" groupAlignment="3" attributes="0">
-                                  <Component id="TableButton" alignment="3" min="-2" max="-2" attributes="0"/>
                                   <Component id="PDFButton" alignment="3" min="-2" max="-2" attributes="0"/>
                                   <Component id="CloseButton" alignment="3" min="-2" max="-2" attributes="0"/>
                               </Group>
@@ -234,15 +232,6 @@
               </Properties>
               <Events>
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="PDFButtonActionPerformed"/>
-              </Events>
-            </Component>
-            <Component class="javax.swing.JButton" name="TableButton">
-              <Properties>
-                <Property name="text" type="java.lang.String" value="Produce Tables"/>
-                <Property name="toolTipText" type="java.lang.String" value="Generate CSV tables for each attributes with columns for all files"/>
-              </Properties>
-              <Events>
-                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="TableButtonActionPerformed"/>
               </Events>
             </Component>
             <Component class="javax.swing.JButton" name="CloseButton">

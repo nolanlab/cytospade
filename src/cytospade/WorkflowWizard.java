@@ -21,20 +21,23 @@ public class WorkflowWizard {
     public static final String BACK_BUTTON_ACTION_COMMAND = "BackButtonActionCommand";
     public static final String CANCEL_BUTTON_ACTION_COMMAND = "CancelButtonActionCommand";
 
-    private Model      wizardModel;
+    private Model wizardModel;
     private Controller wizardController;
-    private JDialog    wizardDialog;
+    private JDialog wizardDialog;
 
-    private JPanel     cardPanel;
+    private JPanel cardPanel;
     private CardLayout cardLayout;
 
     private JButton backButton;
     private JButton nextButton;
     private JButton cancelButton;
+    
+    private final Frame frame;
 
     private int returnCode;
 
     public WorkflowWizard(Frame desktop) {
+        this.frame = desktop;
         wizardModel = new Model();
         wizardDialog = new JDialog(desktop);
         initWizardComponents();
@@ -67,14 +70,24 @@ public class WorkflowWizard {
         wizardModel.getCurrentPanelDescriptor().displayingPanel();
     }
 
-
+    /**
+     *
+     * @param id
+     * @param panel
+     */
     public void registerWizardPanel(Object id, PanelDescriptor panel) {
         cardPanel.add(panel.getPanelComponent(), id);
         panel.setWizard(this);
         wizardModel.registerPanel(id, panel);
     }
 
-    public void setNextButtonEnabled(boolean enabled) { nextButton.setEnabled(enabled); }
+    /**
+     *
+     * @param enabled
+     */
+    public void setNextButtonEnabled(boolean enabled) {
+        nextButton.setEnabled(enabled);
+    }
 
     public void setTitle(String s) {
         wizardDialog.setTitle(s);

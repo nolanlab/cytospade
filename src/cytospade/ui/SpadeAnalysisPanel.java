@@ -5,30 +5,13 @@
  */
 package cytospade.ui;
 
-import cytoscape.CyNetwork;
-import cytoscape.CyNode;
-import cytoscape.Cytoscape;
-import cytoscape.actions.LoadNetworkTask;
-import cytoscape.data.SelectEventListener;
-import cytoscape.logger.CyLogger;
-import cytoscape.view.CyNetworkView;
-import cytoscape.visual.GlobalAppearanceCalculator;
-import cytoscape.visual.NodeAppearanceCalculator;
-import cytoscape.visual.VisualMappingManager;
-import cytoscape.visual.VisualPropertyDependency;
-import cytoscape.visual.VisualPropertyType;
-import cytoscape.visual.VisualStyle;
-import cytospade.CytoSpade;
 import cytospade.FCSOperations;
 import cytospade.MergeOrderOperations;
 import cytospade.SpadeContext;
 import cytospade.SpadeContext.NormalizationKind;
-import cytospade.SpadeController;
 import cytospade.VisualMapping;
 import cytospade.WorkflowWizard;
 import cytospade.WorkflowWizardPanels;
-import giny.model.GraphPerspective;
-import giny.view.NodeView;
 import java.awt.Color;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -41,16 +24,21 @@ import java.util.List;
 import java.util.Scanner;
 import java.util.Set;
 import java.util.concurrent.locks.ReentrantLock;
+import javax.swing.Icon;
 import javax.swing.JOptionPane;
 import javax.swing.SwingConstants;
 import javax.swing.SwingWorker;
 import javax.swing.table.DefaultTableModel;
+import org.cytoscape.application.swing.CytoPanelComponent;
+import org.cytoscape.application.swing.CytoPanelName;
+import org.cytoscape.model.CyNode;
+import org.cytoscape.view.model.View;
 
 /**
  *
  * @author Ketaki
  */
-public class SpadeAnalysisPanel extends javax.swing.JPanel {
+public class SpadeAnalysisPanel extends javax.swing.JPanel implements CytoPanelComponent {
 
     private SpadeContext spadeCxt;
     private VisualMapping visualMapping;
@@ -62,7 +50,8 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel {
             new Object[][]{{null, null}},
             new String[]{"Parameter", "T value"});
 
-    /** Creates new form SpadeAnalysisPanel */
+    /** Creates new form SpadeAnalysisPanel
+     * @param spadeCxt */
     public SpadeAnalysisPanel(SpadeContext spadeCxt) {
         this.spadeCxt = spadeCxt;
 
@@ -89,6 +78,14 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel {
 
     }
 
+    public CytoPanelName getCytoPanelName() {
+        return CytoPanelName.WEST;
+    }
+    
+    public Icon getIcon() {
+        return null;
+    }
+    
     /**
      * @author bjornson
      * class to override File's toString method
@@ -293,7 +290,7 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel {
             double[][] pos = new double[nodeCount][2];
 
             for (CyNode node : (List<CyNode>) currentNetwork.nodesList()) {
-                NodeView nodeView = currentNetworkView.getNodeView(node);
+                View<CyNode> nodeView = currentNetworkView.getNodeView(node);
 
                 int id;
                 try {
@@ -317,7 +314,7 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel {
 
             lout.close();
         } catch (IOException ex) {
-            CyLogger.getLogger().error("Error read layout.table", ex);
+            //CyLogger.getLogger().error("Error read layout.table", ex);
             return;
         }
 
@@ -365,14 +362,14 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel {
                     continue;
                 }
 
-                NodeView nodeView = currentNetworkView.getNodeView(node);
+                View<CyNode> nodeView = currentNetworkView.getNodeView(node);
                 nodeView.setXPosition(pos[id][0]);
                 nodeView.setYPosition(pos[id][1]);
             }
 
 
         } catch (FileNotFoundException ex) {
-            CyLogger.getLogger().error("Error read layout.table", ex);
+            //CyLogger.getLogger().error("Error read layout.table", ex);
             return;
         }
 
@@ -386,7 +383,7 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel {
                         // Convert back to 0-indexed nodes
                         nodes.add(Cytoscape.getCyNode(Integer.toString(Integer.parseInt(id) - 1)));
                     } catch (NumberFormatException ex) {
-                        CyLogger.getLogger().error("Invalid entry in nested.txt", ex);
+                        //CyLogger.getLogger().error("Invalid entry in nested.txt", ex);
                     }
                 }
                 // Apply nesting
@@ -394,7 +391,7 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel {
             }
 
         } catch (FileNotFoundException ex) {
-            CyLogger.getLogger().debug("Error reading nested.txt", ex);
+            //CyLogger.getLogger().debug("Error reading nested.txt", ex);
             return;
         }
     }
@@ -691,7 +688,7 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel {
                 }
             }
         } catch (Exception ex) {
-            CyLogger.getLogger().debug("", ex);
+            //CyLogger.getLogger().debug("", ex);
             mergeOrderSlider.setEnabled(true);
         }
     }//GEN-LAST:event_mergeOrderDetailsActionPerformed
@@ -703,7 +700,7 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel {
                 mergeOrder = mergeOrderOps.createNestedGraphIncremental(mergeOrder, jCheckShowNestedIcon.isSelected());
                 jLabel5.setText("Merge order: " + String.valueOf(mergeOrder) + " of " + mergeOrderOps.getMaxMergeOrder());
             } catch (Exception ex) {
-                CyLogger.getLogger().debug("Exception processing merge order: " + mergeOrder, ex);
+                //CyLogger.getLogger().debug("Exception processing merge order: " + mergeOrder, ex);
             }
 
             mergeOrderSlider.requestFocusInWindow();

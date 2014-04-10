@@ -1,12 +1,4 @@
 package cytospade;
-import cytoscape.CyNode;
-import cytoscape.Cytoscape;
-import cytoscape.data.CyAttributes;
-import cytoscape.logger.CyLogger;
-import cytoscape.visual.VisualPropertyType;
-import cytoscape.visual.calculators.BasicCalculator;
-import cytoscape.visual.calculators.Calculator;
-import cytoscape.visual.mappings.*;
 import cytospade.SpadeContext.NormalizationKind;
 import cytospade.SpadeContext.SymmetryType;
 import java.awt.Color;
@@ -19,6 +11,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import org.apache.commons.math.stat.descriptive.rank.Percentile;
+import org.cytoscape.model.CyNode;
 
 /**
  *
@@ -259,13 +252,13 @@ public class VisualMapping {
             }
 
         } catch (FileNotFoundException ex) {
-            CyLogger.getLogger(CytoSpade.class.getName()).error(null, ex);
+            //CyLogger.getLogger(CytoSpade.class.getName()).error(null, ex);
             globalRanges = null;
         } catch (IOException ex) {
-            CyLogger.getLogger(CytoSpade.class.getName()).error(null, ex);
+            //CyLogger.getLogger(CytoSpade.class.getName()).error(null, ex);
             globalRanges = null;
         }
-        CyLogger.getLogger(CytoSpade.class.getName()).info("Loaded ranges from global_boundaries.table");
+        //CyLogger.getLogger(CytoSpade.class.getName()).info("Loaded ranges from global_boundaries.table");
     }
 
 }

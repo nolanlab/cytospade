@@ -1,6 +1,6 @@
 package cytospade;
-import cytoscape.logger.CyLogger;
 import java.awt.Component;
+import java.awt.Frame;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
@@ -8,17 +8,11 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 import javax.swing.*;
 
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-
 /**
  *
  * @author mlinderm
  */
 public class WorkflowWizardPanels {
-
     
     public static class Intro extends WorkflowWizard.PanelDescriptor {
 
@@ -730,10 +724,13 @@ public class WorkflowWizardPanels {
     public static class SummaryAndRun extends WorkflowWizard.PanelDescriptor {
 
         public static final String IDENTIFIER = "SUMMARY_AND_RUN_PANEL";
+        
+        private final Frame frame;
 
-        public SummaryAndRun(SpadeContext cxt) {
+        public SummaryAndRun(Frame frame, SpadeContext cxt) {
             super(IDENTIFIER);
 
+            this.frame = frame;
             this.cxt = cxt;
 
             setPanelComponent(createPanel());
@@ -764,7 +761,6 @@ public class WorkflowWizardPanels {
             ctl = null;
         }
 
-
         @Override
         public void nextButtonPressed() {
             try {
@@ -775,14 +771,13 @@ public class WorkflowWizardPanels {
                     cxt.setPath(new File(cxt.getPath().getAbsolutePath() + File.separator + "output"));
                 }
             } catch (IllegalArgumentException ex) {
-                CyLogger.getLogger(WorkflowWizardPanels.class.getName()).error(null, ex);
+                //CyLogger.getLogger(WorkflowWizardPanels.class.getName()).error(null, ex);
             } catch (InterruptedException ex) {
-                CyLogger.getLogger(WorkflowWizardPanels.class.getName()).error(null, ex);
+                //CyLogger.getLogger(WorkflowWizardPanels.class.getName()).error(null, ex);
             } catch (ExecutionException ex) {
-                CyLogger.getLogger(WorkflowWizardPanels.class.getName()).error(null, ex);
+                //CyLogger.getLogger(WorkflowWizardPanels.class.getName()).error(null, ex);
             }
         }
-
 
         private JPanel createPanel() {
             contentPanel = new JPanel();
@@ -844,11 +839,11 @@ public class WorkflowWizardPanels {
 
         private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {
             try {
-                cxt.authorRunSpade("runSPADE.R");
-                ctl = new SpadeController(cxt.getPath(), "runSPADE.R");
+                this.cxt.authorRunSpade("runSPADE.R");
+                ctl = new SpadeController(this.frame, cxt.getPath(), "runSPADE.R");
                 ctl.exec();
             } catch (IOException ex) {
-                CyLogger.getLogger(CytoSpade.class.getName()).error(null, ex);
+                //CyLogger.getLogger(CytoSpade.class.getName()).error(null, ex);
             }
         }
 
@@ -861,7 +856,7 @@ public class WorkflowWizardPanels {
             }
         }
 
-        private SpadeContext    cxt;
+        private SpadeContext cxt;
         private SpadeController ctl = null;
 
         private javax.swing.JPanel contentPanel;
@@ -877,9 +872,12 @@ public class WorkflowWizardPanels {
 
         public static final String IDENTIFIER = "GENERATE_PDFS_PANEL";
 
-        public GeneratePDFs(SpadeContext cxt) {
+        private final Frame frame;
+        
+        public GeneratePDFs(Frame frame, SpadeContext cxt) {
             super(IDENTIFIER);
 
+            this.frame = frame;
             this.cxt = cxt;
 
             setPanelComponent(createPanel());
@@ -976,10 +974,10 @@ public class WorkflowWizardPanels {
                 cxt.setNodeSizeScaleFactor(Double.parseDouble(jTextField1.getText()));
 
                 cxt.authorPlotSpade("plotSPADE.R");
-                ctl = new SpadeController(cxt.getPath(), "plotSPADE.R");
+                ctl = new SpadeController(this.frame, this.cxt.getPath(), "plotSPADE.R");
                 ctl.exec();
             } catch (IOException ex) {
-                CyLogger.getLogger(CytoSpade.class.getName()).error(null, ex);
+                //CyLogger.getLogger(CytoSpade.class.getName()).error(null, ex);
             }
         }
 

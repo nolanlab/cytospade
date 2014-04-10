@@ -1,16 +1,8 @@
 package cytospade.ui;
 
-import cytoscape.CyEdge;
-import cytoscape.CyNetwork;
-import cytoscape.CyNode;
-import cytoscape.Cytoscape;
-import cytoscape.data.CyAttributes;
-import giny.model.Node;
-import cytoscape.data.Semantics;
-import cytoscape.view.CyNetworkView;
-import cytoscape.visual.VisualStyle;
-import giny.model.GraphPerspective;
-import giny.view.NodeView;
+import org.cytoscape.view.model.View;
+import org.cytoscape.model.CyNode;
+import org.cytoscape.model.CyNetwork;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.HashSet;
@@ -30,13 +22,18 @@ public class NodeContextMenuItems {
         public static final String LABEL = "Create Nested Network";
         private static int MetaID = 0;
 
-        public static CyNode makeNestedNode(Set nodes) {
+        public static View<CyNode> makeNestedNode(Set nodes) {
             return makeNestedNode(nodes, false);
         }
 
-        public static CyNode makeNestedNode(Set nodes, boolean renderNestedView) {
+        public static View<CyNode> makeNestedNode(Set nodes, boolean renderNestedView) {
+            /* Cytoscape.getCurrentNetwork() and Cytoscape.getCurrentNetworkView() are
+              now part of the CyApplicationManager interface, however their use is
+              discouraged in favor of implementing NetworkTaskFactory and
+              NetworkViewTaskFactory services (found in the core-task-api bundle). */
             CyNetwork currentNetwork = Cytoscape.getCurrentNetwork();
             CyNetworkView currentView = Cytoscape.getCurrentNetworkView();
+            // CyAttributes has been replaced by the concept of CyTable.
             CyAttributes nodeAttributes = Cytoscape.getNodeAttributes();
 
             Set nestedNodes = new HashSet(nodes);
@@ -80,7 +77,7 @@ public class NodeContextMenuItems {
             {
                 double avgX = 0.0, avgY = 0.0;
                 for (CyNode node : (Set<CyNode>) nestedNodes) {
-                    NodeView nv = currentView.getNodeView(node);
+                    View<CyNode> nv = currentView.getNodeView(node);
                     double currX = nv.getXPosition();
                     double currY = nv.getYPosition();
                     avgX += currX;
@@ -88,12 +85,12 @@ public class NodeContextMenuItems {
                 }
                 avgX /= nestedNodes.size();
                 avgY /= nestedNodes.size();
-                NodeView containerNodeView = currentView.getNodeView(containerNode);
+                View<CyNode> containerNodeView = currentView.getNodeView(containerNode);
                 containerNodeView.setXPosition(avgX);
                 containerNodeView.setYPosition(avgY);
 
                 for (CyNode node : (Set<CyNode>) nestedNodes) {
-                    NodeView nv = currentView.getNodeView(node);
+                    View<CyNode> nv = currentView.getNodeView(node);
                     nodeAttributes.setAttribute(node.getIdentifier(), "OffsetToNNX", nv.getXPosition() - avgX);
                     nodeAttributes.setAttribute(node.getIdentifier(), "OffsetToNNY", nv.getYPosition() - avgY);
                 }
@@ -248,7 +245,7 @@ public class NodeContextMenuItems {
                 return;
             }
 
-            NodeView nv = currentView.getNodeView(node);
+            View<CyNode> nv = currentView.getNodeView(node);
             for (CyNode nn : (List<CyNode>) nestedNetwork.nodesList()) {
                 if (!MakeNestedNetwork.isNested(nn)) {
                     continue;
@@ -257,7 +254,7 @@ public class NodeContextMenuItems {
                 currentNetwork.restoreNode(nn);
                 nodeAttributes.deleteAttribute(nn.getIdentifier(), "is_nested");
 
-                NodeView nnv = currentView.getNodeView(nn);  // Restore original layout along with nodes
+                View<CyNode> nnv = currentView.getNodeView(nn);  // Restore original layout along with nodes
                 Double off_x = nodeAttributes.getDoubleAttribute(nn.getIdentifier(), "OffsetToNNX");
                 if (off_x != null) {
                     nnv.setXPosition(off_x + nv.getXPosition());

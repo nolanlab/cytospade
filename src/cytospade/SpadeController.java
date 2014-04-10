@@ -1,6 +1,5 @@
 package cytospade;
-import cytoscape.Cytoscape;
-import cytoscape.logger.CyLogger;
+import java.awt.Frame;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -14,25 +13,27 @@ import javax.swing.SwingWorker;
  */
 public class SpadeController extends SwingWorker<Integer, Void> {
 
-    File   workingDir;
+    File workingDir;
     String script;
 
-    javax.swing.JDialog     outDialog;
-    javax.swing.JTextArea   outArea;
+    javax.swing.JDialog outDialog;
+    javax.swing.JTextArea outArea;
     javax.swing.JScrollPane outAreaWrapper;
-    javax.swing.JPanel      buttonPanel;
-    javax.swing.JSeparator  separator;
-    javax.swing.JButton     doneButton;
+    javax.swing.JPanel buttonPanel;
+    javax.swing.JSeparator separator;
+    javax.swing.JButton doneButton;
+    
+    private final Frame frame;
 
-    public SpadeController(File cwd, String script) {
+    public SpadeController(Frame frame, File cwd, String script) {
+        this.frame = frame;
         this.workingDir = cwd;
         this.script = script;
     }
 
     public void exec() {
         // Initialize dialog for displaying output
-        //
-        outDialog = new javax.swing.JDialog(Cytoscape.getDesktop());
+        outDialog = new javax.swing.JDialog(this.frame);
         outDialog.getContentPane().setLayout(new java.awt.BorderLayout());
         outDialog.setTitle("SPADE Execution Console");
 
@@ -98,9 +99,9 @@ public class SpadeController extends SwingWorker<Integer, Void> {
             reader.close();
             return p.waitFor();
         } catch (IOException ex) {
-            CyLogger.getLogger(SpadeController.class.getName()).error(null, ex);
+            //CyLogger.getLogger(SpadeController.class.getName()).error(null, ex);
         } catch (InterruptedException ex) {
-            CyLogger.getLogger(SpadeController.class.getName()).error(null, ex);
+            //CyLogger.getLogger(SpadeController.class.getName()).error(null, ex);
         }
         return 1;
     }
@@ -111,9 +112,9 @@ public class SpadeController extends SwingWorker<Integer, Void> {
         try {
             exit_status = this.get();
         } catch (InterruptedException ex) {
-            CyLogger.getLogger(SpadeController.class.getName()).error(null, ex);
+            //CyLogger.getLogger(SpadeController.class.getName()).error(null, ex);
         } catch (ExecutionException ex) {
-            CyLogger.getLogger(SpadeController.class.getName()).error(null, ex);
+            //CyLogger.getLogger(SpadeController.class.getName()).error(null, ex);
         }
         if (exit_status == 0) {
             javax.swing.JOptionPane.showMessageDialog(null, "Successfully executed script.");
@@ -149,7 +150,7 @@ public class SpadeController extends SwingWorker<Integer, Void> {
                 else
                     return '"'+result.substring(token +  REGSTR_TOKEN.length()).trim()+"\\bin\\R\"";
             } catch (Exception ex) {
-                CyLogger.getLogger(SpadeController.class.getName()).error(null, ex);
+                //CyLogger.getLogger(SpadeController.class.getName()).error(null, ex);
                 return null;
             }
         } else

@@ -31,7 +31,7 @@ package cytospade;
  *
  * http://www.cytobank.org
  */
-import cytoscape.logger.CyLogger;
+
 import java.io.*;
 import java.util.*;
 
@@ -1189,7 +1189,7 @@ public final class fcsFile {
             if (n <= 0 || n > this.parameters)
                 throw new NumberFormatException();
         } catch (NumberFormatException nfe) {
-            CyLogger.getLogger().error("Failed to parse parameter count in spill string",nfe);
+            //CyLogger.getLogger().error("Failed to parse parameter count in spill string",nfe);
             return events;
         }
 
@@ -1198,12 +1198,12 @@ public final class fcsFile {
         // Match names in spill string to columns in parameter lists
         compDataStart = Arrays.asList(this.channelShortname).indexOf(compNames[0]);
         if (compDataStart < 0) {
-            CyLogger.getLogger().error("Failed to match channel "+compNames[0]+" to parameter in file");
+            //CyLogger.getLogger().error("Failed to match channel "+compNames[0]+" to parameter in file");
             return events;  // Failure match spill string names to channels
         }
         for (int i = 0; i < n; i++) {
             if (!compNames[i].equals(this.channelShortname[compDataStart + i])) {
-                CyLogger.getLogger().error("Spill channel are not continguous parameters in file");
+                //CyLogger.getLogger().error("Spill channel are not continguous parameters in file");
                 return events;  // Spill string columns not in order
             }
         }

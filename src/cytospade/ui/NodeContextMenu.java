@@ -7,11 +7,11 @@ package cytospade.ui;
 
 import cytospade.ui.NodeContextMenuItems.MakeNestedNetwork;
 import cytospade.ui.NodeContextMenuItems.UndoNestedNetwork;
-import ding.view.NodeContextMenuListener;
-import giny.view.NodeView;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
+import org.cytoscape.model.CyNode;
+import org.cytoscape.view.model.View;
 
 /**
  *
@@ -19,7 +19,7 @@ import javax.swing.JPopupMenu;
  */
 public class NodeContextMenu implements NodeContextMenuListener {
 
-    public void addNodeContextMenuItems(NodeView nv, JPopupMenu jpm) {
+    public void addNodeContextMenuItems(View<CyNode> nv, JPopupMenu jpm) {
         JMenu spadeMenu = new JMenu("SPADE");
 
         // Populate menu depending on context...

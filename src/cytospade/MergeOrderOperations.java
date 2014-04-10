@@ -1,12 +1,6 @@
 package cytospade;
 
-import cytoscape.CyNetwork;
-import cytoscape.CyNode;
-import cytoscape.Cytoscape;
-import cytoscape.view.CyNetworkView;
-import cytoscape.visual.VisualStyle;
 import cytospade.ui.NodeContextMenuItems;
-import giny.model.Node;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
@@ -14,6 +8,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Scanner;
 import java.util.Set;
+import org.cytoscape.model.CyNode;
 
 /**
  * @author ksheode

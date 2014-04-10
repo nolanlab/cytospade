@@ -11,19 +11,15 @@
 
 package cytospade.ui;
 
-import cytoscape.logger.CyLogger;
 import cytospade.FCSOperations;
 import cytospade.SpadeContext;
 import facs.CanvasSettings;
-import facs.Illustration;
 import facs.Plot2D;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.swing.ImageIcon;
 import javax.swing.JMenuItem;
 import javax.swing.SwingWorker;
@@ -164,7 +160,7 @@ public class ScatterPlotPanel extends javax.swing.JPanel {
                     Plot.setIcon(new ImageIcon(image));
                 } catch (IOException ex) {
                     Plot.setIcon(null);
-                    CyLogger.getLogger(SpadeAnalysisPanel.class.getName()).error(null, ex);
+                    //CyLogger.getLogger(SpadeAnalysisPanel.class.getName()).error(null, ex);
                 }
                 return 0;
             }

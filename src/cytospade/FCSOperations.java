@@ -1,16 +1,5 @@
 package cytospade;
 
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-import cytoscape.*;
-
-import cytoscape.logger.CyLogger;
-
-import giny.model.GraphPerspective;
-
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -21,11 +10,10 @@ import java.util.List;
 
 import java.util.Set;
 
-
 import org.apache.commons.math.stat.inference.TTestImpl;
 import org.apache.commons.math.linear.Array2DRowRealMatrix;
 import org.apache.commons.lang.ArrayUtils;
-
+import org.cytoscape.model.CyNode;
 
 public class FCSOperations {
 
@@ -229,7 +217,7 @@ public class FCSOperations {
         try {
             return tTest.t(selectedEvents.getDataRef()[attribute], allEvents.getDataRef()[attribute]);
         } catch (IllegalArgumentException ex) {
-            CyLogger.getLogger(FCSOperations.class.getName()).error(null, ex);
+            //CyLogger.getLogger(FCSOperations.class.getName()).error(null, ex);
         }
         return 0.0;
     }

@@ -26,10 +26,21 @@ public class SpadeContext {
         public File[]   reference_files;
         public String[] fold_markers;
 
+        /**
+         *
+         * @param panel_files
+         */
         public AnalysisPanel(Object[] panel_files) {
             this(panel_files, null, null, null);
         }
 
+        /**
+         *
+         * @param panel_files
+         * @param median_markers
+         * @param reference_files
+         * @param fold_markers
+         */
         public AnalysisPanel(Object[] panel_files, Object[] median_markers, Object[] reference_files, Object[] fold_markers) {
             this.panel_files = new File[panel_files.length];
             for (int i=0; i<panel_files.length; i++) { this.panel_files[i] = (File)panel_files[i]; }
@@ -79,6 +90,9 @@ public class SpadeContext {
     private NormalizationKind normalizationKind = NormalizationKind.GLOBAL;
     private SymmetryType symmetryType = SymmetryType.ASYMMETRIC;
 
+    /**
+     *
+     */
     public SpadeContext() {
         selectedClusteringMarkers = new String[0];
     }
@@ -217,26 +231,50 @@ public class SpadeContext {
         this.arcsinh = arcsinh;
     }
 
+    /**
+     *
+     * @return
+     */
     public double getNodeSizeScaleFactor() {
         return nodeSizeScaleFactor;
     }
 
+    /**
+     *
+     * @param nodeSizeScaleFactor
+     */
     public void setNodeSizeScaleFactor(double nodeSizeScaleFactor) {
         this.nodeSizeScaleFactor = nodeSizeScaleFactor;
     }
 
+    /**
+     *
+     * @return
+     */
     public NormalizationKind getNormalizationKind() {
         return normalizationKind;
     }
 
+    /**
+     *
+     * @param normalizationKind
+     */
     public void setNormalizationKind(NormalizationKind normalizationKind) {
         this.normalizationKind = normalizationKind;
     }
 
+    /**
+     *
+     * @param symmetryType
+     */
     public void setSymmetry(SymmetryType symmetryType) {
         this.symmetryType = symmetryType;
     }
 
+    /**
+     *
+     * @return
+     */
     public SymmetryType getSymmetry() {
         return symmetryType;
     }

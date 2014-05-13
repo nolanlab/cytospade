@@ -534,7 +534,7 @@ public class SpadeContext {
                 out.write("DOWNSAMPLING_TARGET_PERCENT=NULL\n");
                 break;
             case EVENTS:
-                out.write(String.format("DOWNSAMPLING_TARGET_NUMBER=%d\n",this.getTargetDownsampleEvents()));
+                out.write("DOWNSAMPLING_TARGET_NUMBER=" + nf.format(this.getTargetDownsampleEvents()) + "\n");
                 out.write("DOWNSAMPLING_TARGET_PCTILE=NULL\n");
                 out.write("DOWNSAMPLING_TARGET_PERCENT=NULL\n");
                 break;
@@ -542,10 +542,10 @@ public class SpadeContext {
             default:
                 out.write("DOWNSAMPLING_TARGET_NUMBER=NULL\n");
                 out.write("DOWNSAMPLING_TARGET_PCTILE=NULL\n");
-                out.write(String.format("DOWNSAMPLING_TARGET_PERCENT=%d\n",this.getTargetDownsamplePercent()/100.0));
+                out.write("DOWNSAMPLING_TARGET_PERCENT=" + nf.format(this.getTargetDownsamplePercent() / 100.0) + "\n");
                 break;
         }
-        out.write(String.format("TARGET_CLUSTERS=%d\n",this.getTargetClusters()));
+        out.write("TARGET_CLUSTERS=" + nf.format(this.getTargetClusters()) + "\n");
 
         out.write("CLUSTERING_SAMPLES=50000\n");
         out.write("DOWNSAMPLING_EXCLUDE_PCTILE=0.01\n");

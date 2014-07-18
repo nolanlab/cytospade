@@ -13,6 +13,7 @@ import cytospade.VisualMapping;
 import cytospade.WorkflowWizard;
 import cytospade.WorkflowWizardPanels;
 import java.awt.Color;
+import java.awt.Component;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -29,10 +30,17 @@ import javax.swing.JOptionPane;
 import javax.swing.SwingConstants;
 import javax.swing.SwingWorker;
 import javax.swing.table.DefaultTableModel;
+import org.cytoscape.application.CyApplicationManager;
 import org.cytoscape.application.swing.CytoPanelComponent;
 import org.cytoscape.application.swing.CytoPanelName;
+import org.cytoscape.model.CyNetwork;
 import org.cytoscape.model.CyNode;
+import org.cytoscape.task.read.LoadNetworkFileTaskFactory;
+import org.cytoscape.view.model.CyNetworkView;
 import org.cytoscape.view.model.View;
+import org.cytoscape.view.vizmap.VisualMappingManager;
+import org.cytoscape.view.vizmap.VisualPropertyDependency;
+import org.cytoscape.view.vizmap.VisualStyle;
 
 /**
  *
@@ -46,6 +54,9 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel implements CytoPanelC
     private ScatterPlotPanel scatterPlot;
     private ReentrantLock panelLock;
     private MergeOrderOperations mergeOrderOps;
+    
+    private CyNetworkView cnv;
+    
     DefaultTableModel TValTableModel = new javax.swing.table.DefaultTableModel(
             new Object[][]{{null, null}},
             new String[]{"Parameter", "T value"});
@@ -54,6 +65,10 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel implements CytoPanelC
      * @param spadeCxt */
     public SpadeAnalysisPanel(SpadeContext spadeCxt) {
         this.spadeCxt = spadeCxt;
+
+        CyApplicationManager cam = spadeCxt.adapter.getCyApplicationManager();
+        CyNetwork network = cam.getCurrentNetwork(); //not in use
+        cnv = cam.getCurrentNetworkView();
 
         // Find the global_boundaries.table file it exists, and create appropiate visual mapping
         File[] boundaryFiles = spadeCxt.getPath().listFiles(new FilenameFilter() {
@@ -84,6 +99,14 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel implements CytoPanelC
     
     public Icon getIcon() {
         return null;
+    }
+
+    public Component getComponent() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    public String getTitle() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
     
     /**
@@ -767,18 +790,23 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel implements CytoPanelC
     }//GEN-LAST:event_ColoringSelect1ActionPerformed
 
     private void FilenameSelect1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_FilenameSelect1ActionPerformed
-        GraphPerspective network = (GraphPerspective) Cytoscape.getCurrentNetwork();
+
+        
+        //GraphPerspective network = (GraphPerspective) Cytoscape.getCurrentNetwork();
 
         // Close the current network, saving the X and Y coords for reuse
         //   This is a hackerish way to tell if no network is loaded. For some reason,
         //   Cytoscape.getCurrentNetwork[View]() always returns something.
-        if (!network.nodesList().isEmpty()) {
-            this.saveMetadata(true);
-        }
+  // TODO fix this, and see if you can find a less hackerish way of doing this (per above comment)
+//        if (!network.nodesList().isEmpty()) {
+//            this.saveMetadata(true);
+//        }
 
         //Open the new network, applying the X and Y coords if available
         if (FilenameSelect1.getSelectedIndex() >= 0) {
-            LoadNetworkTask.loadFile(spadeCxt.getGMLFiles()[FilenameSelect1.getSelectedIndex()], true);
+            File filetoload = spadeCxt.getGMLFiles()[FilenameSelect1.getSelectedIndex()];
+            LoadNetworkFileTaskFactory lnftf = spadeCxt.adapter.get_LoadNetworkFileTaskFactory();
+            lnftf.createTaskIterator(filetoload);
 
             //Find the layout.table file if it exists
             File[] layoutFiles = spadeCxt.getPath().listFiles(new FilenameFilter() {
@@ -795,8 +823,8 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel implements CytoPanelC
             }
 
             // Network Interactions
-            Cytoscape.getCurrentNetworkView().addNodeContextMenuListener(new NodeContextMenu());
-            Cytoscape.getCurrentNetworkView().fitContent();
+            //Cytoscape.getCurrentNetworkView().addNodeContextMenuListener(new NodeContextMenu());
+            cnv.fitContent();
 
             VisualMapping.populateNumericAttributeComboBox(ColoringSelect1);  // Update the parameter combo box
             ColoringSelect1.setSelectedIndex(0);
@@ -840,7 +868,7 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel implements CytoPanelC
             }
 
             try {
-                this.fcsOperations = new FCSOperations(((FileItem) FilenameSelect1.getSelectedItem()).getFCSFile());
+                this.fcsOperations = new FCSOperations(spadeCxt, ((FileItem) FilenameSelect1.getSelectedItem()).getFCSFile());
                 this.scatterPlot = new ScatterPlotPanel(this.fcsOperations);
                 this.PlotContainer.setViewportView(this.scatterPlot);
                 Cytoscape.getCurrentNetwork().addSelectEventListener(new HandleSelect());

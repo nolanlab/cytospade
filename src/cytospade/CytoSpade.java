@@ -1,8 +1,13 @@
 package cytospade;
 
+import java.io.File;
 import org.cytoscape.app.swing.AbstractCySwingApp;
 import org.cytoscape.app.swing.CySwingAppAdapter;
+import org.cytoscape.application.CyApplicationManager;
 import org.cytoscape.application.swing.CySwingApplication;
+import org.cytoscape.model.CyNetwork;
+import org.cytoscape.task.read.LoadNetworkFileTaskFactory;
+import org.cytoscape.view.model.CyNetworkView;
 
 /**
  * Cytoscape plugin that draws scatter plots for SPADE trees
@@ -20,9 +25,9 @@ public class CytoSpade extends AbstractCySwingApp {
     public CytoSpade(CySwingAppAdapter adapter) {
         super(adapter);
         CySwingApplication cytoscapeDesktopService = adapter.getCySwingApplication();
-        
+                        
         // Initialized internal state keeping
-        spadeCxt = new SpadeContext();
+        spadeCxt = new SpadeContext(adapter);
         this.adapter = adapter;
         
         // Create menu bar item, along with associated action...

@@ -24,14 +24,16 @@ public class FCSOperations {
     private int numNodesSelected = 0;
     private Array2DRowRealMatrix eventsSlctd = null;
 
+    
 
-    public FCSOperations(File inputFile) throws FileNotFoundException, IOException {
-        this(new fcsFile(inputFile, true));
+    public FCSOperations(SpadeContext context, File inputFile) throws FileNotFoundException, IOException {
+        this(context, new fcsFile(inputFile, true));
     }
     
-    public FCSOperations(fcsFile inputFile) {
+    public FCSOperations(SpadeContext context, fcsFile inputFile) {
         fcsInputFile = inputFile;
         eventsInitl = new Array2DRowRealMatrix(fcsInputFile.getCompensatedEventList());
+        
     }
 
      public fcsFile getFCSFile() {
@@ -137,12 +139,12 @@ public class FCSOperations {
 
         CyNetwork currentNetwork = Cytoscape.getCurrentNetwork();
         for (CyNode node : (Set<CyNode>) currentNetwork.getSelectedNodes()) {
-            GraphPerspective nestedNetwork = node.getNestedNetwork();
-            if (nestedNetwork == null) {
+//            GraphPerspective nestedNetwork = node.getNestedNetwork();
+//            if (nestedNetwork == null) {
                 selectedNodes.add(node);
-            } else {
-                selectedNodes.addAll(nestedNetwork.nodesList());
-            }
+//            } else {
+//                selectedNodes.addAll(nestedNetwork.nodesList());
+//            }
         }
 
         int[] selectedNodes_i = new int[selectedNodes.size()];

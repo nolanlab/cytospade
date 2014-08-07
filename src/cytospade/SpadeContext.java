@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.text.NumberFormat;
 import java.util.*;
 import javax.swing.JOptionPane;
+import org.cytoscape.app.swing.CySwingAppAdapter;
 
 /**
  * Container for SPADE state, script generation for backend, etc.
@@ -90,11 +91,15 @@ public class SpadeContext {
     private NormalizationKind normalizationKind = NormalizationKind.GLOBAL;
     private SymmetryType symmetryType = SymmetryType.ASYMMETRIC;
 
+    public CySwingAppAdapter adapter;
+    
     /**
      *
+     * @param adapter
      */
-    public SpadeContext() {
+    public SpadeContext(CySwingAppAdapter adapter) {
         selectedClusteringMarkers = new String[0];
+        this.adapter = adapter;
     }
 
     /**

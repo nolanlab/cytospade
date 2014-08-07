@@ -8,7 +8,10 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Scanner;
 import java.util.Set;
+import org.cytoscape.application.CyApplicationManager;
+import org.cytoscape.model.CyNetwork;
 import org.cytoscape.model.CyNode;
+import org.cytoscape.view.model.CyNetworkView;
 
 /**
  * @author ksheode
@@ -16,6 +19,9 @@ import org.cytoscape.model.CyNode;
 public class MergeOrderOperations {
 
     //Nesting type Incremental
+    private SpadeContext spadeCxt;
+    private CyApplicationManager cam;
+    private CyNetworkView cnv;
     private ArrayList<ArrayList<Integer>> mergeOrderFileCache = new ArrayList<ArrayList<Integer>>();
     private ArrayList<String> clusterIdentifier = new ArrayList<String>();
     //Nesting type Absolute
@@ -26,9 +32,11 @@ public class MergeOrderOperations {
     private int previousMergeOrder = 0;
     private boolean previousRenderNestedView = false;
 
-    public MergeOrderOperations(File mergeOrderFile) throws FileNotFoundException, Exception {
+    public MergeOrderOperations(File mergeOrderFile, SpadeContext context) throws FileNotFoundException, Exception {
         Scanner myfile = new Scanner(mergeOrderFile);
-
+        this.spadeCxt = context;
+        this.cam = spadeCxt.adapter.getCyApplicationManager();
+        this.cnv = cam.getCurrentNetworkView();
         //MergeOrder = 0 is no nesting        
         mergeOrderFileCache.add(new ArrayList<Integer>());
 
@@ -122,8 +130,10 @@ public class MergeOrderOperations {
             }
 
             //Convert to cytoscape nodes
-            CyNode cyNode1 = Cytoscape.getCyNode(firstNodeId);
-            CyNode cyNode2 = Cytoscape.getCyNode(secondNodeId);
+            //CyNode cyNode1 = Cytoscape.getCyNode(firstNodeId);
+            CyNode cyNode1 = cam.getCurrentNetwork().getNode(Long.parseLong(firstNodeId));
+            //CyNode cyNode2 = Cytoscape.getCyNode(secondNodeId);
+            CyNode cyNode2 = cam.getCurrentNetwork().getNode(Long.parseLong(secondNodeId));
 
             if (cyNode1 == null || cyNode2 == null) {
                 continue;
@@ -133,14 +143,16 @@ public class MergeOrderOperations {
             Set<CyNode> cluster = new HashSet<CyNode>();
             cluster.add(cyNode1);
             cluster.add(cyNode2);
-            CyNode retRootNode = NodeContextMenuItems.MakeNestedNetwork.makeNestedNode(cluster, renderNestedView);
+            //not nesting nodes right now
+            //CyNode retRootNode = NodeContextMenuItems.MakeNestedNetwork.makeNestedNode(cluster, renderNestedView);
+            /*
             if (retRootNode != null) {
                 clusterIdentifier.add(i, retRootNode.getIdentifier());
             }
         }
-
+            */
         //If mergeorder is lesser than previous merge, need to unmerge some more
-        for (int i = previousMergeOrder; i > mergeOrder; i--, previousMergeOrder--) {
+        for (i = previousMergeOrder; i > mergeOrder; i--, previousMergeOrder--) {
             //Get identifier of merged cluster
             String clusterid = clusterIdentifier.get(i);
             if (clusterid == null) {
@@ -148,8 +160,8 @@ public class MergeOrderOperations {
             }
 
             //Convert to Cynode
-            CyNode clusterNode = Cytoscape.getCyNode(clusterid);
-
+            //CyNode clusterNode = Cytoscape.getCyNode(clusterid);
+            CyNode clusterNode = cam.getCurrentNetwork().getNode(Long.parseLong(clusterid));
             //Update datastructure
             clusterIdentifier.set(i, null);
 
@@ -158,18 +170,21 @@ public class MergeOrderOperations {
                 continue;
             }
 
-            NodeContextMenuItems.UndoNestedNetwork.undoNestedNode(clusterNode);
+            //NodeContextMenuItems.UndoNestedNetwork.undoNestedNode(clusterNode);
         }
 
-        Cytoscape.getVisualMappingManager().applyAppearances();
-
+        //Cytoscape.getVisualMappingManager().applyAppearances();
+        //spadeCxt.adapter.getVisualMappingManager()
+        cnv.updateView();
+        
+        }
         return mergeOrder;
     }
-
     /**
      * Create a new window with the nested networks visible within the node
      * This can take a while.
      */
+    /*
     public void showNestedNetworkDetails() {
         //Undo all nesting
         int previous = previousMergeOrder;
@@ -177,11 +192,14 @@ public class MergeOrderOperations {
         createNestedGraphIncremental(0, previousRenderNestedView);
 
         //Make a copy of the current network
-        CyNetworkView currentView = Cytoscape.getCurrentNetworkView();
-        CyNetwork currentNetwork = Cytoscape.getCurrentNetwork();
-        originalNetworkId = currentNetwork.getIdentifier();
+        //CyNetworkView currentView = Cytoscape.getCurrentNetworkView();
+        CyNetworkView currentView = cam.getCurrentNetworkView();
+        //CyNetwork currentNetwork = Cytoscape.getCurrentNetwork();
+        CyNetwork currentNetwork = cam.getCurrentNetwork();
+        //originalNetworkId = currentNetwork.getIdentifier();
+        //originalNetworkId = currentNetwork.getRow
 
-        String title = currentNetwork.getTitle() + "_Merge" + Integer.toString(previous);
+        String title = currentNetwork.toString() + "_Merge" + Integer.toString(previous);
         CyNetwork nestedNetwork = Cytoscape.createNetwork(title, true);
         nestedNetwork.appendNetwork(currentNetwork);
         CyNetworkView nestedView = Cytoscape.createNetworkView(nestedNetwork, title);
@@ -229,7 +247,7 @@ public class MergeOrderOperations {
         createNestedGraphIncremental(previous, previousView);
         Cytoscape.getDesktop().setFocus(nestedNetwork.getIdentifier());
     }
-
+    */
     /**
      * Merge SPADE generated clusters to the order of merge specified on the current network
      * The nested network contains non-hierarchical nesting of nodes.
@@ -240,6 +258,7 @@ public class MergeOrderOperations {
      *                          non-hierarchical nesting of nodes. 
      * @return: The actual order of merge rendered, -1 if no merge rendered
      */
+    /*
     private void createNestedGraphAbsolute(int mergeOrder, boolean renderNestedView) {
 
         //Cluster nodes using the absolute node list
@@ -262,10 +281,11 @@ public class MergeOrderOperations {
             }
         }
     }
-
+    */
     /**
      * Shuts down all the windows opened by showNestedNetworkDetails
      */
+    /*
     public void destroyNestedNetworkDetails() {
         //Set the detailed network as the current network.
         //Required as many operation in various places are performed exclusively on the current network.
@@ -289,4 +309,5 @@ public class MergeOrderOperations {
         Cytoscape.setCurrentNetworkView(originalNetworkId);
         Cytoscape.getDesktop().setFocus(originalNetworkId);
     }
+    */
 }

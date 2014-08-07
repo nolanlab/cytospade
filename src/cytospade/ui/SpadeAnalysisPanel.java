@@ -13,6 +13,9 @@ import cytospade.VisualMapping;
 import cytospade.WorkflowWizard;
 import cytospade.WorkflowWizardPanels;
 import java.awt.Color;
+import java.awt.Component;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -29,10 +32,20 @@ import javax.swing.JOptionPane;
 import javax.swing.SwingConstants;
 import javax.swing.SwingWorker;
 import javax.swing.table.DefaultTableModel;
+import org.cytoscape.application.CyApplicationManager;
+import org.cytoscape.application.swing.CySwingApplication;
 import org.cytoscape.application.swing.CytoPanelComponent;
 import org.cytoscape.application.swing.CytoPanelName;
+import org.cytoscape.model.CyNetwork;
 import org.cytoscape.model.CyNode;
+import org.cytoscape.task.read.LoadNetworkFileTaskFactory;
+import org.cytoscape.view.model.CyNetworkView;
 import org.cytoscape.view.model.View;
+import org.cytoscape.view.presentation.property.BasicVisualLexicon;
+import org.cytoscape.view.presentation.property.NodeShapeVisualProperty;
+import org.cytoscape.view.vizmap.VisualMappingManager;
+import org.cytoscape.view.vizmap.VisualPropertyDependency;
+import org.cytoscape.view.vizmap.VisualStyle;
 
 /**
  *
@@ -46,6 +59,10 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel implements CytoPanelC
     private ScatterPlotPanel scatterPlot;
     private ReentrantLock panelLock;
     private MergeOrderOperations mergeOrderOps;
+    private CyApplicationManager cam;
+    private CyNetworkView cnv;
+    private CySwingApplication capp;
+    
     DefaultTableModel TValTableModel = new javax.swing.table.DefaultTableModel(
             new Object[][]{{null, null}},
             new String[]{"Parameter", "T value"});
@@ -54,6 +71,11 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel implements CytoPanelC
      * @param spadeCxt */
     public SpadeAnalysisPanel(SpadeContext spadeCxt) {
         this.spadeCxt = spadeCxt;
+        this.capp = spadeCxt.adapter.getCySwingApplication();
+        this.cam = spadeCxt.adapter.getCyApplicationManager();
+        CyApplicationManager cam = spadeCxt.adapter.getCyApplicationManager();
+        CyNetwork network = cam.getCurrentNetwork(); //not in use
+        cnv = cam.getCurrentNetworkView();
 
         // Find the global_boundaries.table file it exists, and create appropiate visual mapping
         File[] boundaryFiles = spadeCxt.getPath().listFiles(new FilenameFilter() {
@@ -66,7 +88,7 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel implements CytoPanelC
         if (boundaryFiles.length == 1) {
             this.visualMapping = new VisualMapping(boundaryFiles[0]);
         } else if (boundaryFiles.length == 0) {
-            this.visualMapping = new VisualMapping();
+            //this.visualMapping = new VisualMapping();
         } else {
             JOptionPane.showMessageDialog(null, "Error: Found more than one global_boundaries.table file.");
             return;
@@ -84,6 +106,14 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel implements CytoPanelC
     
     public Icon getIcon() {
         return null;
+    }
+
+    public Component getComponent() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    public String getTitle() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
     
     /**
@@ -129,10 +159,16 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel implements CytoPanelC
     /**
      * Handles node selection events
      */
-    public class HandleSelect implements SelectEventListener {
-
-        public void onSelectEvent(cytoscape.data.SelectEvent e) {
+    //public class HandleSelect implements SelectEventListener {
+    public class HandleSelect implements ActionListener {
+        
+        //public void onSelectEvent(cytoscape.data.SelectEvent e) {
+        public void HandleSelect(ActionEvent e) {
             updateFCSConsumers();
+        }
+
+        public void actionPerformed(ActionEvent e) {
+            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         }
     }
 
@@ -203,44 +239,64 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel implements CytoPanelC
             return;
         }
 
-        VisualMappingManager cyVMM = Cytoscape.getVisualMappingManager();
+        //VisualMappingManager cyVMM = Cytoscape.getVisualMappingManager();
+        VisualMappingManager cyVMM = spadeCxt.adapter.getVisualMappingManager();
 
         try {
 
-            VisualStyle spadeVS = cyVMM.getCalculatorCatalog().getVisualStyle("SPADEVisualStyle");
+            //VisualStyle spadeVS = cyVMM.getCalculatorCatalog().getVisualStyle("SPADEVisualStyle");
+            VisualStyle spadeVS = spadeCxt.adapter.getVisualStyleFactory().createVisualStyle("SPADEVisualStyle");
             if (spadeVS != null) {
                 // Overwrite visual style, only way to get Cytoscape to reliably update
-                cyVMM.getCalculatorCatalog().removeVisualStyle("SPADEVisualStyle");
+                //cyVMM.getCalculatorCatalog().removeVisualStyle("SPADEVisualStyle");
+                cyVMM.removeVisualStyle(cyVMM.getCurrentVisualStyle());
             }
-            spadeVS = new VisualStyle("SPADEVisualStyle");
-
+            //spadeVS = new VisualStyle("SPADEVisualStyle");
+            cyVMM.setCurrentVisualStyle(spadeVS);
             // Update with new calculators
-            GlobalAppearanceCalculator globalAppCalc = new GlobalAppearanceCalculator();
-            globalAppCalc.setDefaultNodeSelectionColor(Color.MAGENTA);
-            globalAppCalc.setDefaultEdgeSelectionColor(Color.MAGENTA);
-            globalAppCalc.setDefaultBackgroundColor(Color.BLACK);
-            spadeVS.setGlobalAppearanceCalculator(globalAppCalc);
-
-            NodeAppearanceCalculator nodeAppCalc = new NodeAppearanceCalculator(spadeVS.getDependency());
-            nodeAppCalc.setCalculator(visualMapping.createColorCalculator());
-            nodeAppCalc.setCalculator(visualMapping.createSizeCalculator());
-            spadeVS.setNodeAppearanceCalculator(nodeAppCalc);
-
+            //GlobalAppearanceCalculator globalAppCalc = new GlobalAppearanceCalculator();
+            //globalAppCalc.setDefaultNodeSelectionColor(Color.MAGENTA);
+            cnv.setVisualProperty(BasicVisualLexicon.NODE_SELECTED_PAINT, Color.MAGENTA);
+            //globalAppCalc.setDefaultEdgeSelectionColor(Color.MAGENTA);
+            cnv.setVisualProperty(BasicVisualLexicon.EDGE_SELECTED_PAINT, Color.MAGENTA);
+            //globalAppCalc.setDefaultBackgroundColor(Color.BLACK);
+            //spadeVS.setGlobalAppearanceCalculator(globalAppCalc);
+            cnv.setVisualProperty(BasicVisualLexicon.NETWORK_BACKGROUND_PAINT, Color.BLACK);
+            //NodeAppearanceCalculator nodeAppCalc = new NodeAppearanceCalculator(spadeVS.getDependency());
+            //nodeAppCalc.setCalculator(visualMapping.createColorCalculator());
+            //nodeAppCalc.setCalculator(visualMapping.createSizeCalculator());
+            //spadeVS.setNodeAppearanceCalculator(nodeAppCalc);
+            cnv.updateView();
+            
             // Set a few defaults now that we have overwritten the calculators
-            VisualPropertyType.NODE_SHAPE.setDefault(spadeVS, cytoscape.visual.NodeShape.ELLIPSE);
-            VisualPropertyType.NODE_FILL_COLOR.setDefault(spadeVS, Color.LIGHT_GRAY);
-            spadeVS.getDependency().set(VisualPropertyDependency.Definition.NODE_SIZE_LOCKED, true);
-            VisualPropertyType.NODE_BORDER_COLOR.setDefault(spadeVS, Color.WHITE);
-            VisualPropertyType.NODE_LINE_WIDTH.setDefault(spadeVS, 4);
-            VisualPropertyType.EDGE_COLOR.setDefault(spadeVS, Color.WHITE);
-            VisualPropertyType.EDGE_LINE_WIDTH.setDefault(spadeVS, 2);
+            //VisualPropertyType.NODE_SHAPE.setDefault(spadeVS, NodeShapeVisualProperty.ELLIPSE);
+            spadeVS.setDefaultValue(BasicVisualLexicon.NODE_SHAPE, NodeShapeVisualProperty.ELLIPSE);
+            cnv.setViewDefault(BasicVisualLexicon.NODE_SHAPE, NodeShapeVisualProperty.ELLIPSE);
+            //cnv.setViewDefault(BasicVisualLexicon.NODE_SHAPE, spadeVS);
+            //VisualPropertyType.NODE_FILL_COLOR.setDefault(spadeVS, Color.LIGHT_GRAY);
+            spadeVS.setDefaultValue(BasicVisualLexicon.NODE_FILL_COLOR, Color.LIGHT_GRAY);
+            //spadeVS.getDependency().set(VisualPropertyDependency.Definition.NODE_SIZE_LOCKED, true);
+            //spadeVS.addVisualPropertyDependency(BasicVisualLexicon);
+            //VisualPropertyType.NODE_BORDER_COLOR.setDefault(spadeVS, Color.WHITE);
+            spadeVS.setDefaultValue(BasicVisualLexicon.NODE_BORDER_PAINT, Color.WHITE);
+            //VisualPropertyType.NODE_LINE_WIDTH.setDefault(spadeVS, 4);
+            spadeVS.setDefaultValue(BasicVisualLexicon.NODE_BORDER_WIDTH, 4.0);
+            //VisualPropertyType.EDGE_COLOR.setDefault(spadeVS, Color.WHITE);
+            spadeVS.setDefaultValue(BasicVisualLexicon.EDGE_PAINT, Color.WHITE);
+            //VisualPropertyType.EDGE_LINE_WIDTH.setDefault(spadeVS, 2);
+            spadeVS.setDefaultValue(BasicVisualLexicon.NODE_FILL_COLOR, Color.LIGHT_GRAY);
 
-            cyVMM.getCalculatorCatalog().addVisualStyle(spadeVS);
-            cyVMM.setVisualStyle(spadeVS);
-            Cytoscape.getCurrentNetworkView().setVisualStyle(spadeVS.getName());
+            //cyVMM.getCalculatorCatalog().addVisualStyle(spadeVS);
+            cyVMM.getAllVisualStyles().add(spadeVS);
+            cyVMM.setCurrentVisualStyle(spadeVS);
+            //cyVMM.setVisualStyle(spadeVS);
+            //Cytoscape.getCurrentNetworkView().setVisualStyle(spadeVS.getName());
+            spadeVS.apply(cnv);
+            cnv.updateView();
 
         } catch (RuntimeException ex) {
-            CyLogger.getLogger().error("Error Visual Mapping", ex);
+            //CyLogger.getLogger().error("Error Visual Mapping", ex);
+            System.out.println("error line 296...spadeanalysispanel");
         }
     }
 
@@ -250,14 +306,19 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel implements CytoPanelC
      * @param closeNetwork - whether or not to close the network after saving it.
      */
     private void saveMetadata(Boolean closeNetwork) {
-        CyNetwork currentNetwork = Cytoscape.getCurrentNetwork();
-        CyNetworkView currentNetworkView = Cytoscape.getCurrentNetworkView();
+        //CyNetwork currentNetwork = Cytoscape.getCurrentNetwork();
+        CyNetwork currentNetwork = cam.getCurrentNetwork();
+        //CyNetworkView currentNetworkView = Cytoscape.getCurrentNetworkView();
+        
 
         try {
             FileWriter nstream = new FileWriter(new File(spadeCxt.getPath(), "nested.txt").getAbsolutePath());
             BufferedWriter nout = new BufferedWriter(nstream);
-            for (CyNode node : (List<CyNode>) currentNetwork.nodesList()) {
+            //for (CyNode node : (List<CyNode>) currentNetwork.nodesList()) {
+            /*
+            for (CyNode node : (List<CyNode>) currentNetwork.getNodeList()) {
                 // Write out membership in nested networks
+                
                 GraphPerspective nestedNetwork = node.getNestedNetwork();
                 if (nestedNetwork != null) {
                     for (CyNode nn : (List<CyNode>) nestedNetwork.nodesList()) {
@@ -274,9 +335,11 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel implements CytoPanelC
                     NodeContextMenuItems.UndoNestedNetwork.undoNestedNode(node);
                 }
             }
+            */
             nout.close();
         } catch (IOException ex) {
-            CyLogger.getLogger().error("Error read layout.table", ex);
+            //CyLogger.getLogger().error("Error read layout.table", ex);
+            System.out.println("error");
             return;
         }
 
@@ -289,12 +352,15 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel implements CytoPanelC
             int nodeCount = currentNetwork.getNodeCount();
             double[][] pos = new double[nodeCount][2];
 
-            for (CyNode node : (List<CyNode>) currentNetwork.nodesList()) {
-                View<CyNode> nodeView = currentNetworkView.getNodeView(node);
+            //for (CyNode node : (List<CyNode>) currentNetwork.nodesList()) {
+            for (CyNode node : (List<CyNode>) currentNetwork.getNodeList()) {
+                //View<CyNode> nodeView = currentNetworkView.getNodeView(node);
+                View<CyNode> nodeView = cnv.getNodeView(node);
 
                 int id;
                 try {
-                    id = Integer.parseInt(node.getIdentifier());
+                    //id = Integer.parseInt(node.getIdentifier());
+                    id = Integer.parseInt(currentNetwork.getRow(node).get("id", String.class));
                 } catch (NumberFormatException ex) {
                     continue;
                 }
@@ -303,8 +369,10 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel implements CytoPanelC
                 }
 
                 if (nodeView != null) {
-                    pos[id][0] = nodeView.getXPosition();
-                    pos[id][1] = -1.0 * nodeView.getYPosition();
+                    //pos[id][0] = nodeView.getXPosition();
+                    pos[id][0] = nodeView.getVisualProperty(BasicVisualLexicon.NODE_X_LOCATION);
+                    //pos[id][1] = -1.0 * nodeView.getYPosition();
+                    pos[id][1] = -1.0 * nodeView.getVisualProperty(BasicVisualLexicon.NODE_Y_LOCATION);
                 }
             }
 
@@ -320,10 +388,12 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel implements CytoPanelC
 
         if (closeNetwork) {
             //Close the network that the user just left
-            Cytoscape.destroyNetwork(currentNetwork);
+            //Cytoscape.destroyNetwork(currentNetwork);
+            spadeCxt.adapter.getCyNetworkManager().destroyNetwork(currentNetwork);
             //This is the only way to clear the nodeAttributes. I don't really
             //know what it does though; found it by trial-and-error:
-            Cytoscape.createNewSession();
+            //Cytoscape.createNewSession();
+            //spadeCxt.adapter.getCyNetworkManager().
             //(It's necessary to clear the nodeAttributes for the sake of
             //mapColor's functionality.
         }
@@ -334,8 +404,9 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel implements CytoPanelC
      * @param layoutFile
      */
     private void loadMetadata(File layoutFile) {
-        CyNetwork currentNetwork = Cytoscape.getCurrentNetwork();
-        CyNetworkView currentNetworkView = Cytoscape.getCurrentNetworkView();
+        //CyNetwork currentNetwork = Cytoscape.getCurrentNetwork();
+        CyNetwork currentNetwork = cam.getCurrentNetwork();
+        //CyNetworkView currentNetworkView = Cytoscape.getCurrentNetworkView();
 
         try {
             int curNode = 0, nodeCount = currentNetwork.getNodeCount();
@@ -351,10 +422,12 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel implements CytoPanelC
                 curNode++;
             }
 
-            for (CyNode node : (List<CyNode>) currentNetwork.nodesList()) {
+            //for (CyNode node : (List<CyNode>) currentNetwork.nodesList()) {
+            for (CyNode node : (List<CyNode>) currentNetwork.getNodeList()) {
                 int id;
                 try {
-                    id = Integer.parseInt(node.getIdentifier());
+                    //id = Integer.parseInt(node.getIdentifier());
+                    id = Integer.parseInt(currentNetwork.getRow(node).get("id", String.class));
                 } catch (NumberFormatException ex) {
                     continue;
                 }
@@ -362,9 +435,12 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel implements CytoPanelC
                     continue;
                 }
 
-                View<CyNode> nodeView = currentNetworkView.getNodeView(node);
-                nodeView.setXPosition(pos[id][0]);
-                nodeView.setYPosition(pos[id][1]);
+                //View<CyNode> nodeView = currentNetworkView.getNodeView(node);
+                View<CyNode> nodeView = cnv.getNodeView(node);
+                //nodeView.setXPosition(pos[id][0]);
+                nodeView.setVisualProperty(BasicVisualLexicon.NODE_X_LOCATION, pos[id][0]);
+                //nodeView.setYPosition(pos[id][1]);
+                nodeView.setVisualProperty(BasicVisualLexicon.NODE_Y_LOCATION, pos[id][1]);
             }
 
 
@@ -381,7 +457,8 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel implements CytoPanelC
                 for (String id : scanner.nextLine().split(" ")) {
                     try {
                         // Convert back to 0-indexed nodes
-                        nodes.add(Cytoscape.getCyNode(Integer.toString(Integer.parseInt(id) - 1)));
+                        //nodes.add(Cytoscape.getCyNode(Integer.toString(Integer.parseInt(id) - 1)));
+                        nodes.add(currentNetwork.getNode(Long.parseLong(id) - 1));
                     } catch (NumberFormatException ex) {
                         //CyLogger.getLogger().error("Invalid entry in nested.txt", ex);
                     }
@@ -679,10 +756,10 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel implements CytoPanelC
                 if ("See Merge Details".equals(mergeOrderDetails.getText())) {
                     mergeOrderDetails.setText("Clear Merge Details");
                     mergeOrderSlider.setEnabled(false);
-                    mergeOrderOps.showNestedNetworkDetails();
+                    //mergeOrderOps.showNestedNetworkDetails();
 
                 } else {
-                    mergeOrderOps.destroyNestedNetworkDetails();
+                    //mergeOrderOps.destroyNestedNetworkDetails();
                     mergeOrderDetails.setText("See Merge Details");
                     mergeOrderSlider.setEnabled(true);
                 }
@@ -710,13 +787,17 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel implements CytoPanelC
     private void radioAsymmetric1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_radioAsymmetric1ActionPerformed
         spadeCxt.setSymmetry(SpadeContext.SymmetryType.ASYMMETRIC);
         updateNodeSizeAndColors();
-        Cytoscape.getCurrentNetworkView().redrawGraph(true, true);
+        //Cytoscape.getCurrentNetworkView().redrawGraph(true, true);
+        //not sure if this equates to above
+        cnv.updateView();
     }//GEN-LAST:event_radioAsymmetric1ActionPerformed
 
     private void radioSymmetric1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_radioSymmetric1ActionPerformed
         spadeCxt.setSymmetry(SpadeContext.SymmetryType.SYMMETRIC);
         updateNodeSizeAndColors();
-        Cytoscape.getCurrentNetworkView().redrawGraph(true, true);
+        //Cytoscape.getCurrentNetworkView().redrawGraph(true, true);
+        //not sure if this equates to above
+        cnv.updateView();
     }//GEN-LAST:event_radioSymmetric1ActionPerformed
 
     private void CloseButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_CloseButtonActionPerformed
@@ -731,18 +812,24 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel implements CytoPanelC
             }
             //Close
             //FIXME This will fail if the user loads another plug-in after loading SPADE
-            Cytoscape.getDesktop().getCytoPanel(SwingConstants.WEST).remove(Cytoscape.getDesktop().getCytoPanel(SwingConstants.WEST).getCytoPanelComponentCount() - 1);
+            //Cytoscape.getDesktop().getCytoPanel(SwingConstants.WEST).remove(Cytoscape.getDesktop().getCytoPanel(SwingConstants.WEST).getCytoPanelComponentCount() - 1);
+            //unsure how to replicate above
+            
         }
     }//GEN-LAST:event_CloseButtonActionPerformed
 
     private void PDFButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_PDFButtonActionPerformed
         // Save current landscaping before generating PDFs
         saveMetadata(false);
+        
 
         // Create the workflow wizard to walk user through setting up PDF generation
-        WorkflowWizard wf = new WorkflowWizard(Cytoscape.getDesktop());
+        //WorkflowWizard wf = new WorkflowWizard(Cytoscape.getDesktop());
+        WorkflowWizard wf = new WorkflowWizard(spadeCxt.adapter.getCySwingApplication().getJFrame());
 
-        WorkflowWizard.PanelDescriptor genPDFs = new WorkflowWizardPanels.GeneratePDFs(spadeCxt);
+        //WorkflowWizard.PanelDescriptor genPDFs = new WorkflowWizardPanels.GeneratePDFs(spadeCxt);
+        //not sure if below should have null parameter.
+        WorkflowWizard.PanelDescriptor genPDFs = new WorkflowWizardPanels.GeneratePDFs(null, spadeCxt);
         wf.registerWizardPanel(WorkflowWizardPanels.GeneratePDFs.IDENTIFIER, genPDFs);
 
         wf.setCurrentPanel(WorkflowWizardPanels.GeneratePDFs.IDENTIFIER);
@@ -758,27 +845,35 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel implements CytoPanelC
     private void RangeSelect1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_RangeSelect1ActionPerformed
         spadeCxt.setNormalizationKind((SpadeContext.NormalizationKind) RangeSelect1.getSelectedItem());
         updateNodeSizeAndColors();
-        Cytoscape.getCurrentNetworkView().redrawGraph(true, true);
+        //Cytoscape.getCurrentNetworkView().redrawGraph(true, true);
+        cnv.updateView();
+        
     }//GEN-LAST:event_RangeSelect1ActionPerformed
 
     private void ColoringSelect1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ColoringSelect1ActionPerformed
         updateNodeSizeAndColors();
-        Cytoscape.getCurrentNetworkView().redrawGraph(true, true);
+        //Cytoscape.getCurrentNetworkView().redrawGraph(true, true);
+        cnv.updateView();
     }//GEN-LAST:event_ColoringSelect1ActionPerformed
 
     private void FilenameSelect1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_FilenameSelect1ActionPerformed
-        GraphPerspective network = (GraphPerspective) Cytoscape.getCurrentNetwork();
+
+        
+        //GraphPerspective network = (GraphPerspective) Cytoscape.getCurrentNetwork();
 
         // Close the current network, saving the X and Y coords for reuse
         //   This is a hackerish way to tell if no network is loaded. For some reason,
         //   Cytoscape.getCurrentNetwork[View]() always returns something.
-        if (!network.nodesList().isEmpty()) {
-            this.saveMetadata(true);
-        }
+  // TODO fix this, and see if you can find a less hackerish way of doing this (per above comment)
+//        if (!network.nodesList().isEmpty()) {
+//            this.saveMetadata(true);
+//        }
 
         //Open the new network, applying the X and Y coords if available
         if (FilenameSelect1.getSelectedIndex() >= 0) {
-            LoadNetworkTask.loadFile(spadeCxt.getGMLFiles()[FilenameSelect1.getSelectedIndex()], true);
+            File filetoload = spadeCxt.getGMLFiles()[FilenameSelect1.getSelectedIndex()];
+            LoadNetworkFileTaskFactory lnftf = spadeCxt.adapter.get_LoadNetworkFileTaskFactory();
+            lnftf.createTaskIterator(filetoload);
 
             //Find the layout.table file if it exists
             File[] layoutFiles = spadeCxt.getPath().listFiles(new FilenameFilter() {
@@ -795,10 +890,10 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel implements CytoPanelC
             }
 
             // Network Interactions
-            Cytoscape.getCurrentNetworkView().addNodeContextMenuListener(new NodeContextMenu());
-            Cytoscape.getCurrentNetworkView().fitContent();
+            //Cytoscape.getCurrentNetworkView().addNodeContextMenuListener(new NodeContextMenu());
+            cnv.fitContent();
 
-            VisualMapping.populateNumericAttributeComboBox(ColoringSelect1);  // Update the parameter combo box
+//            VisualMapping.populateNumericAttributeComboBox(ColoringSelect1);  // Update the parameter combo box
             ColoringSelect1.setSelectedIndex(0);
 
             RangeSelect1.setSelectedIndex(0);
@@ -825,7 +920,7 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel implements CytoPanelC
 
             try {
                 if (mergeOrderFile.length == 1) {
-                    this.mergeOrderOps = new MergeOrderOperations(mergeOrderFile[0]);
+                    this.mergeOrderOps = new MergeOrderOperations(mergeOrderFile[0], spadeCxt);
                     mergeOrderSlider.setMaximum(mergeOrderOps.getMaxMergeOrder());
                 } else if (mergeOrderFile.length == 0) {
                     jLabel5.setText("merge_order.txt not found");
@@ -840,10 +935,12 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel implements CytoPanelC
             }
 
             try {
-                this.fcsOperations = new FCSOperations(((FileItem) FilenameSelect1.getSelectedItem()).getFCSFile());
+                this.fcsOperations = new FCSOperations(spadeCxt, ((FileItem) FilenameSelect1.getSelectedItem()).getFCSFile());
                 this.scatterPlot = new ScatterPlotPanel(this.fcsOperations);
                 this.PlotContainer.setViewportView(this.scatterPlot);
-                Cytoscape.getCurrentNetwork().addSelectEventListener(new HandleSelect());
+                //Cytoscape.getCurrentNetwork().addSelectEventListener(new HandleSelect());
+                //not sure how to add handle select listener to this network
+                //cam.getCurrentNetwork()
                 updateFCSConsumers();
             } catch (FileNotFoundException ex) {
                 JOptionPane.showMessageDialog(null, "FCS file not found: " + ((FileItem) FilenameSelect1.getSelectedItem()).getFCSpath());

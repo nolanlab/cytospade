@@ -11,7 +11,10 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import org.apache.commons.math.stat.descriptive.rank.Percentile;
+import org.cytoscape.application.CyApplicationManager;
 import org.cytoscape.model.CyNode;
+import org.cytoscape.view.vizmap.mappings.BoundaryRangeValues;
+import org.cytoscape.view.vizmap.mappings.ContinuousMapping;
 
 /**
  *
@@ -19,6 +22,8 @@ import org.cytoscape.model.CyNode;
  */
 public class VisualMapping {
 
+    private SpadeContext spadeCxt;
+    private CyApplicationManager cam;
     private NormalizationKind rangeKind;
     private SymmetryType symmetryType;
     private HashMap globalRanges;
@@ -26,8 +31,10 @@ public class VisualMapping {
     private String sizeMarker;
     private String colorMarker;
 
-    public VisualMapping() {
+    public VisualMapping(SpadeContext context) {
         globalRanges = null;
+        this.spadeCxt = context;
+        this.cam = spadeCxt.adapter.getCyApplicationManager();
     }
 
     public VisualMapping(File globalBoundaryFile) {
@@ -83,12 +90,14 @@ public class VisualMapping {
      * @throws IllegalArgumentException If markers are non-numeric
      */
     public void setCurrentMarkersAndRangeKind(String sizeMarker, String colorMarker, NormalizationKind rangeKind, SymmetryType symmetryType) throws IllegalArgumentException {
-        if (!isNumericAttribute(sizeMarker)) {
+        //if (!isNumericAttribute(sizeMarker)) {
+        if (sizeMarker == null) {
           throw new IllegalArgumentException("sizeMarker is non-numeric");
         }
         this.sizeMarker = sizeMarker;
 
-        if (!isNumericAttribute(colorMarker)) {
+        //if (!isNumericAttribute(colorMarker)) {
+         if (colorMarker == null) {
             throw new IllegalArgumentException("colorMarker is non-numeric");
         }
         this.colorMarker = colorMarker;
@@ -105,7 +114,9 @@ public class VisualMapping {
      * Create a size calculator based on current sizeMarker
      * @return "SPADE Size Calculator" with size continuous mapper
      */
+    /* currently out
     public Calculator createSizeCalculator() {
+    
         Range rng = getAttributeRange(sizeMarker);
         double rmin = rng.getMin();
         double rmax = rng.getMax();
@@ -130,7 +141,7 @@ public class VisualMapping {
      * Create a color calculator based on current colorMarker
      * @return "SPADE Color Calculator" with color continuous mapper
      */
-    public Calculator createColorCalculator() {
+    public void createColorCalculator(ContinuousMapping mapping){
         Range rng = getAttributeRange(colorMarker);
         double rmin = rng.getMin();
         double rmax = rng.getMax();
@@ -141,13 +152,6 @@ public class VisualMapping {
             rmin = -1 * rmax;
         }
         
-        VisualPropertyType type = VisualPropertyType.NODE_FILL_COLOR;
-        final Object defaultObj = type.getDefault(Cytoscape.getVisualMappingManager().getVisualStyle());
-
-        ContinuousMapping cm = new ContinuousMapping(defaultObj.getClass(), colorMarker);
-        Interpolator numToColor = new LinearNumberToColorInterpolator();
-        cm.setInterpolator(numToColor);
-
         Color[] colors = new Color[7];
         colors[0] = new Color(0,0,153);
         colors[1] = new Color(0,0,255);
@@ -159,12 +163,12 @@ public class VisualMapping {
 
         double step = (rmax - rmin) / (colors.length - 1);
         for (int i=0; i<colors.length; i++) {
-            cm.addPoint(rmin + step*i, new BoundaryRangeValues(colors[i],colors[i],colors[i]));
+            mapping.addPoint(rmin + step*i, new BoundaryRangeValues(colors[i],colors[i],colors[i]));
         }
 
         //TODO try to trigger the VizMapper panel event listener so the graphic there updates.
 
-        return new BasicCalculator("SPADE Color Calculator", cm, VisualPropertyType.NODE_FILL_COLOR);
+        //return new BasicCalculator("SPADE Color Calculator", cm, VisualPropertyType.NODE_FILL_COLOR);
     }
 
     /**
@@ -172,6 +176,7 @@ public class VisualMapping {
      * @param attrID Attribute to be checked
      * @return true if numeric
      */
+    /* attrubutes not used the same way
     public static boolean isNumericAttribute(String attrID) {
         CyAttributes cyNodeAttrs = Cytoscape.getNodeAttributes();
         switch(cyNodeAttrs.getType(attrID)) {
@@ -181,11 +186,12 @@ public class VisualMapping {
                 return true;
         }
     }
-
+    */
     /**
      * Populates a JComboBox will all numeric attributes of current network
      * @param csBox - JComboBox to populate
      */
+    /*
     public static void populateNumericAttributeComboBox(javax.swing.JComboBox csBox) {
         csBox.removeAllItems();
         CyAttributes cyNodeAttrs = Cytoscape.getNodeAttributes();
@@ -197,7 +203,7 @@ public class VisualMapping {
             }
         }
     }
-
+    */
     private Range getAttributeRange(String attrID) {
         Range range;
         if ((rangeKind == NormalizationKind.GLOBAL) && ((range = (Range)globalRanges.get(attrID)) != null)) {
@@ -205,18 +211,24 @@ public class VisualMapping {
         }
 
         // Either local, or could not find attribute in global list
-        double[] values = new double[Cytoscape.getCurrentNetwork().getNodeCount()];
+        //double[] values = new double[.getNodeCount()];
+        double[] values = new double[cam.getCurrentNetwork().getNodeCount()];
         int value_idx = 0;
 
-        CyAttributes cyNodeAttrs = Cytoscape.getNodeAttributes();
-        byte attrType = cyNodeAttrs.getType(attrID);
-
-        Iterator<CyNode> it = Cytoscape.getCurrentNetwork().nodesIterator();
+        //CyAttributes cyNodeAttrs = Cytoscape.getNodeAttributes();
+       // byte attrType = cyNodeAttrs.getType(attrID);
+       //byte attrType = cam.getCurrentTable().getAllRows().get(attrID);
+        //String attrType = cam.getCurrentNetwork().getDefaultNetworkTable().attrID);
+        //Iterator<CyNode> it = Cytoscape.getCurrentNetwork().nodesIterator();
+        Iterator<CyNode> it = cam.getCurrentNetwork().getNodeList().iterator();
         while (it.hasNext()) {
-            giny.model.Node node = (giny.model.Node) it.next();
+            //giny.model.Node node = (giny.model.Node) it.next();
+            CyNode node = it.next();
             // Ignore non-numeric nodes
-            String nodeID = node.getIdentifier();
-            if (cyNodeAttrs.hasAttribute(nodeID, attrID)) {
+            String nodeID = cam.getCurrentNetwork().getRow(node).get("node_id", String.class);
+            //if (cyNodeAttrs.hasAttribute(nodeID, attrID)) {
+            /*
+            if (cam.getCurrentTable().rowExists(nodeID) && cam.getCurrentTable().rowExists(nodeID)) {
                 Double value;
                 if (attrType == CyAttributes.TYPE_INTEGER) {
                     value = cyNodeAttrs.getIntegerAttribute(nodeID, attrID).doubleValue();
@@ -225,10 +237,11 @@ public class VisualMapping {
                 } else {
                     continue;
                 }
-                values[value_idx] = value;
+                    */
+                values[value_idx] = Integer.parseInt(nodeID);
                 value_idx++;
             }
-        }
+        //}
 
         values = Arrays.copyOf(values, value_idx);
         Percentile pctile = new Percentile();

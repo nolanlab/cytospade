@@ -71,8 +71,17 @@
     nbproject/build-impl.xml file. 
 
     -->
+    <manifest file="MANIFEST.MF">
+        <attribute name="Manifest-Version" value= "1.0"/>
+        <attribute name="Cytoscape-API-Compatibility" value= "3.0"/>
+        <attribute name="Cytoscape-App" value= "CytoSpade"/>
+        <attribute name="Cytoscape-App-Name" value= "CytoSpade"/>
+        <attribute name="Cytoscape-App-Version" value= "0.1"/>
+   </manifest>
     <property name="dist.jar.name" value="CytoSPADE.dist.jar"/>
-
+    
+    
+   
     <target name="-post-jar">
         <echo message="Packaging ${application.title} into a single JAR at dist/${dist.jar.name}"/>
         <jar jarfile="dist/${dist.jar.name}">

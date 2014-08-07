@@ -3,35 +3,36 @@ package cytospade;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
 import java.util.Set;
-
-import org.apache.commons.math.stat.inference.TTestImpl;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.math.linear.Array2DRowRealMatrix;
-import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.math.stat.inference.TTestImpl;
+import org.cytoscape.model.CyNetwork;
 import org.cytoscape.model.CyNode;
 
 public class FCSOperations {
 
     private fcsFile fcsInputFile = null;
-
+    private SpadeContext spadeCxt;
     private Array2DRowRealMatrix eventsInitl = null;
 
     private int numNodesSelected = 0;
     private Array2DRowRealMatrix eventsSlctd = null;
 
+    
 
-    public FCSOperations(File inputFile) throws FileNotFoundException, IOException {
-        this(new fcsFile(inputFile, true));
+    public FCSOperations(SpadeContext context, File inputFile) throws FileNotFoundException, IOException {
+        this(context, new fcsFile(inputFile, true));
+        this.spadeCxt = context;
     }
     
-    public FCSOperations(fcsFile inputFile) {
+    public FCSOperations(SpadeContext context, fcsFile inputFile) {
         fcsInputFile = inputFile;
         eventsInitl = new Array2DRowRealMatrix(fcsInputFile.getCompensatedEventList());
+        
     }
 
      public fcsFile getFCSFile() {
@@ -135,19 +136,22 @@ public class FCSOperations {
     private int[] getSelectedNodes() {
         ArrayList<CyNode> selectedNodes = new ArrayList<CyNode>();
 
-        CyNetwork currentNetwork = Cytoscape.getCurrentNetwork();
-        for (CyNode node : (Set<CyNode>) currentNetwork.getSelectedNodes()) {
-            GraphPerspective nestedNetwork = node.getNestedNetwork();
-            if (nestedNetwork == null) {
+        //CyNetwork currentNetwork = Cytoscape.getCurrentNetwork();
+        CyNetwork currentNetwork = spadeCxt.adapter.getCyApplicationManager().getCurrentNetwork();
+        //for (CyNode node : (Set<CyNode>) currentNetwork.getSelectedNodes()) {
+        for (CyNode node : (Set<CyNode>) currentNetwork.getNodeList()) {
+//            GraphPerspective nestedNetwork = node.getNestedNetwork();
+//            if (nestedNetwork == null) {
                 selectedNodes.add(node);
-            } else {
-                selectedNodes.addAll(nestedNetwork.nodesList());
-            }
+//            } else {
+//                selectedNodes.addAll(nestedNetwork.nodesList());
+//            }
         }
 
         int[] selectedNodes_i = new int[selectedNodes.size()];
         for (int i = 0; i < selectedNodes.size(); i++) {
-            selectedNodes_i[i] = Integer.parseInt(selectedNodes.get(i).getIdentifier()) + 1;
+            //selectedNodes_i[i] = Integer.parseInt(selectedNodes.get(i).getIdentifier) + 1;
+            selectedNodes_i[i] = Integer.parseInt(currentNetwork.getRow(selectedNodes.get(i)).get("id", String.class)) + 1;
         }
 
         return selectedNodes_i;

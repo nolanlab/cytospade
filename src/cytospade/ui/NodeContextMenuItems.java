@@ -1,8 +1,6 @@
 package cytospade.ui;
 
-import org.cytoscape.view.model.View;
-import org.cytoscape.model.CyNode;
-import org.cytoscape.model.CyNetwork;
+import cytospade.SpadeContext;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.HashSet;
@@ -10,31 +8,50 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import javax.swing.JOptionPane;
+import org.cytoscape.application.CyApplicationManager;
+import org.cytoscape.model.CyEdge;
+import org.cytoscape.model.CyNetwork;
+import org.cytoscape.model.CyNetworkManager;
+import org.cytoscape.model.CyNode;
+import org.cytoscape.model.CyTableUtil;
+import org.cytoscape.view.model.CyNetworkView;
+import org.cytoscape.view.model.CyNetworkViewFactory;
+import org.cytoscape.view.model.View;
+import org.cytoscape.view.presentation.property.BasicVisualLexicon;
+import org.cytoscape.view.vizmap.VisualStyle;
 
 /**
  *
  * @author mlinderm
  */
 public class NodeContextMenuItems {
-
+    
+    private static SpadeContext spadeCxt;
+    private static CyNetworkView cnv;
+    private static CyApplicationManager cam;
+    private static CyNetworkManager netman;
+    private static View<CyNode> view;
+    
     public static class MakeNestedNetwork implements ActionListener {
 
         public static final String LABEL = "Create Nested Network";
         private static int MetaID = 0;
+        private static VisualStyle vsName;
 
         public static View<CyNode> makeNestedNode(Set nodes) {
             return makeNestedNode(nodes, false);
         }
-
+        
         public static View<CyNode> makeNestedNode(Set nodes, boolean renderNestedView) {
             /* Cytoscape.getCurrentNetwork() and Cytoscape.getCurrentNetworkView() are
               now part of the CyApplicationManager interface, however their use is
               discouraged in favor of implementing NetworkTaskFactory and
               NetworkViewTaskFactory services (found in the core-task-api bundle). */
-            CyNetwork currentNetwork = Cytoscape.getCurrentNetwork();
-            CyNetworkView currentView = Cytoscape.getCurrentNetworkView();
+            //CyNetwork currentNetwork = Cytoscape.getCurrentNetwork();
+            netman = spadeCxt.adapter.getCyNetworkManager();
+            cnv = cam.getCurrentNetworkView();
             // CyAttributes has been replaced by the concept of CyTable.
-            CyAttributes nodeAttributes = Cytoscape.getNodeAttributes();
+            //CyAttributes nodeAttributes = Cytoscape.getNodeAttributes(); //not using attributes at this time
 
             Set nestedNodes = new HashSet(nodes);
             Set nestedEdges = new HashSet();
@@ -50,7 +67,8 @@ public class NodeContextMenuItems {
                 //}
             }
 
-            for (CyEdge edge : (List<CyEdge>) currentNetwork.edgesList()) {
+            //for (CyEdge edge : (List<CyEdge>) currentNetwork.edgesList()) {
+                for (CyEdge edge : (List<CyEdge>) cam.getCurrentNetwork().getEdgeList()){
                 boolean src_in = nestedNodes.contains(edge.getSource()),
                         trg_in = nestedNodes.contains(edge.getTarget());
                 if (src_in && trg_in) {
@@ -61,30 +79,41 @@ public class NodeContextMenuItems {
                 }
             }
 
-            String title = currentNetwork.getTitle() + "_meta" + MetaID;
-            CyNetwork nestedNetwork = Cytoscape.createNetwork(
+            //String title = currentNetwork.getTitle() + "_meta" + MetaID;
+            String title = cam.getCurrentNetwork().toString() + "_meta" + MetaID;
+            CyNetwork myNet = spadeCxt.adapter.getCyNetworkFactory().createNetwork();
+            //CyNetwork nestedNetwork = Cytoscape.createNetwork(
+            /* nested networks are out temporarily
                     nestedNodes,
                     nestedEdges,
                     title,
-                    currentNetwork,
+                    //currentNetwork,
+                    cam.getCurrentNetwork());
                     false);
-
+            */
             // Create metanode and add it to the current graph.
-            CyNode containerNode = Cytoscape.getCyNode("meta" + MetaID, true);
-            currentNetwork.addNode(containerNode);
-
+            //CyNode containerNode = Cytoscape.getCyNode("meta" + MetaID, true);
+            
+            //currentNetwork.addNode(containerNode);
+            CyNode newNode = myNet.addNode();
+            myNet.getRow(newNode).set(CyNetwork.NAME,"meta" + MetaID);
             // Put meta-node where original network was ...
-            {
+            
                 double avgX = 0.0, avgY = 0.0;
                 for (CyNode node : (Set<CyNode>) nestedNodes) {
-                    View<CyNode> nv = currentView.getNodeView(node);
-                    double currX = nv.getXPosition();
-                    double currY = nv.getYPosition();
+                    //View<CyNode> nv = currentView.getNodeView(node);
+                    View<CyNode> nv = cnv.getNodeView(node);
+                    //double currX = nv.getXPosition();
+                    double currX = nv.getVisualProperty(BasicVisualLexicon.NODE_X_LOCATION);
+                    //double currY = nv.getYPosition();
+                    double currY = nv.getVisualProperty(BasicVisualLexicon.NODE_Y_LOCATION);
                     avgX += currX;
                     avgY += currY;
                 }
                 avgX /= nestedNodes.size();
                 avgY /= nestedNodes.size();
+                
+                /* attributes out
                 View<CyNode> containerNodeView = currentView.getNodeView(containerNode);
                 containerNodeView.setXPosition(avgX);
                 containerNodeView.setYPosition(avgY);
@@ -102,8 +131,9 @@ public class NodeContextMenuItems {
                     nodeAttributes.setUserVisible("OffsetToNNY", false);
                 }
             }
-
+            */
             // Create attributes for meta node
+            /*
             {
                 for (String name : nodeAttributes.getAttributeNames()) {
                     switch (nodeAttributes.getType(name)) {
@@ -147,31 +177,44 @@ public class NodeContextMenuItems {
                     }
                 }
             }
-
+            */ //attributes out
+                
             if (renderNestedView) {
                 //Set the nested network style. This sets the icon in the newly created node.
-                CyNetworkView nestedNetworkView = Cytoscape.createNetworkView(nestedNetwork, " selection");
+                //CyNetworkView nestedNetworkView = Cytoscape.createNetworkView(nestedNetwork, " selection");
+                //cnv = cam.getCurrentNetworkView();
+                CyNetworkViewFactory cnvf = spadeCxt.adapter.getCyNetworkViewFactory();
+                CyNetworkView nestedNetworkView = cnvf.createNetworkView(myNet);
+                spadeCxt.adapter.getCyNetworkViewManager().addNetworkView(nestedNetworkView);
                 String vsName = "default";
-                if (currentView != Cytoscape.getNullNetworkView()) {
-                    Iterator i = nestedNetwork.nodesIterator();
+                //if (currentView != Cytoscape.getNullNetworkView()) {
+                //if (cnv.getNodeViews() != null)
+                    //Iterator i = nestedNetwork.nodesIterator();
 
-                    while (i.hasNext()) {
-                        Node node = (Node) i.next();
-                        nestedNetworkView.getNodeView(node).setOffset(currentView.getNodeView(node).getXPosition(), currentView.getNodeView(node).getYPosition());
+                    //while (i.hasNext()) {
+                        //Node node = (Node) i.next();
+                    for (CyNode node : (Set<CyNode>) nestedNodes) {
+                        //nestedNetworkView.getNodeView(node).setOffset(currentView.getNodeView(node).getXPosition(), currentView.getNodeView(node).getYPosition());
+                        //not sure how to set offset here
+                        //nestedNetworkView.getNodeView(node).setOffset(cnv.getNodeView(node).getVisualProperty(BasicVisualLexicon.NODE_X_LOCATION), cnv.getNodeView(node).getVisualProperty(BasicVisualLexicon.NODE_Y_LOCATION));
                     }
 
                     nestedNetworkView.fitContent();
-                    VisualStyle newVS = currentView.getVisualStyle();
+                    //VisualStyle newVS = currentView.getVisualStyle();
+                    VisualStyle newVS = spadeCxt.adapter.getVisualMappingManager().getVisualStyle(cnv);
 
                     if (newVS != null) {
-                        vsName = newVS.getName();
+                        //vsName = newVS.getName();
+                        vsName = newVS.getTitle();
                     }
                 }
 
-                Cytoscape.getVisualMappingManager().setVisualStyle(vsName);
-            }
+                //Cytoscape.getVisualMappingManager().setVisualStyle(vsName);
+                spadeCxt.adapter.getVisualMappingManager().setVisualStyle(vsName, cnv);
+            
 
             //Set the nested network
+            /* out for now
             containerNode.setNestedNetwork(nestedNetwork);
 
             // Create edges to replace those that cross the metanode boundary...
@@ -210,11 +253,21 @@ public class NodeContextMenuItems {
 
             return containerNode;
         }
+        */
+        return view;
+        }
 
+        public void actionPerformed(ActionEvent e) {
+            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        }
+        
+    }
         public static boolean isNested(CyNode node) {
-            CyAttributes nodeAttributes = Cytoscape.getNodeAttributes();
-            Boolean is_nested = nodeAttributes.getBooleanAttribute(node.getIdentifier(), "is_nested");
-            return is_nested != null && is_nested;
+            //CyAttributes nodeAttributes = Cytoscape.getNodeAttributes();
+            //Boolean is_nested = nodeAttributes.getBooleanAttribute(node.getIdentifier(), "is_nested");
+            String is_nested = cam.getCurrentNetwork().getRow(node).get("is_nested", String.class);
+            //return is_nested != null && is_nested;
+            return (is_nested == "is_nested");
         }
 
         public void actionPerformed(ActionEvent ae) {
@@ -223,14 +276,18 @@ public class NodeContextMenuItems {
                 return;
             }
 
-            CyNetwork currentNetwork = Cytoscape.getCurrentNetwork();
-            makeNestedNode(currentNetwork.getSelectedNodes());
+            //CyNetwork currentNetwork = Cytoscape.getCurrentNetwork();
+            CyNetwork currentNetwork = cam.getCurrentNetwork();
+            //makeNestedNode(currentNetwork.getSelectedNodes());
+            List<CyNode> nodes = CyTableUtil.getNodesInState(currentNetwork,"selected",true);
+            //makeNestedNode(currentNetwork.getRow(cnv).get(null, ae)); //not making nested nodes right now
 
             // Re-apply visual appearances
-            Cytoscape.getVisualMappingManager().applyAppearances();
+            //Cytoscape.getVisualMappingManager().applyAppearances();
+            cnv.updateView();
         }
     }
-
+    /* currently unnecessary
     public static class UndoNestedNetwork implements ActionListener {
 
         public static final String LABEL = "Undo Nested Network";
@@ -303,4 +360,5 @@ public class NodeContextMenuItems {
             Cytoscape.getVisualMappingManager().applyAppearances();
         }
     }
-}
+*/
+//}

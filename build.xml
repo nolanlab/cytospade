@@ -76,7 +76,7 @@
         <attribute name="Cytoscape-API-Compatibility" value= "3.0"/>
         <attribute name="Cytoscape-App" value= "CytoSpade"/>
         <attribute name="Cytoscape-App-Name" value= "CytoSpade"/>
-        <attribute name="Cytoscape-App-Version" value= "0.1"/>
+        <attribute name="Cytoscape-App-Version" value= "2.0"/>
    </manifest>
     <property name="dist.jar.name" value="CytoSPADE.dist.jar"/>
     

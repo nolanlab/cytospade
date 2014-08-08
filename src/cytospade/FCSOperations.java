@@ -12,6 +12,7 @@ import org.apache.commons.math.linear.Array2DRowRealMatrix;
 import org.apache.commons.math.stat.inference.TTestImpl;
 import org.cytoscape.model.CyNetwork;
 import org.cytoscape.model.CyNode;
+import org.cytoscape.model.CyTableUtil;
 
 public class FCSOperations {
 
@@ -135,11 +136,14 @@ public class FCSOperations {
      */
     private int[] getSelectedNodes() {
         ArrayList<CyNode> selectedNodes = new ArrayList<CyNode>();
-
         //CyNetwork currentNetwork = Cytoscape.getCurrentNetwork();
         CyNetwork currentNetwork = spadeCxt.adapter.getCyApplicationManager().getCurrentNetwork();
         //for (CyNode node : (Set<CyNode>) currentNetwork.getSelectedNodes()) {
-        for (CyNode node : (Set<CyNode>) currentNetwork.getNodeList()) {
+        //for (CyNode node : (Set<CyNode>) currentNetwork.getNodeList()) {
+        //CyNetwork currentNetwork = Cytoscape.getCurrentNetwork();
+        //for (CyNode node : (Set<CyNode>) currentNetwork.getSelectedNodes()) {
+        for (CyNode node : (List<CyNode>) CyTableUtil.getNodesInState(currentNetwork,"selected",true)) {
+
 //            GraphPerspective nestedNetwork = node.getNestedNetwork();
 //            if (nestedNetwork == null) {
                 selectedNodes.add(node);

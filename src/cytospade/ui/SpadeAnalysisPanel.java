@@ -54,6 +54,7 @@ import org.cytoscape.view.vizmap.VisualStyle;
 public class SpadeAnalysisPanel extends javax.swing.JPanel implements CytoPanelComponent {
 
     private SpadeContext spadeCxt;
+    private CyNetwork network;
     private VisualMapping visualMapping;
     private FCSOperations fcsOperations;
     private ScatterPlotPanel scatterPlot;
@@ -62,6 +63,8 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel implements CytoPanelC
     private CyApplicationManager cam;
     private CyNetworkView cnv;
     private CySwingApplication capp;
+    
+
     
     DefaultTableModel TValTableModel = new javax.swing.table.DefaultTableModel(
             new Object[][]{{null, null}},
@@ -75,6 +78,8 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel implements CytoPanelC
         this.cam = spadeCxt.adapter.getCyApplicationManager();
         CyApplicationManager cam = spadeCxt.adapter.getCyApplicationManager();
         CyNetwork network = cam.getCurrentNetwork(); //not in use
+        cnv = cam.getCurrentNetworkView();
+        this.network = cam.getCurrentNetwork(); //not in use
         cnv = cam.getCurrentNetworkView();
 
         // Find the global_boundaries.table file it exists, and create appropiate visual mapping

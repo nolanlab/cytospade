@@ -74,7 +74,7 @@
     <manifest file="MANIFEST.MF">
         <attribute name="Manifest-Version" value= "1.0"/>
         <attribute name="Cytoscape-API-Compatibility" value= "3.0"/>
-        <attribute name="Cytoscape-App" value= "CytoSpade"/>
+        <attribute name="Cytoscape-App" value= "cytospade.CytoSpade"/>
         <attribute name="Cytoscape-App-Name" value= "CytoSpade"/>
         <attribute name="Cytoscape-App-Version" value= "2.0"/>
    </manifest>

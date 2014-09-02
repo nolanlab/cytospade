@@ -24,16 +24,15 @@ public class CytoSpade extends AbstractCySwingApp {
      */
     public CytoSpade(CySwingAppAdapter adapter) {
         super(adapter);
-        CySwingApplication cytoscapeDesktopService = adapter.getCySwingApplication();
+        //CySwingApplication cytoscapeDesktopService = adapter.getCySwingApplication();
                         
         // Initialized internal state keeping
         spadeCxt = new SpadeContext(adapter);
         this.adapter = adapter;
-        
         // Create menu bar item, along with associated action...
         spadeDrawAction = new SpadeDrawAction(adapter, spadeCxt);
-        
-        cytoscapeDesktopService.addAction(spadeDrawAction);
+        adapter.getCySwingApplication().addAction(spadeDrawAction);
+        //cytoscapeDesktopService.addAction(spadeDrawAction);
     }
 
     /**

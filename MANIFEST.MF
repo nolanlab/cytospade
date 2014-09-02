@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Ant-Version: Apache Ant 1.9.2
 Created-By: 1.7.0_65-b19 (Oracle Corporation)
 Cytoscape-API-Compatibility: 3.0
-Cytoscape-App: CytoSpade
+Cytoscape-App: cytospade.CytoSpade
 Cytoscape-App-Name: CytoSpade
 Cytoscape-App-Version: 2.0
 

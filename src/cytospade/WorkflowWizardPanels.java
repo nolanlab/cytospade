@@ -839,11 +839,20 @@ public class WorkflowWizardPanels {
 
         private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {
             try {
+                final JFrame f = new JFrame("TESTER");
+                f.setSize(640,480);
+                f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+                f.pack();
+                f.setVisible(true);
                 this.cxt.authorRunSpade("runSPADE.R");
-                ctl = new SpadeController(this.frame, cxt.getPath(), "runSPADE.R");
+                //ctl = new SpadeController(this.frame, cxt.getPath(), "runSPADE.R");
+                ctl = new SpadeController(f, cxt.getPath(), "runSPADE.R");
                 ctl.exec();
+                
             } catch (IOException ex) {
                 //CyLogger.getLogger(CytoSpade.class.getName()).error(null, ex);
+                JOptionPane.showMessageDialog(null,"ALERT MESSAGE","TITLE",JOptionPane.WARNING_MESSAGE);
+                
             }
         }
 

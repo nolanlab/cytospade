@@ -49,6 +49,10 @@ public class SpadeDrawAction extends AbstractCyAction {
     public boolean isInMenu(){
         return true;
     }
+    public boolean isEnabled(){
+        
+        return true;
+    }
     
     /**
      * This method is called when the user selects the menu item.
@@ -87,16 +91,15 @@ public class SpadeDrawAction extends AbstractCyAction {
 
         if (spadeCxt.getWorkflowKind() == SpadeContext.WorkflowKind.ANALYSIS) {
             CytoPanel cytoPanelWest = this.adapter.getCySwingApplication().getCytoPanel(CytoPanelName.WEST);
-            
             //Create a tab panel for SPADE controls
-            analysisPanel = new SpadeAnalysisPanel(spadeCxt);
-            
+            //analysisPanel = new SpadeAnalysisPanel(spadeCxt);
             //AddImageIconAction addImageIconAction = new AddImageIconAction(cytoscapeDesktopService);
-            adapter.getCyServiceRegistrar().registerService(analysisPanel, CytoPanelComponent.class, new Properties());
+            adapter.getCyServiceRegistrar().registerService(new SpadeAnalysisPanel(spadeCxt), CytoPanelComponent.class, new Properties());
             //adapter.getCyServiceRegistrar().registerService(wf, CytoPanelComponent.class, new Properties());
-            //CytoPanel ctrlPanel = this.adapter.getCySwingApplication().getCytoPanel(CytoPanelName.WEST);
+            CytoPanel ctrlPanel = this.adapter.getCySwingApplication().getCytoPanel(CytoPanelName.WEST);
             //ctrlPanel.add("SPADE", analysisPanel);
-
+            //ctrlPanel.
+            //frame.add(analysisPanel);
             //Set the focus on the panel
             if (cytoPanelWest.getState() == CytoPanelState.HIDE) {
                 cytoPanelWest.setState(CytoPanelState.DOCK);
@@ -118,7 +121,8 @@ public class SpadeDrawAction extends AbstractCyAction {
 //            Cytoscape.getDesktop().setPreferredSize(new Dimension(
 //                    Cytoscape.getDesktop().getSize().width - 1,
 //                    Cytoscape.getDesktop().getSize().height - 1));
-//            Cytoscape.getDesktop().pack();
+//           Cytoscape.getDesktop().pack();
+            
             cnv.updateView();
         }
         frame.pack();

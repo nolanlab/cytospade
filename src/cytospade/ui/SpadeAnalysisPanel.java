@@ -114,11 +114,11 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel implements CytoPanelC
     }
 
     public Component getComponent() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return this;
     }
 
     public String getTitle() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return "Spade Analysis Panel";
     }
     
     /**
@@ -898,7 +898,7 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel implements CytoPanelC
             //Cytoscape.getCurrentNetworkView().addNodeContextMenuListener(new NodeContextMenu());
             cnv.fitContent();
 
-//            VisualMapping.populateNumericAttributeComboBox(ColoringSelect1);  // Update the parameter combo box
+            VisualMapping.populateNumericAttributeComboBox(ColoringSelect1);  // Update the parameter combo box
             ColoringSelect1.setSelectedIndex(0);
 
             RangeSelect1.setSelectedIndex(0);

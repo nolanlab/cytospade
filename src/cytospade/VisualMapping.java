@@ -8,11 +8,22 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
+import javax.swing.JOptionPane;
 import org.apache.commons.math.stat.descriptive.rank.Percentile;
 import org.cytoscape.application.CyApplicationManager;
+import org.cytoscape.model.CyColumn;
+import org.cytoscape.model.CyNetwork;
 import org.cytoscape.model.CyNode;
+import org.cytoscape.model.CyRow;
+import org.cytoscape.model.CyTable;
+import org.cytoscape.model.CyTableUtil;
+import org.cytoscape.model.SavePolicy;
 import org.cytoscape.view.vizmap.mappings.BoundaryRangeValues;
 import org.cytoscape.view.vizmap.mappings.ContinuousMapping;
 
@@ -22,8 +33,10 @@ import org.cytoscape.view.vizmap.mappings.ContinuousMapping;
  */
 public class VisualMapping {
 
-    private SpadeContext spadeCxt;
-    private CyApplicationManager cam;
+    private static CyNetwork network;
+    private static Set<String> nodeList;
+    private static SpadeContext spadeCxt;
+    private static CyApplicationManager cam;
     private NormalizationKind rangeKind;
     private SymmetryType symmetryType;
     private HashMap globalRanges;
@@ -32,9 +45,12 @@ public class VisualMapping {
     private String colorMarker;
 
     public VisualMapping(SpadeContext context) {
+       
         globalRanges = null;
+        this.nodeList = new HashSet();
         this.spadeCxt = context;
         this.cam = spadeCxt.adapter.getCyApplicationManager();
+        this.network = cam.getCurrentNetwork();
     }
 
     public VisualMapping(File globalBoundaryFile) {
@@ -165,7 +181,7 @@ public class VisualMapping {
         for (int i=0; i<colors.length; i++) {
             mapping.addPoint(rmin + step*i, new BoundaryRangeValues(colors[i],colors[i],colors[i]));
         }
-
+        //mapping.apply(null, null);
         //TODO try to trigger the VizMapper panel event listener so the graphic there updates.
 
         //return new BasicCalculator("SPADE Color Calculator", cm, VisualPropertyType.NODE_FILL_COLOR);
@@ -176,14 +192,17 @@ public class VisualMapping {
      * @param attrID Attribute to be checked
      * @return true if numeric
      */
-    /* attrubutes not used the same way
+    // attrubutes not used the same way
+    /*
     public static boolean isNumericAttribute(String attrID) {
-        CyAttributes cyNodeAttrs = Cytoscape.getNodeAttributes();
+        //CyAttributes cyNodeAttrs = Cytoscape.getNodeAttributes();
+        
         switch(cyNodeAttrs.getType(attrID)) {
             default: return false;
             case CyAttributes.TYPE_FLOATING:
             case CyAttributes.TYPE_INTEGER:
                 return true;
+      
         }
     }
     */
@@ -191,19 +210,42 @@ public class VisualMapping {
      * Populates a JComboBox will all numeric attributes of current network
      * @param csBox - JComboBox to populate
      */
-    /*
+    
+    @SuppressWarnings("empty-statement")
     public static void populateNumericAttributeComboBox(javax.swing.JComboBox csBox) {
         csBox.removeAllItems();
-        CyAttributes cyNodeAttrs = Cytoscape.getNodeAttributes();
-        String[] names = cyNodeAttrs.getAttributeNames();
+        String name = "";
+        String[] names = null;
+         int i = 0;
+        //CyAttributes cyNodeAttrs = Cytoscape.getNodeAttributes();
+         
+        
+         //nodeList = CyTableUtil.getColumnNames(cam.getCurrentTable());
+         try{ 
+             CyTable nodeTable = network.getDefaultNodeTable(); nodeList = CyTableUtil.getColumnNames(nodeTable);} catch (Exception ex) {JOptionPane.showMessageDialog(null, "weird exception");}
+         JOptionPane.showMessageDialog(null, "F1");
+         //nodeList = CyTableUtil.getColumnNames(spadeCxt.adapter.getCyTableManager().getTable(0));
+         
+         JOptionPane.showMessageDialog(null, "F2");
+     
+        for (String colName : nodeList){
+            if (colName != null) {
+                JOptionPane.showMessageDialog(null, "H");
+                names[i] = colName;
+                i++;
+            }
+        //String[] names = spadeCxt.adapter.getCyApplicationManager().getCurrentNetwork().getRow(node).get("name",String.class);
+        //String[] names = cyNodeAttrs.getAttributeNames();
         Arrays.sort(names);
-        for (String name : names) {
-            if (isNumericAttribute(name) && cyNodeAttrs.getUserVisible(name)) {
-                csBox.addItem(name);
+        for (String nameIterator : names) {
+            //if (isNumericAttribute(name) && cyNodeAttrs.getUserVisible(name)) {
+                csBox.addItem(nameIterator);
+        
             }
         }
+         
     }
-    */
+    
     private Range getAttributeRange(String attrID) {
         Range range;
         if ((rangeKind == NormalizationKind.GLOBAL) && ((range = (Range)globalRanges.get(attrID)) != null)) {

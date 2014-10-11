@@ -1,4 +1,5 @@
 package cytospade;
+import java.awt.Dialog;
 import java.awt.Frame;
 import java.io.BufferedReader;
 import java.io.File;
@@ -68,11 +69,12 @@ public class SpadeController extends SwingWorker<Integer, Void> {
         });
 
         this.execute();
-
-        outDialog.setModal(true);
+        //outDialog.setModal(true);
+        outDialog.setModalityType(Dialog.ModalityType.APPLICATION_MODAL);
         outDialog.pack();
         outDialog.setLocationRelativeTo(outDialog.getParent());
-        outDialog.show();
+        //outDialog.show();
+        outDialog.setVisible(true);
     }
 
     protected Integer doInBackground() {

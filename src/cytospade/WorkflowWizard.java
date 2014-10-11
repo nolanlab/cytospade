@@ -47,7 +47,8 @@ public class WorkflowWizard {
         wizardDialog.setModal(true);
         wizardDialog.pack();
         wizardDialog.setLocationRelativeTo(wizardDialog.getParent());
-        wizardDialog.show();
+        //wizardDialog.show();
+        wizardDialog.setVisible(true);
         return returnCode;
     }
 

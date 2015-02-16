@@ -6,6 +6,7 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.text.NumberFormat;
 import java.util.*;
+import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import org.cytoscape.app.swing.CySwingAppAdapter;
 
@@ -118,7 +119,7 @@ public class SpadeContext {
      */
     public void setPath(File path) {
         this.path = path;
-
+        JOptionPane.showMessageDialog(null, "setPath called");
         // Flush any previously existing path data
         this.analysisPanels.clear();
         this.selectedClusteringMarkers = new String[0];
@@ -127,10 +128,12 @@ public class SpadeContext {
         gmlFiles = path.listFiles(new FilenameFilter() {
             public boolean accept(File f, String name) {
                 return (name.endsWith(".medians.gml"));
+              
             }
         });
         
         if (gmlFiles.length > 0) { // We are probably doing analysis
+          
             fcsFiles = path.listFiles(new FilenameFilter() {
                 public boolean accept(File f, String name) {
                     return (name.endsWith(".cluster.fcs"));
@@ -153,6 +156,9 @@ public class SpadeContext {
             // Set workflow
             workflowKind = WorkflowKind.ANALYSIS;
         } else {
+  
+                
+            
             fcsFiles = path.listFiles(new FilenameFilter() {
                 public boolean accept(File f, String name) {
                     return (name.endsWith(".fcs"));

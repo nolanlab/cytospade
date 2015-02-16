@@ -37,6 +37,7 @@ import org.cytoscape.application.swing.CySwingApplication;
 import org.cytoscape.application.swing.CytoPanelComponent;
 import org.cytoscape.application.swing.CytoPanelName;
 import org.cytoscape.model.CyNetwork;
+import org.cytoscape.model.CyNetworkManager;
 import org.cytoscape.model.CyNode;
 import org.cytoscape.task.read.LoadNetworkFileTaskFactory;
 import org.cytoscape.view.model.CyNetworkView;
@@ -46,6 +47,7 @@ import org.cytoscape.view.presentation.property.NodeShapeVisualProperty;
 import org.cytoscape.view.vizmap.VisualMappingManager;
 import org.cytoscape.view.vizmap.VisualPropertyDependency;
 import org.cytoscape.view.vizmap.VisualStyle;
+import org.cytoscape.work.TaskIterator;
 
 /**
  *
@@ -53,6 +55,7 @@ import org.cytoscape.view.vizmap.VisualStyle;
  */
 public class SpadeAnalysisPanel extends javax.swing.JPanel implements CytoPanelComponent {
 
+    private static CyNetworkManager netman;
     private SpadeContext spadeCxt;
     private CyNetwork network;
     private VisualMapping visualMapping;
@@ -76,11 +79,12 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel implements CytoPanelC
         this.spadeCxt = spadeCxt;
         this.capp = spadeCxt.adapter.getCySwingApplication();
         this.cam = spadeCxt.adapter.getCyApplicationManager();
+        this.netman = spadeCxt.adapter.getCyNetworkManager();
         CyApplicationManager cam = spadeCxt.adapter.getCyApplicationManager();
         CyNetwork network = cam.getCurrentNetwork(); //not in use
-        cnv = cam.getCurrentNetworkView();
+        //cnv = cam.getCurrentNetworkView();
         this.network = cam.getCurrentNetwork(); //not in use
-        cnv = cam.getCurrentNetworkView();
+        //cnv = cam.getCurrentNetworkView();
 
         // Find the global_boundaries.table file it exists, and create appropiate visual mapping
         File[] boundaryFiles = spadeCxt.getPath().listFiles(new FilenameFilter() {
@@ -91,7 +95,7 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel implements CytoPanelC
         });
 
         if (boundaryFiles.length == 1) {
-            this.visualMapping = new VisualMapping(boundaryFiles[0]);
+            this.visualMapping = new VisualMapping(boundaryFiles[0], spadeCxt);
         } else if (boundaryFiles.length == 0) {
             //this.visualMapping = new VisualMapping();
         } else {
@@ -144,6 +148,7 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel implements CytoPanelC
         }
 
         public File getFCSFile() {
+            JOptionPane.showMessageDialog(null, "line 148");
             return f;
         }
     }
@@ -182,7 +187,7 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel implements CytoPanelC
 
             @Override
             protected Integer doInBackground() throws Exception {
-
+                JOptionPane.showMessageDialog(null, "update fcs");
                 fcsOperations.updateSelectedNodes();
 
                 scatterPlot.updatePlot();
@@ -409,10 +414,11 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel implements CytoPanelC
      * @param layoutFile
      */
     private void loadMetadata(File layoutFile) {
+        JOptionPane.showMessageDialog(null, "loadmetadata");
         //CyNetwork currentNetwork = Cytoscape.getCurrentNetwork();
         CyNetwork currentNetwork = cam.getCurrentNetwork();
         //CyNetworkView currentNetworkView = Cytoscape.getCurrentNetworkView();
-
+        JOptionPane.showMessageDialog(null, "loadmetadata1");
         try {
             int curNode = 0, nodeCount = currentNetwork.getNodeCount();
             double[][] pos = new double[currentNetwork.getNodeCount()][2];
@@ -428,6 +434,7 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel implements CytoPanelC
             }
 
             //for (CyNode node : (List<CyNode>) currentNetwork.nodesList()) {
+            JOptionPane.showMessageDialog(null, "loadmetadata2");
             for (CyNode node : (List<CyNode>) currentNetwork.getNodeList()) {
                 int id;
                 try {
@@ -450,12 +457,14 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel implements CytoPanelC
 
 
         } catch (FileNotFoundException ex) {
+            JOptionPane.showMessageDialog(null, "file not found");
             //CyLogger.getLogger().error("Error read layout.table", ex);
             return;
         }
 
         // Apply nesting loaded from nested.txt metadata
         try {
+            JOptionPane.showMessageDialog(null, "try block");
             Scanner scanner = new Scanner(new File(spadeCxt.getPath(), "nested.txt"));
             while (scanner.hasNextLine()) {
                 Set nodes = new HashSet();
@@ -876,13 +885,18 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel implements CytoPanelC
 
         //Open the new network, applying the X and Y coords if available
         if (FilenameSelect1.getSelectedIndex() >= 0) {
+            JOptionPane.showMessageDialog(null, "line 879");
             File filetoload = spadeCxt.getGMLFiles()[FilenameSelect1.getSelectedIndex()];
             LoadNetworkFileTaskFactory lnftf = spadeCxt.adapter.get_LoadNetworkFileTaskFactory();
-            lnftf.createTaskIterator(filetoload);
-
+            //lnftf.createTaskIterator(filetoload);
+            //TaskIterator taskIterator = LoadNetworkFileTaskFactory.createTaskIterator(file);
+            TaskIterator taskiterator = lnftf.createTaskIterator(filetoload);
+            spadeCxt.adapter.getTaskManager().execute(taskiterator);
+            netman.addNetwork(network);
+            JOptionPane.showMessageDialog(null, "line 883");
             //Find the layout.table file if it exists
-            File[] layoutFiles = spadeCxt.getPath().listFiles(new FilenameFilter() {
-
+            File[] layoutFiles;
+            layoutFiles = spadeCxt.getPath().listFiles(new FilenameFilter() {
                 public boolean accept(File f, String name) {
                     return (name.matches("layout.table"));
                 }
@@ -896,11 +910,14 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel implements CytoPanelC
 
             // Network Interactions
             //Cytoscape.getCurrentNetworkView().addNodeContextMenuListener(new NodeContextMenu());
+            JOptionPane.showMessageDialog(null, "end loadmetadata");
+            cnv = cam.getCurrentNetworkView();
             cnv.fitContent();
-
+            JOptionPane.showMessageDialog(null, "end fitcontent");
             VisualMapping.populateNumericAttributeComboBox(ColoringSelect1);  // Update the parameter combo box
+            JOptionPane.showMessageDialog(null, "attribute box populated");
             ColoringSelect1.setSelectedIndex(0);
-
+            JOptionPane.showMessageDialog(null, "after color select");
             RangeSelect1.setSelectedIndex(0);
             spadeCxt.setNormalizationKind((NormalizationKind) RangeSelect1.getSelectedItem());
             spadeCxt.setSymmetry(radioSymmetric1.isSelected() ? SpadeContext.SymmetryType.SYMMETRIC : SpadeContext.SymmetryType.ASYMMETRIC);
@@ -915,7 +932,8 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel implements CytoPanelC
             this.PlotContainer.setViewportView(null);
             this.scatterPlot = null;
             this.fcsOperations = null;
-
+            JOptionPane.showMessageDialog(null, "last");
+            /*
             File[] mergeOrderFile = spadeCxt.getPath().listFiles(new FilenameFilter() {
 
                 public boolean accept(File f, String name) {
@@ -925,8 +943,11 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel implements CytoPanelC
 
             try {
                 if (mergeOrderFile.length == 1) {
+                    JOptionPane.showMessageDialog(null, "testing");
                     this.mergeOrderOps = new MergeOrderOperations(mergeOrderFile[0], spadeCxt);
+                    JOptionPane.showMessageDialog(null, "testing2");
                     mergeOrderSlider.setMaximum(mergeOrderOps.getMaxMergeOrder());
+                    JOptionPane.showMessageDialog(null, "testing3");
                 } else if (mergeOrderFile.length == 0) {
                     jLabel5.setText("merge_order.txt not found");
                     mergeOrderSlider.setEnabled(false);
@@ -938,11 +959,18 @@ public class SpadeAnalysisPanel extends javax.swing.JPanel implements CytoPanelC
             } catch (Exception ex) {
                 JOptionPane.showMessageDialog(null, "Error reading Merge Order file: " + ex.getMessage());
             }
-
+            */
             try {
-                this.fcsOperations = new FCSOperations(spadeCxt, ((FileItem) FilenameSelect1.getSelectedItem()).getFCSFile());
+                JOptionPane.showMessageDialog(null, "line 947");
+                //this.fcsOperations = new FCSOperations(spadeCxt, ((FileItem) FilenameSelect1.getSelectedItem()).getFCSFile());
+                File fcsFile = ((FileItem) FilenameSelect1.getSelectedItem()).getFCSFile();
+                JOptionPane.showMessageDialog(null, "line 956");
+                this.fcsOperations = new FCSOperations(spadeCxt, fcsFile);
+                JOptionPane.showMessageDialog(null, "line 955");
                 this.scatterPlot = new ScatterPlotPanel(this.fcsOperations);
+                JOptionPane.showMessageDialog(null, "line 956");
                 this.PlotContainer.setViewportView(this.scatterPlot);
+                this.PlotContainer.setVisible(true);
                 //Cytoscape.getCurrentNetwork().addSelectEventListener(new HandleSelect());
                 //not sure how to add handle select listener to this network
                 //cam.getCurrentNetwork()

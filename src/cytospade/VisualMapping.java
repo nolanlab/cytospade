@@ -8,11 +8,9 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Set;
 import javax.swing.JOptionPane;
 import org.apache.commons.math.stat.descriptive.rank.Percentile;
@@ -20,10 +18,8 @@ import org.cytoscape.application.CyApplicationManager;
 import org.cytoscape.model.CyColumn;
 import org.cytoscape.model.CyNetwork;
 import org.cytoscape.model.CyNode;
-import org.cytoscape.model.CyRow;
 import org.cytoscape.model.CyTable;
 import org.cytoscape.model.CyTableUtil;
-import org.cytoscape.model.SavePolicy;
 import org.cytoscape.view.vizmap.mappings.BoundaryRangeValues;
 import org.cytoscape.view.vizmap.mappings.ContinuousMapping;
 
@@ -45,7 +41,6 @@ public class VisualMapping {
     private String colorMarker;
 
     public VisualMapping(SpadeContext context) {
-       
         globalRanges = null;
         this.nodeList = new HashSet();
         this.spadeCxt = context;
@@ -53,8 +48,12 @@ public class VisualMapping {
         this.network = cam.getCurrentNetwork();
     }
 
-    public VisualMapping(File globalBoundaryFile) {
+    public VisualMapping(File globalBoundaryFile, SpadeContext context) {
         globalRanges = new HashMap();
+        this.nodeList = new HashSet();
+        this.spadeCxt = context;
+        this.cam = spadeCxt.adapter.getCyApplicationManager();
+        this.network = cam.getCurrentNetwork();
         readBoundaries(globalBoundaryFile);
     }
 
@@ -215,33 +214,69 @@ public class VisualMapping {
     public static void populateNumericAttributeComboBox(javax.swing.JComboBox csBox) {
         csBox.removeAllItems();
         String name = "";
-        String[] names = null;
-         int i = 0;
+        //String[] names = null;
+        String[] names = new String[100];
+        int i = 0;
         //CyAttributes cyNodeAttrs = Cytoscape.getNodeAttributes();
+        JOptionPane.showMessageDialog(null, "hello1");
+        /*
+        //nodeList = CyTableUtil.getColumnNames(cam.getCurrentTable());
+        if (network.toString() == null){
+            JOptionPane.showMessageDialog(null, "nullval");
+        }else{
+        String networkName = network.toString();
+        JOptionPane.showMessageDialog(null, "hello1.5");
+        }
+        if (network.getDefaultNodeTable().toString() == null){
+            JOptionPane.showMessageDialog(null, "nullval2");
+        }else{
+        String tableName = network.getDefaultNodeTable().toString();
+        JOptionPane.showMessageDialog(null, "hello2");
+        }
+          JOptionPane.showMessageDialog(null, "hello3");
+            for (CyColumn column: network.getDefaultNodeTable().getColumns()) {
+                if (column.getName() != null)
+                JOptionPane.showMessageDialog(null, column.getName());
+            }
+        */
+        try{ 
+            
+          String str = network.toString();
+            
+            nodeList = CyTableUtil.getColumnNames(cam.getCurrentTable());
+            //CyTable nodeTable = spadeCxt.adapter.getCyTableManager().getTable(0);
+            //CyTable nodeTable = network.getDefaultNodeTable().get; // BF check that these are the right values
+            //network.getNodeList()
+            //CyTable nodeTable = cam.getCurrentTable();
+            //nodeList = CyTableUtil.getColumnNames(nodeTable);
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(null, ex.getClass().getName());
+        }
          
+        //nodeList = CyTableUtil.getColumnNames(spadeCxt.adapter.getCyTableManager().getTable(0));
+/*
+        for (CyColumn column : network.getDefaultNodeTable().getColumns()){
+            if (column.getName() != null){
+                names[i] = column.getName();
+                i++;
+            } 
+        }
+        */
         
-         //nodeList = CyTableUtil.getColumnNames(cam.getCurrentTable());
-         try{ 
-             CyTable nodeTable = network.getDefaultNodeTable(); nodeList = CyTableUtil.getColumnNames(nodeTable);} catch (Exception ex) {JOptionPane.showMessageDialog(null, "weird exception");}
-         JOptionPane.showMessageDialog(null, "F1");
-         //nodeList = CyTableUtil.getColumnNames(spadeCxt.adapter.getCyTableManager().getTable(0));
-         
-         JOptionPane.showMessageDialog(null, "F2");
-     
         for (String colName : nodeList){
             if (colName != null) {
-                JOptionPane.showMessageDialog(null, "H");
                 names[i] = colName;
                 i++;
             }
+        }
+        
         //String[] names = spadeCxt.adapter.getCyApplicationManager().getCurrentNetwork().getRow(node).get("name",String.class);
         //String[] names = cyNodeAttrs.getAttributeNames();
-        Arrays.sort(names);
+        //Arrays.sort(names);
         for (String nameIterator : names) {
             //if (isNumericAttribute(name) && cyNodeAttrs.getUserVisible(name)) {
                 csBox.addItem(nameIterator);
-        
-            }
+            //}
         }
          
     }

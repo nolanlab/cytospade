@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import javax.swing.JOptionPane;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.math.linear.Array2DRowRealMatrix;
 import org.apache.commons.math.stat.inference.TTestImpl;
@@ -24,16 +25,19 @@ public class FCSOperations {
     private Array2DRowRealMatrix eventsSlctd = null;
 
     
-
+    public FCSOperations(){}
+    
     public FCSOperations(SpadeContext context, File inputFile) throws FileNotFoundException, IOException {
         this(context, new fcsFile(inputFile, true));
-        this.spadeCxt = context;
+        JOptionPane.showMessageDialog(null, "line 32");
     }
     
-    public FCSOperations(SpadeContext context, fcsFile inputFile) {
+    public FCSOperations(SpadeContext context, fcsFile inputFile) throws FileNotFoundException, IOException{
+        this.spadeCxt = context;
         fcsInputFile = inputFile;
+        JOptionPane.showMessageDialog(null, "line 38");
         eventsInitl = new Array2DRowRealMatrix(fcsInputFile.getCompensatedEventList());
-        
+        JOptionPane.showMessageDialog(null, "line 40");
     }
 
      public fcsFile getFCSFile() {

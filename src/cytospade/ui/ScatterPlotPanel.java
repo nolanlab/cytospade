@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import javax.swing.ImageIcon;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.SwingWorker;
 
 /**
@@ -65,6 +66,7 @@ public class ScatterPlotPanel extends javax.swing.JPanel {
 
     /** Creates new form ScatterPlotPanel */
     public ScatterPlotPanel(FCSOperations fcsOps) {
+        JOptionPane.showMessageDialog(null, "scatter panel");
         this.fcsOps = fcsOps;
 
         initComponents();
@@ -107,9 +109,10 @@ public class ScatterPlotPanel extends javax.swing.JPanel {
 
     public void updatePlot() {
          (new SwingWorker<Integer,Void>() {
-
+            
             @Override
             protected Integer doInBackground() throws Exception {
+                JOptionPane.showMessageDialog(null, "update plot");
                 int plot_type = getPlotType((String)StyleSelect.getSelectedItem());
     
                 int event_count = fcsOps.getSelectedNodesCount() == 0 ? fcsOps.getEventCount() : fcsOps.getSelectedEventCount();
@@ -144,6 +147,7 @@ public class ScatterPlotPanel extends javax.swing.JPanel {
                         facs.Illustration.DEFAULT_POPULATION_TYPE, event_count, dot_size);
                 BufferedImage image;
                 try {
+                    JOptionPane.showMessageDialog(null, "no exception");
                     image = facs.Plot2D.drawPlot(
                             cs,
                             fcsOps.getSelectedNodesCount() == 0 ? fcsOps.getEvents(xAxisParam) : fcsOps.getSelectedEvents(xAxisParam),
@@ -159,6 +163,7 @@ public class ScatterPlotPanel extends javax.swing.JPanel {
                             );
                     Plot.setIcon(new ImageIcon(image));
                 } catch (IOException ex) {
+                    JOptionPane.showMessageDialog(null, "exception");
                     Plot.setIcon(null);
                     //CyLogger.getLogger(SpadeAnalysisPanel.class.getName()).error(null, ex);
                 }

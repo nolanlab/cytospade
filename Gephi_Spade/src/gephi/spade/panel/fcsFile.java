@@ -44,6 +44,7 @@ import java.util.*;
 import java.nio.*;
 import java.nio.channels.*;
 import java.nio.charset.*;
+import javax.swing.JOptionPane;
 import org.apache.commons.math.linear.Array2DRowRealMatrix;
 import org.apache.commons.math.linear.BlockRealMatrix;
 import org.apache.commons.math.linear.LUDecompositionImpl;
@@ -1168,20 +1169,25 @@ public final class fcsFile {
      * @return array of double arrays containing the events.
      */
     public double[][] getCompensatedEventList() {
+        
         double[][] events = this.getEventList();
+        
         if (events.length != this.getNumChannels())
             return events;  // Unable to extract the underlying events
-
+        
         // Convert the SPILL string to a compensation matrix
         String compString = this.getSpillString();
-        if (compString == null)
+        if (compString == null){
+            JOptionPane.showMessageDialog(null, "spillstring is null");
+            if (events == null){
+                JOptionPane.showMessageDialog(null, "empty eventlist");
+            }
             return events;  // No compensation, just return the events
-
+        }
         // Split the compensation string into its values
         //
         // The basic structure for SPILL* is:
         // $SPILLOVER/n,string1,string2,...,f1,f2,f3,f4,.../
-
         String[] compValues = compString.split(",");
         String[] compNames  = null;
         String[] compData   = null;
@@ -1197,7 +1203,7 @@ public final class fcsFile {
             //CyLogger.getLogger().error("Failed to parse parameter count in spill string",nfe);
             return events;
         }
-
+ 
         compNames = Arrays.copyOfRange(compValues, 1, n+1);
 
         // Match names in spill string to columns in parameter lists
@@ -1212,7 +1218,6 @@ public final class fcsFile {
                 return events;  // Spill string columns not in order
             }
         }
-
        // Extract actual compensation data
         compData  = Arrays.copyOfRange(compValues, n+1, compValues.length);
         if (compData.length != (n*n))

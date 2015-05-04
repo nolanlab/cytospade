@@ -7,26 +7,28 @@
 package gephi.spade.panel;
 
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 import javax.swing.JOptionPane;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.math.linear.Array2DRowRealMatrix;
 import org.apache.commons.math.stat.inference.TTestImpl;
-import org.gephi.data.attributes.api.*;
 import org.gephi.graph.api.Graph;
 import org.gephi.graph.api.Node;
-import org.gephi.visualization.VizController;
-import org.gephi.visualization.opengl.*;
+
 import org.gephi.graph.api.*;
 import org.gephi.project.api.ProjectController;
+//import org.gephi.visualization.api.VisualizationController;
 import org.openide.util.Lookup;
 import org.gephi.visualization.apiimpl.ModelImpl;
+//import org.gephi.visualization.opengl.AbstractEngine;
+
 
 
 public class FCSOperations {
@@ -36,21 +38,21 @@ public class FCSOperations {
     private Array2DRowRealMatrix eventsInitl = null;
 
     private int numNodesSelected = 0;
-    private Array2DRowRealMatrix eventsSlctd = null;
+    private static Array2DRowRealMatrix eventsSlctd = null;
 
     
     public FCSOperations(){}
     
     public FCSOperations(File inputFile) throws FileNotFoundException, IOException {
         this(new fcsFile(inputFile, true));
-        JOptionPane.showMessageDialog(null, "line 32");
     }
     
     public FCSOperations(fcsFile inputFile) throws FileNotFoundException, IOException{
+        if (inputFile.length() == 0){
+            
+        }
         fcsInputFile = inputFile;
-        JOptionPane.showMessageDialog(null, "line 38");
         eventsInitl = new Array2DRowRealMatrix(fcsInputFile.getCompensatedEventList());
-        JOptionPane.showMessageDialog(null, "line 40");
     }
 
      public fcsFile getFCSFile() {
@@ -70,6 +72,7 @@ public class FCSOperations {
     }
 
     public double[] getEvents(String channel) {
+        this.updateSelectedNodes();
         return eventsInitl.getDataRef()[fcsInputFile.getChannelIdFromShortName(channel)];
     }
 
@@ -90,17 +93,26 @@ public class FCSOperations {
     }
     
     public int getSelectedNodesCount() {
-        return this.numNodesSelected;
+        //return this.numNodesSelected;
+            return 0;
+        
     }
 
     public int getSelectedEventCount() {
         return eventsSlctd == null ? 0 : eventsSlctd.getColumnDimension();
     }
 
-    public double[] getSelectedEvents(String channel) {
+   public double[] getSelectedEvents(String channel) {  
+            if (getSelectedNodesCount() > 0){
+               return eventsSlctd.getDataRef()[fcsInputFile.getChannelIdFromShortName(channel)];
+            }else{ return new double[0]; }
+        
+    
+            /*
         return getSelectedNodesCount() > 0 ?
             eventsSlctd.getDataRef()[fcsInputFile.getChannelIdFromShortName(channel)] :
             new double[0];
+            */
     }
 
 
@@ -153,7 +165,8 @@ public class FCSOperations {
      */
     private int[] getSelectedNodes() {
         //ArrayList<CyNode> selectedNodes = new ArrayList<CyNode>();
-        ArrayList<Node> selectedNodes = new ArrayList<Node>();
+        
+        //ArrayList<Node> selectedNodes = new ArrayList<Node>();
         //CyNetwork currentNetwork = Cytoscape.getCurrentNetwork();
         //CyNetwork currentNetwork = spadeCxt.adapter.getCyApplicationManager().getCurrentNetwork();
         
@@ -163,19 +176,32 @@ public class FCSOperations {
         //for (CyNode node : (Set<CyNode>) currentNetwork.getSelectedNodes()) {
         //for (CyNode node : (List<CyNode>) CyTableUtil.getNodesInState(currentNetwork,"selected",true)) {
         //AbstractEngine engine = VizController.getInstance().getEngine();
+        //VisualizationController vc = Lookup.getDefault().lookup(VisualizationController.class);
+        
         /*
         GraphController graphController = Lookup.getDefault().lookup(GraphController.class);
         Graph graph = graphController.getModel().getGraphVisible();
-        */
-        /*
+        
+        
         ProjectController pc = Lookup.getDefault().lookup(ProjectController.class);
         org.gephi.project.api.Workspace workspace = pc.getCurrentWorkspace();
         GraphController gc = Lookup.getDefault().lookup(GraphController.class);
         GraphModel gm = gc.getModel(workspace);
         Graph graph = gm.getGraph();
+        */
+        ArrayList<Node> selectedNodes = new ArrayList<Node>();
+        ModelImpl[] model = Lookup.getDefault().lookup(ModelImpl[].class);
+        ProjectController pc = Lookup.getDefault().lookup(ProjectController.class);
+        org.gephi.project.api.Workspace workspace = pc.getCurrentWorkspace();
         
-        ModelImpl[] selectedNodeModels = engine.getSelectedObjects(AbstractEngine.CLASS_NODE);
+        GraphController gc = Lookup.getDefault().lookup(GraphController.class);
+        GraphModel gm = gc.getModel(workspace);
+        Graph graph = gm.getGraph();
         
+        //ModelImpl[] selectedNodeModels = engine.getSelectedObjects(AbstractEngine.CLASS_NODE);
+        NodeIterable ni = graph.getNodes();
+        Node[] nodes = ni.toArray();
+        /*
         for (int i = 0; i < selectedNodeModels.length; i++) {
             Node node = ((NodeData) selectedNodeModels[i].getObj()).getNode(graph.getView().getViewId());
             if (node != null) {
@@ -183,6 +209,7 @@ public class FCSOperations {
             }
         }
         */
+       
         /*
         for (Node node : (List<Node>) CyTableUtil.getNodesInState(currentNetwork,"selected",true)) {
 //            GraphPerspective nestedNetwork = node.getNestedNetwork();
@@ -193,12 +220,34 @@ public class FCSOperations {
 //            }
         }
 */
-        int[] selectedNodes_i = new int[selectedNodes.size()];
+        //int[] selectedNodes_i = new int[selectedNodes.size()];
         
+        //int[] selectedNodes_i = new int[nodes.length];
+        int[] selectedNodes_i = new int[188];
+        /*
         for (int j = 0; j < selectedNodes.size(); j++) {
+            
             //selectedNodes_i[i] = Integer.parseInt(selectedNodes.get(i).getIdentifier) + 1;
+            selectedNodes_i[j] = nodes[j].getId() + 1;
             //selectedNodes_i[j] = Integer.parseInt(currentNetwork.getRow(selectedNodes.get(j)).get("id", String.class)) + 1;
         }
+        */
+        for (int j = 0; j < 188; j++) {
+            
+            //selectedNodes_i[i] = Integer.parseInt(selectedNodes.get(i).getIdentifier) + 1;
+            selectedNodes_i[j] = nodes[j].getId() + 1;
+            
+            //selectedNodes_i[j] = Integer.parseInt(currentNetwork.getRow(selectedNodes.get(j)).get("id", String.class)) + 1;
+        } 
+        
+        int count = 0;
+        
+        for (int k = 0; k < selectedNodes_i.length; k++){
+            if (selectedNodes_i[k] > 1){
+                count++;
+            }
+        }
+        
         return selectedNodes_i;
     }
 

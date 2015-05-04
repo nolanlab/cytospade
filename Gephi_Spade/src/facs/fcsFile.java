@@ -1424,6 +1424,27 @@ public final class fcsFile {
    *
    * @return array of double arrays containing the fluorescence compensation matrix.
    */
+  
+  public String getChannelShortName(int channelNumber) {
+        if ((channelShortname == null) || (channelNumber < 0) || (channelNumber >= getNumChannels())) {
+            // If the channel name array or the channel shortname array is null
+            // or the channel number is invalid, then quit, since they have not
+            // been initialized suggesting something went wrong in the TEXT
+            // parsing.
+            return "Error reading this channel!";
+        }
+
+
+        if (channelShortname[channelNumber] == null) {
+            // If the channel short name for the channel is also null, then
+            // return "Channel #" as the channel name.
+            return ("Channel " + channelNumber);
+        } else {
+            // Otherwise, return the channel short name as the channel name.
+            return channelShortname[channelNumber];
+        }
+    }
+  
   public double[][] getCompensation() {
     if((settings == null) || (parameters <= 0)) {
     // If settings is null or the number of parameters is less than or equal to 0, then return an empty compensation matrix.
